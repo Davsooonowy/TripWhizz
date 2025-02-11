@@ -1,6 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.fancy-font {
+  font-family: 'Pacifico', cursive;
+  font-size: 1.5rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
 @layer base {
     :root {
       --background: 220 13% 95%;

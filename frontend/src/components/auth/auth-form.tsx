@@ -1,41 +1,22 @@
 import { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/auth/form-field.tsx";
+import { SocialLoginButton } from "@/components/auth/social-login-button.tsx";
 import { GalleryVerticalEnd } from "lucide-react";
+import { loginSchema, registerSchema, resetPasswordSchema } from "@/components/util/form-schemas.ts";
+import { calculatePasswordStrength } from "@/components/util/password-utils.ts";
+
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 interface FormData {
   email: string;
   password: string;
   confirmPassword?: string;
 }
-
-const passwordSchema = z.string()
-  .min(8, "Password must be at least 8 characters long")
-  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-  .regex(/[0-9]/, "Password must contain at least one number")
-  .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character");
-
-const loginSchema = z.object({
-  email: z.string().email("Invalid email address").nonempty("Email is required"),
-  password: passwordSchema,
-});
-
-const registerSchema = loginSchema.extend({
-  confirmPassword: z.string().nonempty("Confirm Password is required"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
-
-const resetPasswordSchema = z.object({
-  email: z.string().email("Invalid email address").nonempty("Email is required"),
-});
 
 interface AuthFormProps extends React.ComponentPropsWithoutRef<"form"> {
   isRegister?: boolean;
@@ -82,16 +63,6 @@ export function AuthForm({
     }
   };
 
-  const calculatePasswordStrength = (password: string) => {
-    let strength = 0;
-    if (password.length >= 8) strength += 1;
-    if (/[A-Z]/.test(password)) strength += 1;
-    if (/[a-z]/.test(password)) strength += 1;
-    if (/[0-9]/.test(password)) strength += 1;
-    if (/[^A-Za-z0-9]/.test(password)) strength += 1;
-    return strength;
-  };
-
   const passwordStrength = calculatePasswordStrength(password);
 
   return (
@@ -127,14 +98,13 @@ export function AuthForm({
       <div className="grid gap-6">
         {isResetPasswordMode ? (
           <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
+            <FormField
               id="email"
+              label="Email"
               type="email"
+              register={register}
+              error={errors.email?.message}
               placeholder="m@example.com"
-              {...register("email")}
-              aria-invalid={errors.email ? "true" : "false"}
-              className={errors.email ? "border-red-500" : ""}
             />
             <Button type="submit" className="w-full">
               Reset Password
@@ -145,17 +115,14 @@ export function AuthForm({
           </div>
         ) : (
           <>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                {...register("email")}
-                aria-invalid={errors.email ? "true" : "false"}
-                className={errors.email ? "border-red-500" : ""}
-              />
-            </div>
+            <FormField
+              id="email"
+              label="Email"
+              type="email"
+              register={register}
+              error={errors.email?.message}
+              placeholder="m@example.com"
+            />
             <div className="grid gap-2">
               <div className="flex items-center">
                 <Label htmlFor="password">Password</Label>
@@ -191,16 +158,13 @@ export function AuthForm({
               )}
             </div>
             {isRegisterMode && (
-              <div className="grid gap-2">
-                <Label htmlFor="confirm-password">Confirm Password</Label>
-                <Input
-                  id="confirm-password"
-                  type="password"
-                  {...register("confirmPassword")}
-                  aria-invalid={errors.confirmPassword ? "true" : "false"}
-                  className={errors.confirmPassword ? "border-red-500" : ""}
-                />
-              </div>
+              <FormField
+                id="confirmPassword"
+                label="Confirm Password"
+                type="password"
+                register={register}
+                error={errors.confirmPassword?.message}
+              />
             )}
             <Button type="submit" className="w-full">
               {isRegisterMode ? "Register" : "Login"}
@@ -210,24 +174,8 @@ export function AuthForm({
                 Or
               </span>
             </div>
-            <Button variant="outline" className="w-full" onClick={() => handleSocialLogin('apple')}>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path
-                  d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"
-                  fill="currentColor"
-                />
-              </svg>
-              Continue with Apple
-            </Button>
-            <Button variant="outline" className="w-full" onClick={() => handleSocialLogin('google')}>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path
-                  d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"
-                  fill="currentColor"
-                />
-              </svg>
-              Continue with Google
-            </Button>
+            <SocialLoginButton provider="apple" onClick={() => handleSocialLogin('apple')} />
+            <SocialLoginButton provider="google" onClick={() => handleSocialLogin('google')} />
           </>
         )}
       </div>
