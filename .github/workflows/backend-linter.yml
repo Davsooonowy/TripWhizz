@@ -27,7 +27,7 @@ jobs:
           pip install black flake8
 
       - name: Run Black
-        run: black $LINE_LENGTH --check.
+        run: black $LINE_LENGTH --check .
 
       - name: Run Flake8
         run: flake8 backend $LINE_LENGTH
