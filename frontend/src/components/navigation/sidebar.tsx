@@ -19,7 +19,7 @@ export function AppSidebar() {
   const links = [
     {
       label: "Dashboard",
-      href: "#",
+      href: "main",
       icon: (
         <IconBrandTabler className="text-sidebar-foreground h-5 w-5 flex-shrink-0" />
       ),
@@ -74,7 +74,7 @@ export function AppSidebar() {
                 <IconMoon className="h-5 w-5 flex-shrink-0" />
               )}
               {open && (
-                <span className="text-sm">
+                <span className="text-sm w-24 truncate">
                   {isDarkMode ? "Light Mode" : "Dark Mode"}
                 </span>
               )}
@@ -136,27 +136,10 @@ export const LogoIcon = () => {
   );
 };
 
-// Dummy dashboard component with content
 const Dashboard = () => {
   return (
     <div className="flex flex-1">
       <div className="p-2 md:p-10 rounded-tl-2xl border border-sidebar-border bg-card text-card-foreground flex flex-col gap-2 flex-1 w-full h-full">
-        <div className="flex gap-2">
-          {[...new Array(4)].map((_, i) => (
-            <div
-              key={"first-array" + i}
-              className="h-20 w-full rounded-lg bg-muted animate-pulse"
-            ></div>
-          ))}
-        </div>
-        <div className="flex gap-2 flex-1">
-          {[...new Array(2)].map((_, i) => (
-            <div
-              key={"second-array" + i}
-              className="h-full w-full rounded-lg bg-muted animate-pulse"
-            ></div>
-          ))}
-        </div>
       </div>
     </div>
   );
