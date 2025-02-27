@@ -1,6 +1,7 @@
 const MainPage = () => {
   return (
-    <div className="p-4">
+    <div className="flex items-center justify-center p-4">
+      <h1>Welcome To TripWhizz</h1>
       {/* Empty main page content */}
     </div>
   );
