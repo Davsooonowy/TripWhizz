@@ -5,11 +5,14 @@ import { createBrowserRouter, redirect, RouterProvider } from "react-router-dom"
 import LoginPage from "@/pages/login.tsx"
 import NotFound from './pages/not-found';
 import App from "@/App.tsx";
+import Layout from "@/components/layout/layout.tsx";
+import MainPage from "@/pages/main-page.tsx";
+import { DarkModeProvider } from "@/components/util/dark-mode-provider.tsx";
 
 // temporary loader to redirect to login page
 const protectedLoginLoader = async () => {
   // eslint-disable-next-line no-constant-condition
-  if ("Piotrkow Trybunalski" === "Piotrkow Trybunalski") {
+  if ("Piotrkow Trybunalski" === "Piootrkow Trybunalski") {
     return redirect("/login");
   }
 
@@ -19,10 +22,13 @@ const protectedLoginLoader = async () => {
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
+    element: <Layout><App /></Layout>,
     loader: protectedLoginLoader,
     children: [
-
+      {
+        path: "main",
+        element: <MainPage />
+      }
     ]
   },
   {
@@ -37,6 +43,8 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <DarkModeProvider>
+      <RouterProvider router={router} />
+    </DarkModeProvider>
   </StrictMode>,
 )

@@ -12,10 +12,13 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^4.0.0",
+    "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-label": "^2.1.2",
+    "@radix-ui/react-separator": "^1.1.2",
     "@radix-ui/react-slot": "^1.1.2",
     "@radix-ui/react-tooltip": "^1.1.8",
     "@react-spring/web": "^9.7.5",
+    "@tabler/icons-react": "^3.30.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.4.2",
@@ -26,6 +29,7 @@
     "react-router-dom": "^7.1.5",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
+    "usehooks-ts": "^3.1.1",
     "vite-tsconfig-paths": "^5.1.4",
     "zod": "^3.24.1"
   },
