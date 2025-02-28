@@ -22,8 +22,7 @@ export const DarkModeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem("dark-mode", JSON.stringify(isDarkMode));
   }, [isDarkMode]);
 
-  const toggleDarkMode = () => setIsDarkMode((prevMode) => !prevMode);
-
+  const toggleDarkMode = () => setIsDarkMode((prevMode: boolean) => !prevMode);
   return (
     <DarkModeContext.Provider value={{ isDarkMode, toggleDarkMode }}>
       {children}

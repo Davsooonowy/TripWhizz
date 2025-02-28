@@ -1,14 +1,11 @@
-import { Bell, Home, HelpCircle, Settings, Shield, Sun, Moon } from "lucide-react";
+import { Home, Settings, Shield } from "lucide-react";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
-import { useDarkMode } from "@/components/util/dark-mode-provider.tsx";
 
 export function MobileNavigation() {
-  const { isDarkMode, toggleDarkMode } = useDarkMode();
-
   const tabs = [
     { title: "Dashboard", icon: Home },
     { title: "Settings", icon: Settings },
-    { type: "separator" },
+    { type: "separator" as const },
     { title: "Security", icon: Shield },
   ];
 
