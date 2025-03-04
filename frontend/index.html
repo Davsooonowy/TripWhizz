@@ -10,6 +10,14 @@
     <meta name="theme-color" content="#ffffff">
     <link rel="manifest" href="/manifest.json" />
     <title>TripWhizz</title>
+    <script>
+      (function() {
+        const savedMode = localStorage.getItem('dark-mode');
+        if (savedMode && JSON.parse(savedMode)) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
