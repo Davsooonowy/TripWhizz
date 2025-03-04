@@ -14,13 +14,14 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { MobileNavigation } from "@/components/navigation/mobile-navigation";
+import { HomeIcon } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <AppSidebar />
       {isMobile && <MobileNavigation />}
       <main className="flex-1 overflow-auto">
@@ -30,12 +31,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <Separator orientation="vertical" className="mr-2 h-4" />
             <Breadcrumb>
               <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Building Your Application
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="/">
+                    <HomeIcon className="w-5 h-5" />
                   </BreadcrumbLink>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbPage>Data Fetching</BreadcrumbPage>
                 </BreadcrumbItem>

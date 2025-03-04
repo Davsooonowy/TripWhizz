@@ -6,7 +6,8 @@ import LoginPage from "@/pages/login.tsx"
 import NotFound from './pages/not-found';
 import App from "@/App.tsx";
 import Layout from "@/components/layout/layout.tsx";
-import MainPage from "@/pages/main-page.tsx";
+import NoTripsPage from "@/pages/no-trips/index.tsx";
+import OnboardingPage from "@/pages/onboarding/index.tsx";
 import { DarkModeProvider } from "@/components/util/dark-mode-provider.tsx";
 
 // temporary loader to redirect to login page
@@ -22,9 +23,9 @@ const router = createBrowserRouter([
     loader: protectedLoginLoader,
     children: [
       {
-        path: "main",
-        element: <MainPage />
-      }
+        path: "/no-trips",
+        element: <NoTripsPage />
+      },
     ]
   },
   {
@@ -35,6 +36,10 @@ const router = createBrowserRouter([
     path: "/login",
     element: <LoginPage />
   },
+  {
+    path: "/onboarding",
+    element: <OnboardingPage />
+  }
 ]);
 
 createRoot(document.getElementById('root')!).render(
