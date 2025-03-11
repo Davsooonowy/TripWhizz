@@ -1,11 +1,11 @@
-import { User, Compass, Users } from "lucide-react"
+import { User, Users, CheckCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-interface JourneyTrackerProps {
+interface ProgressTrackerProps {
   currentStep: number
 }
 
-export function ProgressTracker({ currentStep }: JourneyTrackerProps) {
+export function ProgressTracker({ currentStep }: ProgressTrackerProps) {
   const steps = [
     {
       id: 1,
@@ -15,15 +15,15 @@ export function ProgressTracker({ currentStep }: JourneyTrackerProps) {
     },
     {
       id: 2,
-      name: "Preferences",
-      icon: Compass,
-      description: "Travel style",
-    },
-    {
-      id: 3,
       name: "Travel Habits",
       icon: Users,
       description: "Your companions",
+    },
+    {
+      id: 3,
+      name: "Complete",
+      icon: CheckCircle,
+      description: "Finish setup",
     },
   ]
 
@@ -77,7 +77,7 @@ export function ProgressTracker({ currentStep }: JourneyTrackerProps) {
         })}
       </div>
 
-      {/* Mobile version - more visually interesting */}
+      {/* Mobile version */}
       <div className="md:hidden">
         <div className="flex items-center justify-between px-2 mb-8">
           {steps.map((step) => {
@@ -123,4 +123,3 @@ export function ProgressTracker({ currentStep }: JourneyTrackerProps) {
     </div>
   )
 }
-

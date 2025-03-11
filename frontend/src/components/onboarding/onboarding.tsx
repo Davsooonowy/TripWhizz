@@ -3,8 +3,7 @@ import { useNavigate } from "react-router-dom"
 
 import { ProgressTracker } from "./progress-tracker.tsx"
 import { PersonalInfoStep } from "./steps/personal-info-step"
-import { PreferencesStep } from "./steps/preferences-step"
-import { TravelBuddiesStep } from "./steps/travel-buddies-step"
+import { TechnicalPreferencesStep } from "./steps/technical-preferences-step.tsx"
 import { CompletionStep } from "./steps/completion-step"
 
 export default function Onboarding() {
@@ -19,27 +18,29 @@ export default function Onboarding() {
     avatar: null as File | null,
 
     // Travel preferences
-    travelStyle: "explorer",
-    budget: 50,
-    interests: ["nature", "food"],
-
-    // Travel buddies
-    travelFrequency: "monthly",
-    tripDuration: "weekend",
-    travelCompanions: ["friends", "family"],
-    notificationPreferences: ["trip_updates", "friend_joins"],
-  })
+  notifications: {
+        tripInvitations: true,
+        expenseUpdates: true,
+        packingListReminders: true,
+        votingPolls: true,
+      },
+      notificationType: "push",
+      profileVisibility: "public",
+      defaultTheme: "light",
+      language: "english",
+      currencyPreference: "usd",
+    })
 
   const updateFormData = (data: Partial<typeof formData>) => {
     setFormData((prev) => ({ ...prev, ...data }))
   }
 
   const nextStep = () => {
-    if (currentStep < 3) {
+    if (currentStep < 2) {
       setCurrentStep((prev) => prev + 1)
       window.scrollTo(0, 0)
     } else {
-      setCurrentStep(4)
+      setCurrentStep(3)
     }
   }
 
@@ -64,7 +65,7 @@ export default function Onboarding() {
           <p className="text-muted-foreground mt-2">Let's set up your travel profile</p>
         </div>
 
-        {currentStep < 4 && <ProgressTracker currentStep={currentStep} />}
+        {currentStep < 3 && <ProgressTracker currentStep={currentStep} />}
 
         <div className="mt-8">
           {currentStep === 1 && (
@@ -72,11 +73,7 @@ export default function Onboarding() {
           )}
 
           {currentStep === 2 && (
-            <PreferencesStep formData={formData} updateFormData={updateFormData} onNext={nextStep} onBack={prevStep} />
-          )}
-
-          {currentStep === 3 && (
-            <TravelBuddiesStep
+            <TechnicalPreferencesStep
               formData={formData}
               updateFormData={updateFormData}
               onNext={nextStep}
@@ -84,7 +81,7 @@ export default function Onboarding() {
             />
           )}
 
-          {currentStep === 4 && <CompletionStep onComplete={handleComplete} />}
+          {currentStep === 3 && <CompletionStep onComplete={handleComplete} />}
         </div>
       </div>
     </div>
