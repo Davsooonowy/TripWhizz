@@ -1,50 +1,53 @@
-import { User, Users, CheckCircle } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { User, Users, CheckCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ProgressTrackerProps {
-  currentStep: number
+  currentStep: number;
 }
 
 export function ProgressTracker({ currentStep }: ProgressTrackerProps) {
   const steps = [
     {
       id: 1,
-      name: "Personal Info",
+      name: 'Personal Info',
       icon: User,
-      description: "Your profile",
+      description: 'Your profile',
     },
     {
       id: 2,
-      name: "Travel Habits",
+      name: 'Travel Habits',
       icon: Users,
-      description: "Your companions",
+      description: 'Your companions',
     },
     {
       id: 3,
-      name: "Complete",
+      name: 'Complete',
       icon: CheckCircle,
-      description: "Finish setup",
+      description: 'Finish setup',
     },
-  ]
+  ];
 
   return (
     <div className="relative">
       {/* Desktop version */}
       <div className="hidden md:flex justify-between items-center">
         {steps.map((step, index) => {
-          const Icon = step.icon
-          const isActive = currentStep >= step.id
-          const isComplete = currentStep > step.id
+          const Icon = step.icon;
+          const isActive = currentStep >= step.id;
+          const isComplete = currentStep > step.id;
 
           return (
-            <div key={step.id} className="flex flex-col items-center relative z-10">
+            <div
+              key={step.id}
+              className="flex flex-col items-center relative z-10"
+            >
               <div
                 className={cn(
-                  "w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 transform",
+                  'w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 transform',
                   isActive
-                    ? "bg-primary text-primary-foreground shadow-lg scale-110"
-                    : "bg-muted text-muted-foreground",
-                  isComplete && "ring-2 ring-primary ring-offset-2",
+                    ? 'bg-primary text-primary-foreground shadow-lg scale-110'
+                    : 'bg-muted text-muted-foreground',
+                  isComplete && 'ring-2 ring-primary ring-offset-2',
                 )}
               >
                 <Icon className="h-8 w-8" />
@@ -53,13 +56,15 @@ export function ProgressTracker({ currentStep }: ProgressTrackerProps) {
               <div className="mt-3 text-center">
                 <p
                   className={cn(
-                    "font-medium transition-all duration-300",
-                    isActive ? "text-primary" : "text-muted-foreground",
+                    'font-medium transition-all duration-300',
+                    isActive ? 'text-primary' : 'text-muted-foreground',
                   )}
                 >
                   {step.name}
                 </p>
-                <p className="text-xs text-muted-foreground">{step.description}</p>
+                <p className="text-xs text-muted-foreground">
+                  {step.description}
+                </p>
               </div>
 
               {index < steps.length - 1 && (
@@ -67,13 +72,13 @@ export function ProgressTracker({ currentStep }: ProgressTrackerProps) {
                   <div
                     className="h-full bg-transparent transition-all duration-500"
                     style={{
-                      width: currentStep > step.id ? "100%" : "0%",
+                      width: currentStep > step.id ? '100%' : '0%',
                     }}
                   />
                 </div>
               )}
             </div>
-          )
+          );
         })}
       </div>
 
@@ -81,33 +86,38 @@ export function ProgressTracker({ currentStep }: ProgressTrackerProps) {
       <div className="md:hidden">
         <div className="flex items-center justify-between px-2 mb-8">
           {steps.map((step) => {
-            const Icon = step.icon
-            const isActive = currentStep >= step.id
-            const isCurrent = currentStep === step.id
+            const Icon = step.icon;
+            const isActive = currentStep >= step.id;
+            const isCurrent = currentStep === step.id;
 
             return (
               <div key={step.id} className="flex flex-col items-center">
                 <div
                   className={cn(
-                    "w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 transform",
+                    'w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 transform',
                     isActive
-                      ? "bg-primary text-primary-foreground shadow-lg scale-110"
-                      : "bg-muted text-muted-foreground",
-                    isCurrent && "ring-2 ring-primary ring-offset-4",
+                      ? 'bg-primary text-primary-foreground shadow-lg scale-110'
+                      : 'bg-muted text-muted-foreground',
+                    isCurrent && 'ring-2 ring-primary ring-offset-4',
                   )}
                 >
-                  <Icon className={cn("transition-all duration-300", isActive ? "h-7 w-7" : "h-6 w-6")} />
+                  <Icon
+                    className={cn(
+                      'transition-all duration-300',
+                      isActive ? 'h-7 w-7' : 'h-6 w-6',
+                    )}
+                  />
                 </div>
                 <p
                   className={cn(
-                    "text-xs mt-2 font-medium transition-all duration-300",
-                    isActive ? "text-primary" : "text-muted-foreground",
+                    'text-xs mt-2 font-medium transition-all duration-300',
+                    isActive ? 'text-primary' : 'text-muted-foreground',
                   )}
                 >
                   {step.name}
                 </p>
               </div>
-            )
+            );
           })}
 
           <div className="absolute top-7 left-0 w-full h-1 bg-muted -z-10">
@@ -121,5 +131,5 @@ export function ProgressTracker({ currentStep }: ProgressTrackerProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

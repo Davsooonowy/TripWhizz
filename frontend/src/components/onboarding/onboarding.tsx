@@ -1,75 +1,83 @@
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import { ProgressTracker } from "./progress-tracker.tsx"
-import { PersonalInfoStep } from "./steps/personal-info-step"
-import { TechnicalPreferencesStep } from "./steps/technical-preferences-step.tsx"
-import { CompletionStep } from "./steps/completion-step"
+import { ProgressTracker } from './progress-tracker.tsx';
+import { PersonalInfoStep } from './steps/personal-info-step';
+import { TechnicalPreferencesStep } from './steps/technical-preferences-step.tsx';
+import { CompletionStep } from './steps/completion-step';
 
 export default function Onboarding() {
-  const navigate = useNavigate()
-  const [currentStep, setCurrentStep] = useState(1)
+  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     // Personal info
-    firstName: "",
-    lastName: "",
-    username: "",
-    email: "",
+    firstName: '',
+    lastName: '',
+    username: '',
+    email: '',
     avatar: null as File | null,
 
     // Travel preferences
-  notifications: {
-        tripInvitations: true,
-        expenseUpdates: true,
-        packingListReminders: true,
-        votingPolls: true,
-      },
-      notificationType: "push",
-      profileVisibility: "public",
-      defaultTheme: "light",
-      language: "english",
-      currencyPreference: "usd",
-    })
+    notifications: {
+      tripInvitations: true,
+      expenseUpdates: true,
+      packingListReminders: true,
+      votingPolls: true,
+    },
+    notificationType: 'push',
+    profileVisibility: 'public',
+    defaultTheme: 'light',
+    language: 'english',
+    currencyPreference: 'usd',
+  });
 
   const updateFormData = (data: Partial<typeof formData>) => {
-    setFormData((prev) => ({ ...prev, ...data }))
-  }
+    setFormData((prev) => ({ ...prev, ...data }));
+  };
 
   const nextStep = () => {
     if (currentStep < 2) {
-      setCurrentStep((prev) => prev + 1)
-      window.scrollTo(0, 0)
+      setCurrentStep((prev) => prev + 1);
+      window.scrollTo(0, 0);
     } else {
-      setCurrentStep(3)
+      setCurrentStep(3);
     }
-  }
+  };
 
   const prevStep = () => {
     if (currentStep > 1) {
-      setCurrentStep((prev) => prev - 1)
-      window.scrollTo(0, 0)
+      setCurrentStep((prev) => prev - 1);
+      window.scrollTo(0, 0);
     }
-  }
+  };
 
   const handleComplete = () => {
-    console.log("Onboarding complete with data:", formData)
+    console.log('Onboarding complete with data:', formData);
     //TODO: Send data to backend
-    navigate("/no-trips")
-  }
+    navigate('/no-trips');
+  };
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-secondary to-primary py-8 px-4">
       <div className="container max-w-5xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary">Begin Your Journey</h1>
-          <p className="text-muted-foreground mt-2">Let's set up your travel profile</p>
+          <h1 className="text-3xl font-bold text-primary">
+            Begin Your Journey
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Let's set up your travel profile
+          </p>
         </div>
 
         {currentStep < 3 && <ProgressTracker currentStep={currentStep} />}
 
         <div className="mt-8">
           {currentStep === 1 && (
-            <PersonalInfoStep formData={formData} updateFormData={updateFormData} onNext={nextStep} />
+            <PersonalInfoStep
+              formData={formData}
+              updateFormData={updateFormData}
+              onNext={nextStep}
+            />
           )}
 
           {currentStep === 2 && (
@@ -85,5 +93,5 @@ export default function Onboarding() {
         </div>
       </div>
     </div>
-  )
+  );
 }

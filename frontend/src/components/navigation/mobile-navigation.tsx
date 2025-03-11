@@ -1,12 +1,12 @@
-import { Home, Settings, Shield } from "lucide-react";
-import { ExpandableTabs } from "@/components/ui/expandable-tabs";
+import { Home, Settings, Shield } from 'lucide-react';
+import { ExpandableTabs } from '@/components/ui/expandable-tabs';
 
 export function MobileNavigation() {
   const tabs = [
-    { title: "Dashboard", icon: Home },
-    { title: "Settings", icon: Settings },
-    { type: "separator" as const },
-    { title: "Security", icon: Shield },
+    { title: 'Dashboard', icon: Home },
+    { title: 'Settings', icon: Settings },
+    { type: 'separator' as const },
+    { title: 'Security', icon: Shield },
   ];
 
   return (

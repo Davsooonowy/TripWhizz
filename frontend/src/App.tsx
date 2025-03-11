@@ -1,6 +1,6 @@
 import './App.css';
-import { Outlet } from "react-router-dom";
-import { useDarkMode } from "@/components/util/dark-mode-provider.tsx";
+import { Outlet } from 'react-router-dom';
+import { useDarkMode } from '@/components/util/dark-mode-provider.tsx';
 
 function App() {
   const { isDarkMode } = useDarkMode();

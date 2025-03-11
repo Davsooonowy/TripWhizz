@@ -1,5 +1,5 @@
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogClose,
@@ -8,10 +8,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { ArrowRight } from "lucide-react";
-import { useState } from "react";
-import PropTypes from "prop-types";
+} from '@/components/ui/dialog';
+import { ArrowRight } from 'lucide-react';
+import { useState } from 'react';
+import PropTypes from 'prop-types';
 
 interface WelcomeDialogProps {
   isOpen: boolean;
@@ -23,23 +23,24 @@ function WelcomeDialog({ isOpen, onClose }: WelcomeDialogProps) {
 
   const stepContent = [
     {
-      title: "Welcome to TripWhizz",
+      title: 'Welcome to TripWhizz',
       description:
-        "Discover a powerful collection of components designed to enhance your development workflow.",
+        'Discover a powerful collection of components designed to enhance your development workflow.',
     },
     {
-      title: "Customizable Components",
+      title: 'Customizable Components',
       description:
-        "Each component is fully customizable and built with modern web standards in mind.",
+        'Each component is fully customizable and built with modern web standards in mind.',
     },
     {
-      title: "Ready to Start?",
-      description: "Begin building amazing interfaces with our comprehensive component library.",
+      title: 'Ready to Start?',
+      description:
+        'Begin building amazing interfaces with our comprehensive component library.',
     },
     {
-      title: "Get Support",
+      title: 'Get Support',
       description:
-        "Access our extensive documentation and community resources to make the most of Origin UI.",
+        'Access our extensive documentation and community resources to make the most of Origin UI.',
     },
   ];
 
@@ -72,7 +73,9 @@ function WelcomeDialog({ isOpen, onClose }: WelcomeDialogProps) {
         <div className="space-y-6 px-6 pb-6 pt-3">
           <DialogHeader>
             <DialogTitle>{stepContent[step - 1].title}</DialogTitle>
-            <DialogDescription>{stepContent[step - 1].description}</DialogDescription>
+            <DialogDescription>
+              {stepContent[step - 1].description}
+            </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <div className="flex justify-center space-x-1.5 max-sm:order-1">
@@ -80,8 +83,8 @@ function WelcomeDialog({ isOpen, onClose }: WelcomeDialogProps) {
                 <div
                   key={index}
                   className={cn(
-                    "h-1.5 w-1.5 rounded-full bg-primary",
-                    index + 1 === step ? "bg-primary" : "opacity-20",
+                    'h-1.5 w-1.5 rounded-full bg-primary',
+                    index + 1 === step ? 'bg-primary' : 'opacity-20',
                   )}
                 />
               ))}
@@ -93,7 +96,11 @@ function WelcomeDialog({ isOpen, onClose }: WelcomeDialogProps) {
                 </Button>
               </DialogClose>
               {step < totalSteps ? (
-                <Button className="group" type="button" onClick={handleContinue}>
+                <Button
+                  className="group"
+                  type="button"
+                  onClick={handleContinue}
+                >
                   Next
                   <ArrowRight
                     className="-me-1 ms-2 opacity-60 transition-transform group-hover:translate-x-0.5"
