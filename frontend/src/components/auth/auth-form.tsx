@@ -8,9 +8,11 @@ import { SocialLoginButton } from "@/components/auth/social-login-button.tsx";
 import { GalleryVerticalEnd } from "lucide-react";
 import { loginSchema, registerSchema, resetPasswordSchema } from "@/components/util/form-schemas.ts";
 import { calculatePasswordStrength } from "@/components/util/password-utils.ts";
+import { UsersApiClient } from "@/lib/api/users.ts";
 
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import {authenticationProviderInstance} from "@/lib/authentication-provider.ts";
 
 interface FormData {
   email: string;
@@ -46,11 +48,23 @@ export function AuthForm({
     reset();
   };
 
-  const onSubmit: SubmitHandler<FormData> = (data) => {
-    if (isResetPasswordMode) {
-      console.log("Reset password for:", data.email);
-    } else if (!isSocialLogin) {
-      console.log(data);
+  const onSubmit: SubmitHandler<FormData> = async (data) => {
+    try {
+      const usersApiClient = new UsersApiClient(authenticationProviderInstance);
+      let response;
+
+      if (isRegisterMode) {
+        response = await usersApiClient.createUser({ email: data.email, password: data.password });
+        } else {
+        response = await usersApiClient.loginUser({ email: data.email, password: data.password });
+      }
+
+      if (response.token) {
+        authenticationProviderInstance.login(response.token);
+        console.log("Logged in!");
+      }
+    } catch (error) {
+      console.error("Error during registration:", error);
     }
   };
 
