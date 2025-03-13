@@ -61,7 +61,6 @@ export function AuthForm({
 
       if (response.token) {
         authenticationProviderInstance.login(response.token);
-        console.log("Logged in!");
       }
     } catch (error) {
       console.error("Error during registration:", error);

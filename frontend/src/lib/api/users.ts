@@ -12,10 +12,13 @@ export interface RegisterUserResponse {
     token: string;
 }
 
-export interface UserData {
-    username: string;
+export interface User {
+    id: number;
     email: string;
-    avatar: string;
+    username: string;
+    name?: string;
+    surname?: string;
+    avatar?: string;
 }
 
 export class UsersApiClient extends BaseApiClient {
@@ -42,6 +45,19 @@ export class UsersApiClient extends BaseApiClient {
 
         if (!response.ok) {
             throw new Error("Invalid credentials");
+        }
+
+        return response.json();
+    }
+
+    async getCurrentUser(): Promise<User> {
+        const response = await fetch(`${API_URL}/user/me/`, {
+            ...this._requestConfiguration(true),
+            method: "GET",
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch user data");
         }
 
         return response.json();

@@ -29,17 +29,32 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar.tsx"
+import { useEffect, useState } from "react";
+import { User, UsersApiClient } from "@/lib/api/users.ts";
+import { authenticationProviderInstance } from "@/lib/authentication-provider.ts";
 
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string
-    email: string
-    avatar: string
-  }
-}) {
+export function NavUser() {
   const { isMobile } = useSidebar()
+  const [user, setUser] = useState<User>({ id: 0, email: "", username: ""});
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const apiClient = new UsersApiClient(authenticationProviderInstance);
+        const userData = await apiClient.getCurrentUser();
+        setUser(userData);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  const handleLogout = () => {
+    authenticationProviderInstance.logout();
+    window.location.reload();
+  };
 
   return (
     <SidebarMenu>
@@ -70,11 +85,11 @@ export function NavUser({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
+                  <AvatarImage src={user.avatar} alt={user.username} />
                   <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{user.name}</span>
+                  <span className="truncate font-semibold">{user.username}</span>
                   <span className="truncate text-xs">{user.email}</span>
                 </div>
               </div>
@@ -102,7 +117,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
               Log out
             </DropdownMenuItem>

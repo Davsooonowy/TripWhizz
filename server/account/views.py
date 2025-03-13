@@ -7,6 +7,8 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 from .serializers import UserSerializer, LoginSerializer, UpdateUserSerializer
 import json
 
@@ -67,13 +69,6 @@ class UserView(APIView):
         except User.DoesNotExist:
             return JsonResponse({"error": "User not found"}, status=404)
 
-    def get(self, request, user_id):
-        try:
-            user = User.objects.get(id=user_id)
-            return JsonResponse({"email": user.email, "password": user.password}, status=200)
-        except User.DoesNotExist:
-            return JsonResponse({"error": "User not found"}, status=404)
-
     @swagger_auto_schema(
         request_body=UpdateUserSerializer,
         responses={200: openapi.Response("User updated successfully")},
@@ -90,3 +85,13 @@ class UserView(APIView):
             return Response({"message": "User updated successfully"}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CurrentUserView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
