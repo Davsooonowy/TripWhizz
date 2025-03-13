@@ -1,12 +1,15 @@
-import * as React from "react";
-import { Button } from "@/components/ui/button";
+import * as React from 'react';
+import { Button } from '@/components/ui/button';
 
 interface SocialLoginButtonProps {
   provider: 'google' | 'apple';
   onClick: () => void;
 }
 
-export const SocialLoginButton: React.FC<SocialLoginButtonProps> = ({ provider, onClick }) => (
+export const SocialLoginButton: React.FC<SocialLoginButtonProps> = ({
+  provider,
+  onClick,
+}) => (
   <Button variant="outline" className="w-full" onClick={onClick}>
     {provider === 'google' ? (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
