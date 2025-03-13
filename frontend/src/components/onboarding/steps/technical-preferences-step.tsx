@@ -5,7 +5,6 @@ import {
   ArrowRight,
   Sun,
   Moon,
-  Monitor,
   Unlock,
   Lock,
 } from 'lucide-react';
@@ -34,8 +33,8 @@ interface TechnicalPreferencesStepProps {
     notificationType: string;
     profileVisibility: string;
     defaultTheme: string;
-    language: string;
-    currencyPreference: string;
+    defaultMapView: string;
+    tripReminderFrequency: string;
   };
   updateFormData: (
     data: Partial<TechnicalPreferencesStepProps['formData']>,
@@ -208,50 +207,54 @@ export function TechnicalPreferencesStep({
                     <span>Dark</span>
                   </Label>
                 </div>
+              </RadioGroup>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-2">Default Map View</h3>
+              <RadioGroup
+                value={formData.defaultMapView}
+                onValueChange={(value) => handleChange('defaultMapView', value)}
+                className="flex space-x-4"
+              >
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="auto" id="auto" />
-                  <Label htmlFor="auto" className="flex items-center space-x-1">
-                    <Monitor className="h-4 w-4" />
-                    <span>Auto</span>
+                  <RadioGroupItem value="standard" id="standard" />
+                  <Label
+                    htmlFor="standard"
+                    className="flex items-center space-x-1"
+                  >
+                    <span>Standard</span>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="satellite" id="satellite" />
+                  <Label
+                    htmlFor="satellite"
+                    className="flex items-center space-x-1"
+                  >
+                    <span>Satellite</span>
                   </Label>
                 </div>
               </RadioGroup>
             </div>
 
             <div>
-              <h3 className="text-lg font-medium mb-2">Language</h3>
+              <h3 className="text-lg font-medium mb-2">
+                Trip Reminder Frequency
+              </h3>
               <Select
-                value={formData.language}
-                onValueChange={(value) => handleChange('language', value)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a language" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="english">English</SelectItem>
-                  <SelectItem value="spanish">Spanish</SelectItem>
-                  <SelectItem value="french">French</SelectItem>
-                  <SelectItem value="german">German</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-medium mb-2">Currency Preference</h3>
-              <Select
-                value={formData.currencyPreference}
+                value={formData.tripReminderFrequency}
                 onValueChange={(value) =>
-                  handleChange('currencyPreference', value)
+                  handleChange('tripReminderFrequency', value)
                 }
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a currency" />
+                  <SelectValue placeholder="Select a frequency" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="usd">USD ($)</SelectItem>
-                  <SelectItem value="eur">EUR (€)</SelectItem>
-                  <SelectItem value="gbp">GBP (£)</SelectItem>
-                  <SelectItem value="jpy">JPY (¥)</SelectItem>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
                 </SelectContent>
               </Select>
             </div>
