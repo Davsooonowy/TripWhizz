@@ -101,6 +101,15 @@ DATABASES = {
     }
 }
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'mati.wot.f@gmail.com'
+EMAIL_HOST_PASSWORD = 'mtln rnhf kgph wtac'
+DEFAULT_FROM_EMAIL = 'reset.password@tripwhizz.com'
+FRONTEND_URL = 'http://localhost:2137'
+
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 

@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/auth/form-field.tsx";
 import { SocialLoginButton } from "@/components/auth/social-login-button.tsx";
 import { GalleryVerticalEnd } from "lucide-react";
-import { loginSchema, registerSchema, resetPasswordSchema } from "@/components/util/form-schemas.ts";
+import { loginSchema, registerSchema, EmailSchema } from "@/components/util/form-schemas.ts";
 import { calculatePasswordStrength } from "@/components/util/password-utils.ts";
 import { UsersApiClient } from "@/lib/api/users.ts";
 
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {authenticationProviderInstance} from "@/lib/authentication-provider.ts";
+import { useNavigate } from "react-router-dom";
 
 interface FormData {
   email: string;
@@ -30,13 +31,14 @@ export function AuthForm({
   ...props
 }: AuthFormProps) {
   const [isRegisterMode, setIsRegisterMode] = useState(isRegister);
-  const [isSocialLogin, setIsSocialLogin] = useState(false);
+  // const [isSocialLogin, setIsSocialLogin] = useState(false);  // TODO: Add social login
   const [isResetPasswordMode, setIsResetPasswordMode] = useState(false);
   const [password, setPassword] = useState("");
   const schema = isRegisterMode ? registerSchema : loginSchema;
   const { register, handleSubmit, formState: { errors }, reset } = useForm<FormData>({
-    resolver: zodResolver(isResetPasswordMode ? resetPasswordSchema : schema),
+    resolver: zodResolver(isResetPasswordMode ? EmailSchema : schema),
   });
+  const navigate = useNavigate();
 
   const toggleFormMode = () => {
     setIsRegisterMode((prevMode) => !prevMode);
@@ -48,7 +50,24 @@ export function AuthForm({
     reset();
   };
 
+  const sendPasswordResetEmail = async (email: string) => {
+    try {
+      const usersApiClient = new UsersApiClient(authenticationProviderInstance);
+      await usersApiClient.sendPasswordResetEmail(email);
+      alert("Password reset link sent successfully");
+    } catch (error) {
+      console.error("Error sending password reset email:", error);
+      alert("Error sending password reset email");
+    }
+  };
+
   const onSubmit: SubmitHandler<FormData> = async (data) => {
+    if (isResetPasswordMode) {
+      await sendPasswordResetEmail(data.email);
+      toggleResetPasswordMode();
+      return;
+    }
+
     try {
       const usersApiClient = new UsersApiClient(authenticationProviderInstance);
       let response;
@@ -61,6 +80,7 @@ export function AuthForm({
 
       if (response.token) {
         authenticationProviderInstance.login(response.token);
+        navigate("/");
       }
     } catch (error) {
       console.error("Error during registration:", error);

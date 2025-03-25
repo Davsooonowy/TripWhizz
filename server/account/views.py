@@ -1,5 +1,10 @@
 from django.contrib.auth.models import User
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
 from django.http import JsonResponse
+from django.template.loader import render_to_string
+from django.utils.encoding import force_str, force_bytes
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate
 from rest_framework.response import Response
@@ -9,7 +14,9 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-from .serializers import UserSerializer, LoginSerializer, UpdateUserSerializer
+
+from server import settings
+from .serializers import UserSerializer, LoginSerializer, UpdateUserSerializer, EmailSerializer, PasswordChangeSerializer
 import json
 
 
@@ -95,3 +102,55 @@ class CurrentUserView(APIView):
         user = request.user
         serializer = UserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class PasswordResetRequestView(APIView):
+    @swagger_auto_schema(
+        request_body=EmailSerializer,
+        responses={200: openapi.Response("Password reset link sent successfully")},
+    )
+    def post(self, request):
+        serializer = EmailSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            try:
+                user = User.objects.get(email=email)
+                token = default_token_generator.make_token(user)
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
+                reset_link = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}/"
+                message = render_to_string('password_reset_email.html', {
+                    'user': user,
+                    'reset_link': reset_link,
+                })
+                send_mail(
+                    'Password Reset Request',
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    fail_silently=False,
+                )
+                return Response({"message": "Password reset link sent successfully"}, status=status.HTTP_200_OK)
+            except User.DoesNotExist:
+                return Response({"error": "User with this email does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PasswordResetConfirmView(APIView):
+    @swagger_auto_schema(
+        request_body=PasswordChangeSerializer,
+        responses={200: openapi.Response("Password reset successfully")},
+    )
+    def post(self, request, uidb64, token):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+            if default_token_generator.check_token(user, token):
+                serializer = PasswordChangeSerializer(data=request.data)
+                if serializer.is_valid():
+                    user.set_password(serializer.validated_data['new_password'])
+                    user.save()
+                    return Response({"message": "Password reset successfully"}, status=status.HTTP_200_OK)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)

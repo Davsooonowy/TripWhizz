@@ -62,4 +62,28 @@ export class UsersApiClient extends BaseApiClient {
 
         return response.json();
     }
+
+    async sendPasswordResetEmail(email: string): Promise<void> {
+        const response = await fetch(`${API_URL}/user/password-reset/`, {
+            ...this._requestConfiguration(false),
+            method: "POST",
+            body: JSON.stringify({ email }),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to send password reset email");
+        }
+    }
+
+    async resetPassword(uid: string, token: string, newPassword: string, confirmPassword: string): Promise<void> {
+        const response = await fetch(`${API_URL}/user/password-reset-confirm/${uid}/${token}/`, {
+            ...this._requestConfiguration(false),
+            method: "POST",
+            body: JSON.stringify({ new_password: newPassword, confirm_password: confirmPassword }),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to reset password");
+        }
+    }
 }

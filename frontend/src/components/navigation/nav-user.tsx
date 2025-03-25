@@ -32,10 +32,12 @@ import {
 import { useEffect, useState } from "react";
 import { User, UsersApiClient } from "@/lib/api/users.ts";
 import { authenticationProviderInstance } from "@/lib/authentication-provider.ts";
+import { useNavigate } from "react-router-dom";
 
 export function NavUser() {
   const { isMobile } = useSidebar()
   const [user, setUser] = useState<User>({ id: 0, email: "", username: ""});
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -53,7 +55,7 @@ export function NavUser() {
 
   const handleLogout = () => {
     authenticationProviderInstance.logout();
-    window.location.reload();
+    navigate("/login");
   };
 
   return (
