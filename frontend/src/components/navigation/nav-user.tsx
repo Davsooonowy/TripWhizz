@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import {
   BadgeCheck,
@@ -7,13 +7,13 @@ import {
   CreditCard,
   LogOut,
   Sparkles,
-} from "lucide-react"
+} from 'lucide-react';
 
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "@/components/ui/avatar.tsx"
+} from '@/components/ui/avatar.tsx';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,17 +22,17 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx"
+} from '@/components/ui/dropdown-menu.tsx';
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar.tsx"
-import { useEffect, useState } from "react";
-import { User, UsersApiClient } from "@/lib/api/users.ts";
-import { authenticationProviderInstance } from "@/lib/authentication-provider.ts";
-import { useNavigate } from "react-router-dom";
+} from '@/components/ui/sidebar.tsx'
+import { useEffect, useState } from 'react';
+import { User, UsersApiClient } from '@/lib/api/users.ts';
+import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
+import { useNavigate } from 'react-router-dom';
 
 export function NavUser() {
   const { isMobile } = useSidebar()
@@ -80,7 +80,7 @@ export function NavUser() {
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
+            side={isMobile ? 'bottom' : 'right'}
             align="end"
             sideOffset={4}
           >
@@ -127,5 +127,5 @@ export function NavUser() {
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }

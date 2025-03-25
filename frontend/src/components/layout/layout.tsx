@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppSidebar } from "@/components/navigation/app-sidebar";
+import { AppSidebar } from '@/components/navigation/app-sidebar';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -7,15 +7,12 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import {
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { MobileNavigation } from "@/components/navigation/mobile-navigation";
-import { HomeIcon } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
+} from '@/components/ui/breadcrumb';
+import { Separator } from '@/components/ui/separator';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { MobileNavigation } from '@/components/navigation/mobile-navigation';
+import { HomeIcon } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
