@@ -85,7 +85,11 @@ export function AuthForm({
 
       if (response.token) {
         authenticationProviderInstance.login(response.token);
-        navigate("/");
+        if (!response.onboarding_complete) {
+            navigate("/onboarding");
+        } else {
+            navigate("/");
+        }
       }
     } catch (error) {
       console.error("Error during registration:", error);

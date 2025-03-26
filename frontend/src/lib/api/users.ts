@@ -10,15 +10,27 @@ export interface RegisterUserResponse {
     message: string;
     user_id: number;
     token: string;
+    onboarding_complete: boolean;
 }
 
 export interface User {
-    id: number;
-    email: string;
-    username: string;
-    name?: string;
-    surname?: string;
-    avatar?: string;
+  id: number;
+  email: string;
+  username: string;
+  name?: string;
+  surname?: string;
+  avatar?: File | null;
+    notifications?: {
+        tripInvitations: boolean;
+        expenseUpdates: boolean;
+        packingListReminders: boolean;
+        votingPolls: boolean;
+    };
+    notificationType?: "push" | "email";
+    profileVisibility?: "public" | "private";
+    defaultTheme?: "light" | "dark";
+    currencyPreference?: "usd" | "eur";
+    onboarding_complete?: boolean;
 }
 
 export class UsersApiClient extends BaseApiClient {
@@ -84,6 +96,32 @@ export class UsersApiClient extends BaseApiClient {
 
         if (!response.ok) {
             throw new Error("Failed to reset password");
+        }
+    }
+
+    async updateCurrentUser(user: Partial<User>): Promise<void> {
+        const response = await fetch(`${API_URL}/user/me/`, {
+            ...this._requestConfiguration(true),
+            method: "PUT",
+            body: JSON.stringify({
+                first_name: user.name,
+                last_name: user.surname,
+                username: user.username,
+                avatar: user.avatar,
+                trip_invitations: user.notifications?.tripInvitations,
+                expense_updates: user.notifications?.expenseUpdates,
+                packing_list_reminders: user.notifications?.packingListReminders,
+                voting_polls: user.notifications?.votingPolls,
+                notification_type: user.notificationType,
+                profile_visibility: user.profileVisibility,
+                default_theme: user.defaultTheme,
+                currency_preference: user.currencyPreference,
+                onboarding_complete: user.onboarding_complete,
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to update user data");
         }
     }
 }

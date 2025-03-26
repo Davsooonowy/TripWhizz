@@ -110,6 +110,8 @@ EMAIL_HOST_PASSWORD = 'mtln rnhf kgph wtac'
 DEFAULT_FROM_EMAIL = 'reset.password@tripwhizz.com'
 FRONTEND_URL = 'http://localhost:2137'
 
+AUTH_USER_MODEL = 'account.CustomUser'
+
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 

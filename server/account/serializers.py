@@ -1,14 +1,19 @@
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
 
+from account.models import CustomUser
+
+
+User = get_user_model()
 
 class UserSerializer(serializers.Serializer):
-    username = serializers.CharField(required=False)
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
+    onboarding_complete = serializers.BooleanField(default=False)
 
     def create(self, validated_data):
-        username = validated_data['email'].split('@')[0]
+        username = validated_data['email']
         user = User.objects.create_user(username=username, email=validated_data['email'], password=validated_data['password'])
         return user
 
@@ -18,15 +23,19 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
 
-class UpdateUserSerializer(serializers.Serializer):
-    username = serializers.CharField(required=False)
-    name = serializers.CharField(required=False)
-    surname = serializers.CharField(required=False)
+class UpdateUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'first_name', 'last_name', 'avatar', 'notification_type',
+                  'profile_visibility', 'default_theme', 'currency_preference', 'onboarding_complete',
+                  'trip_invitations', 'expense_updates', 'packing_list_reminders', 'voting_polls']
+        extra_kwargs = {
+            'avatar': {'required': False},
+        }
 
     def update(self, instance, validated_data):
-        instance.first_name = validated_data.get('name', instance.first_name)
-        instance.last_name = validated_data.get('surname', instance.last_name)
-        instance.username = validated_data.get('username', instance.username)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
         instance.save()
         return instance
 

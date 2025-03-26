@@ -11,6 +11,7 @@ import OnboardingPage from '@/pages/onboarding/index.tsx';
 import { DarkModeProvider } from '@/components/util/dark-mode-provider.tsx';
 import {authenticationProviderInstance} from '@/lib/authentication-provider.ts';
 import ResetPasswordPage from '@/pages/reset-password-page.tsx';
+import ProtectedRoute from "@/lib/ProtectedRoute.tsx";
 
 const protectedLoginLoader = async () => {
   if (!authenticationProviderInstance.isAuthenticated()) {
@@ -24,7 +25,9 @@ const router = createBrowserRouter([
     path: '/',
     element: (
       <Layout>
-        <App />
+        <ProtectedRoute>
+            <App />
+        </ProtectedRoute>
       </Layout>
     ),
     loader: protectedLoginLoader,

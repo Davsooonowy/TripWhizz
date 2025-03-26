@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.http import JsonResponse
@@ -14,11 +14,14 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth import get_user_model
 
 from server import settings
 from .serializers import UserSerializer, LoginSerializer, UpdateUserSerializer, EmailSerializer, PasswordChangeSerializer
 import json
 
+
+User = get_user_model()
 
 class LoginView(APIView):
     @swagger_auto_schema(
@@ -61,7 +64,8 @@ class AddUserView(APIView):
             return Response({
                 "message": "User created successfully",
                 "user_id": user.id,
-                "token": token.key
+                "token": token.key,
+                "onboarding_complete": user.onboarding_complete
             }, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -102,6 +106,18 @@ class CurrentUserView(APIView):
         user = request.user
         serializer = UserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        request_body=UpdateUserSerializer,
+        responses={200: openapi.Response("User updated successfully")},
+    )
+    def put(self, request):
+        user = request.user
+        serializer = UpdateUserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "User updated successfully"}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PasswordResetRequestView(APIView):
