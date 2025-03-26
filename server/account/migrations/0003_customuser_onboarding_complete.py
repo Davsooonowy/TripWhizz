@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('account', '0002_remove_customuser_notifications_and_more'),
+        ("account", "0002_remove_customuser_notifications_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='customuser',
-            name='onboarding_complete',
+            model_name="customuser",
+            name="onboarding_complete",
             field=models.BooleanField(default=False),
         ),
     ]

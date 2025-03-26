@@ -17,11 +17,18 @@ from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
 
 from server import settings
-from .serializers import UserSerializer, LoginSerializer, UpdateUserSerializer, EmailSerializer, PasswordChangeSerializer
+from .serializers import (
+    UserSerializer,
+    LoginSerializer,
+    UpdateUserSerializer,
+    EmailSerializer,
+    PasswordChangeSerializer,
+)
 import json
 
 
 User = get_user_model()
+
 
 class LoginView(APIView):
     @swagger_auto_schema(
@@ -39,11 +46,15 @@ class LoginView(APIView):
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
-            return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         user = authenticate(username=user.username, password=password)
         if user is None:
-            return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         token, created = Token.objects.get_or_create(user=user)
         return Response({"token": token.key}, status=status.HTTP_200_OK)
@@ -61,12 +72,15 @@ class AddUserView(APIView):
         if serializer.is_valid():
             user = serializer.save()
             token, created = Token.objects.get_or_create(user=user)
-            return Response({
-                "message": "User created successfully",
-                "user_id": user.id,
-                "token": token.key,
-                "onboarding_complete": user.onboarding_complete
-            }, status=status.HTTP_201_CREATED)
+            return Response(
+                {
+                    "message": "User created successfully",
+                    "user_id": user.id,
+                    "token": token.key,
+                    "onboarding_complete": user.onboarding_complete,
+                },
+                status=status.HTTP_201_CREATED,
+            )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -88,12 +102,16 @@ class UserView(APIView):
         try:
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
-            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "User not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         serializer = UpdateUserSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response({"message": "User updated successfully"}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "User updated successfully"}, status=status.HTTP_200_OK
+            )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -116,7 +134,9 @@ class CurrentUserView(APIView):
         serializer = UpdateUserSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response({"message": "User updated successfully"}, status=status.HTTP_200_OK)
+            return Response(
+                {"message": "User updated successfully"}, status=status.HTTP_200_OK
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -128,26 +148,35 @@ class PasswordResetRequestView(APIView):
     def post(self, request):
         serializer = EmailSerializer(data=request.data)
         if serializer.is_valid():
-            email = serializer.validated_data['email']
+            email = serializer.validated_data["email"]
             try:
                 user = User.objects.get(email=email)
                 token = default_token_generator.make_token(user)
                 uid = urlsafe_base64_encode(force_bytes(user.pk))
                 reset_link = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}/"
-                message = render_to_string('password_reset_email.html', {
-                    'user': user,
-                    'reset_link': reset_link,
-                })
+                message = render_to_string(
+                    "password_reset_email.html",
+                    {
+                        "user": user,
+                        "reset_link": reset_link,
+                    },
+                )
                 send_mail(
-                    'Password Reset Request',
+                    "Password Reset Request",
                     message,
                     settings.DEFAULT_FROM_EMAIL,
                     [user.email],
                     fail_silently=False,
                 )
-                return Response({"message": "Password reset link sent successfully"}, status=status.HTTP_200_OK)
+                return Response(
+                    {"message": "Password reset link sent successfully"},
+                    status=status.HTTP_200_OK,
+                )
             except User.DoesNotExist:
-                return Response({"error": "User with this email does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"error": "User with this email does not exist"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -163,10 +192,17 @@ class PasswordResetConfirmView(APIView):
             if default_token_generator.check_token(user, token):
                 serializer = PasswordChangeSerializer(data=request.data)
                 if serializer.is_valid():
-                    user.set_password(serializer.validated_data['new_password'])
+                    user.set_password(serializer.validated_data["new_password"])
                     user.save()
-                    return Response({"message": "Password reset successfully"}, status=status.HTTP_200_OK)
+                    return Response(
+                        {"message": "Password reset successfully"},
+                        status=status.HTTP_200_OK,
+                    )
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST
+            )
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST
+            )

@@ -6,32 +6,32 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('account', '0001_initial'),
+        ("account", "0001_initial"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='customuser',
-            name='notifications',
+            model_name="customuser",
+            name="notifications",
         ),
         migrations.AddField(
-            model_name='customuser',
-            name='expense_updates',
+            model_name="customuser",
+            name="expense_updates",
             field=models.BooleanField(default=True),
         ),
         migrations.AddField(
-            model_name='customuser',
-            name='packing_list_reminders',
+            model_name="customuser",
+            name="packing_list_reminders",
             field=models.BooleanField(default=True),
         ),
         migrations.AddField(
-            model_name='customuser',
-            name='trip_invitations',
+            model_name="customuser",
+            name="trip_invitations",
             field=models.BooleanField(default=True),
         ),
         migrations.AddField(
-            model_name='customuser',
-            name='voting_polls',
+            model_name="customuser",
+            name="voting_polls",
             field=models.BooleanField(default=True),
         ),
     ]
