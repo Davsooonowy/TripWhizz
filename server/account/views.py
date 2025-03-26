@@ -1,20 +1,22 @@
 # from django.contrib.auth.models import User
+import json
+
+from django.contrib.auth import authenticate
+from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.utils.encoding import force_str, force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from rest_framework.views import APIView
-from django.contrib.auth import authenticate
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.authtoken.models import Token
-from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
-from django.contrib.auth import get_user_model
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from server import settings
 from .serializers import (
@@ -24,8 +26,6 @@ from .serializers import (
     EmailSerializer,
     PasswordChangeSerializer,
 )
-import json
-
 
 User = get_user_model()
 
