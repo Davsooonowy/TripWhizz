@@ -1,4 +1,7 @@
+'use client';
+
 import type React from 'react';
+
 import { AppSidebar } from '@/components/navigation/app-sidebar';
 import {
   Breadcrumb,
@@ -15,6 +18,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { Separator } from '@/components/ui/separator';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
@@ -53,7 +57,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <SidebarProvider defaultOpen={false}>
       <AppSidebar />
       {isMobile && <MobileNavigation />}
-      <main className={`flex-1 overflow-auto ${isMobile ? 'pb-24' : ''}`}>
+      <main className={`flex-1 overflow-auto ${isMobile ? 'pb-16' : ''}`}>
         {isMobile && (
           <motion.header
             className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
@@ -67,22 +71,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               ${scrolled ? 'bg-background/85 border-border/30 shadow-sm' : 'bg-background/70 border-transparent'}
             `}
             >
-              <div className="flex items-center h-16 px-4">
-                <div className="flex items-center gap-3">
-                  <SidebarTrigger className="text-foreground/80 hover:text-foreground transition-colors" />
+              <div className="flex items-center h-12 px-4">
+                <div className="flex items-center gap-2">
+                  <SidebarTrigger className="text-foreground/80 hover:text-foreground transition-colors -ml-1" />
 
                   <Breadcrumb>
                     <BreadcrumbList className="flex items-center">
                       <BreadcrumbItem>
                         <BreadcrumbLink href="/" className="flex items-center">
-                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10">
-                            <HomeIcon className="w-4 h-4 text-primary" />
+                          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10">
+                            <HomeIcon className="w-3 h-3 text-primary" />
                           </div>
                         </BreadcrumbLink>
                       </BreadcrumbItem>
 
                       <BreadcrumbSeparator>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground/70" />
+                        <ChevronRight className="w-3 h-3 text-muted-foreground/70" />
                       </BreadcrumbSeparator>
 
                       <BreadcrumbItem>
@@ -91,7 +95,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             key={pageTitle}
                             initial={{ opacity: 0, y: 5 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="font-medium text-foreground"
+                            className="font-medium text-sm text-foreground"
                           >
                             {pageTitle}
                           </motion.span>
@@ -104,7 +108,30 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </motion.header>
         )}
-        <div className={isMobile ? 'pt-16' : ''}>{children}</div>
+
+        {!isMobile && (
+          <header className="flex h-16 shrink-0 items-center gap-2  transition-[width,height] ease-linear">
+            <div className="flex items-center gap-2 px-4">
+              <SidebarTrigger className="-ml-1" />
+              <Separator orientation="vertical" className="mr-2 h-4" />
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink href="/">
+                      <HomeIcon className="w-5 h-5" />
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>{pageTitle}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+          </header>
+        )}
+
+        <div className={isMobile ? 'pt-12' : ''}>{children}</div>
       </main>
     </SidebarProvider>
   );

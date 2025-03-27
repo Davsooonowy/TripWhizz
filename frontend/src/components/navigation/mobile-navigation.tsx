@@ -29,12 +29,12 @@ export function MobileNavigation() {
 
   return (
     <>
-      <div className="fixed bottom-4 left-0 right-0 z-50 px-4">
-        <div className="absolute left-1/2 -translate-x-1/2 -top-6 z-10">
+      <div className="fixed bottom-3 left-0 right-0 z-50 px-4">
+        <div className="absolute left-1/2 -translate-x-1/2 -top-5 z-10">
           <Sheet open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <SheetTrigger asChild>
               <motion.button
-                className="flex items-center justify-center w-16 h-16 rounded-full bg-primary shadow-lg"
+                className="flex items-center justify-center w-14 h-14 rounded-full bg-primary shadow-lg"
                 whileTap={{ scale: 0.92 }}
                 whileHover={{
                   scale: 1.05,
@@ -46,7 +46,7 @@ export function MobileNavigation() {
                   damping: 15,
                 }}
               >
-                <Plus className="h-8 w-8 text-white" />
+                <Plus className="h-7 w-7 text-white" />
               </motion.button>
             </SheetTrigger>
             <SheetContent
@@ -121,18 +121,18 @@ export function MobileNavigation() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.3, delay: 0.1 }}
         >
-          <div className="flex items-center justify-around h-16 px-2 relative">
+          <div className="flex items-center justify-around h-12 px-2 relative">
             <NavItem path="/" icon={Home} label="Home" />
             <NavItem path="/trips" icon={Map} label="Trips" />
 
-            <div className="w-16"></div>
+            <div className="w-14"></div>
 
             <NavItem path="/friends" icon={Users} label="Friends" />
             <NavItem path="/settings" icon={Settings} label="Settings" />
           </div>
         </motion.div>
       </div>
-      <div className="h-24" />
+      <div className="h-16" />
     </>
   );
 }
@@ -155,29 +155,21 @@ function NavItem({
   return (
     <Link
       to={path}
-      className="flex flex-col items-center justify-center w-16 py-2"
+      className="flex flex-col items-center justify-center w-14 py-1"
     >
-      <div
-        className={cn(
-          'flex flex-col items-center justify-center',
-          active ? 'text-primary' : 'text-muted-foreground',
-        )}
-      >
-        <div
-          className={cn(
-            'relative flex items-center justify-center w-10 h-10 rounded-full transition-colors',
-            active ? 'bg-primary/10' : 'bg-transparent',
-          )}
-        >
-          <Icon className="h-5 w-5" />
+      <div className="flex flex-col items-center justify-center">
+        <div className="flex items-center justify-center w-8 h-8">
+          <Icon
+            className={cn(
+              'h-4 w-4',
+              active ? 'text-primary' : 'text-muted-foreground',
+            )}
+          />
         </div>
-
         <span
           className={cn(
-            'text-xs mt-1 transition-colors',
-            active
-              ? 'font-medium text-primary'
-              : 'font-normal text-muted-foreground',
+            'text-[10px] -mt-1',
+            active ? 'font-medium text-primary' : 'text-muted-foreground',
           )}
         >
           {label}
