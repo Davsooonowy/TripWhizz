@@ -56,24 +56,23 @@ export default function Onboarding() {
   const handleComplete = async () => {
     const usersApiClient = new UsersApiClient(authenticationProviderInstance);
     try {
-        await usersApiClient.updateCurrentUser({
-            name: formData.firstName,
-            surname: formData.lastName,
-            username: formData.username,
-            avatar: formData.avatar,
-            notifications: formData.notifications,
-            notificationType: formData.notificationType,
-            profileVisibility: formData.profileVisibility,
-            defaultTheme: formData.defaultTheme,
-            currencyPreference: formData.currencyPreference,
-            onboarding_complete: true,
-        });
-        navigate('/no-trips');
+      await usersApiClient.updateUser({
+        name: formData.firstName,
+        surname: formData.lastName,
+        username: formData.username,
+        avatar: formData.avatar,
+        notifications: formData.notifications,
+        notificationType: formData.notificationType,
+        profileVisibility: formData.profileVisibility,
+        defaultTheme: formData.defaultTheme,
+        currencyPreference: formData.currencyPreference,
+        onboarding_complete: true,
+      });
+      navigate('/no-trips');
     } catch (error) {
-        console.error('Error updating user data:', error);
+      console.error('Error updating user data:', error);
     }
-};
-
+  };
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-secondary to-primary py-8 px-4">

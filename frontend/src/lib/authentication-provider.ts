@@ -30,4 +30,5 @@ class DummyAuthenticationProvider implements AuthenticationProvider {
   }
 }
 
-export const authenticationProviderInstance: AuthenticationProvider = new DummyAuthenticationProvider();
+export const authenticationProviderInstance: AuthenticationProvider =
+  new DummyAuthenticationProvider();

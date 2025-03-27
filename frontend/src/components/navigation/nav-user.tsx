@@ -28,25 +28,25 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from '@/components/ui/sidebar.tsx'
+} from '@/components/ui/sidebar.tsx';
 import { useEffect, useState } from 'react';
 import { User, UsersApiClient } from '@/lib/api/users.ts';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
 import { useNavigate } from 'react-router-dom';
 
 export function NavUser() {
-  const { isMobile } = useSidebar()
-  const [user, setUser] = useState<User>({ id: 0, email: "", username: ""});
+  const { isMobile } = useSidebar();
+  const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const apiClient = new UsersApiClient(authenticationProviderInstance);
-        const userData = await apiClient.getCurrentUser();
+        const userData = await apiClient.getActiveUser();
         setUser(userData);
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error('Error fetching user data:', error);
       }
     };
 
@@ -55,8 +55,12 @@ export function NavUser() {
 
   const handleLogout = () => {
     authenticationProviderInstance.logout();
-    navigate("/login");
+    navigate('/login');
   };
+
+    if (!user) {
+        return null;
+    }
 
   return (
     <SidebarMenu>
@@ -91,7 +95,9 @@ export function NavUser() {
                   <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{user.username}</span>
+                  <span className="truncate font-semibold">
+                    {user.username}
+                  </span>
                   <span className="truncate text-xs">{user.email}</span>
                 </div>
               </div>

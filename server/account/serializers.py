@@ -1,4 +1,3 @@
-# from django.contrib.auth.models import User
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
@@ -8,27 +7,7 @@ from account.models import CustomUser
 User = get_user_model()
 
 
-class UserSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
-    onboarding_complete = serializers.BooleanField(default=False)
-
-    def create(self, validated_data):
-        username = validated_data["email"]
-        user = User.objects.create_user(
-            username=username,
-            email=validated_data["email"],
-            password=validated_data["password"],
-        )
-        return user
-
-
-class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
-
-
-class UpdateUserSerializer(serializers.ModelSerializer):
+class BaseUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = [
@@ -48,8 +27,33 @@ class UpdateUserSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {
             "avatar": {"required": False},
+            "username": {"required": False},
         }
 
+
+class UserSerializer(BaseUserSerializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
+    class Meta(BaseUserSerializer.Meta):
+        fields = BaseUserSerializer.Meta.fields + ['email', 'password']
+
+    def create(self, validated_data):
+        username = validated_data["email"]
+        user = User.objects.create_user(
+            username=username,
+            email=validated_data["email"],
+            password=validated_data["password"],
+        )
+        return user
+
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
+
+class UpdateUserSerializer(BaseUserSerializer):
     def update(self, instance, validated_data):
         for attr, value in validated_data.items():
             setattr(instance, attr, value)

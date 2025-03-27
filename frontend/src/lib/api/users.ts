@@ -1,16 +1,16 @@
-import { BaseApiClient } from "@/lib/api/base.ts";
-import { API_URL } from "@/lib/config.ts";
+import { BaseApiClient } from '@/lib/api/base.ts';
+import { API_URL } from '@/lib/config.ts';
 
 export interface BasicUserData {
-    email: string;
-    password: string;
+  email: string;
+  password: string;
 }
 
 export interface RegisterUserResponse {
-    message: string;
-    user_id: number;
-    token: string;
-    onboarding_complete: boolean;
+  message: string;
+  user_id: number;
+  token: string;
+  onboarding_complete: boolean;
 }
 
 export interface User {
@@ -20,108 +20,121 @@ export interface User {
   name?: string;
   surname?: string;
   avatar?: File | null;
-    notifications?: {
-        tripInvitations: boolean;
-        expenseUpdates: boolean;
-        packingListReminders: boolean;
-        votingPolls: boolean;
-    };
-    notificationType?: "push" | "email";
-    profileVisibility?: "public" | "private";
-    defaultTheme?: "light" | "dark";
-    currencyPreference?: "usd" | "eur";
-    onboarding_complete?: boolean;
+  notifications?: {
+    tripInvitations: boolean;
+    expenseUpdates: boolean;
+    packingListReminders: boolean;
+    votingPolls: boolean;
+  };
+  notificationType?: 'push' | 'email';
+  profileVisibility?: 'public' | 'private';
+  defaultTheme?: 'light' | 'dark';
+  currencyPreference?: 'usd' | 'eur';
+  onboarding_complete?: boolean;
 }
 
 export class UsersApiClient extends BaseApiClient {
-    async createUser(user : BasicUserData): Promise<RegisterUserResponse> {
-        const response = await fetch(`${API_URL}/user/`, {
-            ...this._requestConfiguration(false),
-            method: "POST",
-            body: JSON.stringify(user)
-        });
+  async createUser(user: BasicUserData): Promise<RegisterUserResponse> {
+    const response = await fetch(`${API_URL}/user/`, {
+      ...this._requestConfiguration(false),
+      method: 'POST',
+      body: JSON.stringify(user),
+    });
 
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
-        }
-
-        return await response.json();
+    if (!response.ok) {
+      throw new Error(`Error HTTP: ${response.status}`);
     }
 
-    async loginUser(user : BasicUserData): Promise<RegisterUserResponse> {
-        const response = await fetch(`${API_URL}/user/login/`, {
-            ...this._requestConfiguration(false),
-            method: "POST",
-            body: JSON.stringify(user),
-        });
+    return await response.json();
+  }
 
-        if (!response.ok) {
-            throw new Error("Invalid credentials");
-        }
+  async loginUser(user: BasicUserData): Promise<RegisterUserResponse> {
+    const response = await fetch(`${API_URL}/user/login/`, {
+      ...this._requestConfiguration(false),
+      method: 'POST',
+      body: JSON.stringify(user),
+    });
 
-        return response.json();
+    if (!response.ok) {
+      throw new Error('Invalid credentials');
     }
 
-    async getCurrentUser(): Promise<User> {
-        const response = await fetch(`${API_URL}/user/me/`, {
-            ...this._requestConfiguration(true),
-            method: "GET",
-        });
+    return response.json();
+  }
 
-        if (!response.ok) {
-            throw new Error("Failed to fetch user data");
-        }
+  async getActiveUser(): Promise<User> {
+    const response = await fetch(`${API_URL}/user/me/`, {
+      ...this._requestConfiguration(true),
+      method: 'GET',
+    });
 
-        return response.json();
+    if (!response.ok) {
+      throw new Error('Failed to fetch user data');
     }
 
-    async sendPasswordResetEmail(email: string): Promise<void> {
-        const response = await fetch(`${API_URL}/user/password-reset/`, {
-            ...this._requestConfiguration(false),
-            method: "POST",
-            body: JSON.stringify({ email }),
-        });
+    return response.json();
+  }
 
-        if (!response.ok) {
-            throw new Error("Failed to send password reset email");
-        }
+  async sendPasswordResetEmail(email: string): Promise<void> {
+    const response = await fetch(`${API_URL}/user/password-reset/`, {
+      ...this._requestConfiguration(false),
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to send password reset email');
+    }
+  }
+
+  async resetPassword(
+    uid: string,
+    token: string,
+    newPassword: string,
+    confirmPassword: string,
+  ): Promise<void> {
+    const response = await fetch(
+      `${API_URL}/user/password-reset-confirm/${uid}/${token}/`,
+      {
+        ...this._requestConfiguration(false),
+        method: 'POST',
+        body: JSON.stringify({
+          new_password: newPassword,
+          confirm_password: confirmPassword,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to reset password');
+    }
+  }
+
+  async updateUser(user: Partial<User>): Promise<void> {
+    const payload = {
+        first_name: user.name,
+        last_name: user.surname,
+        username: user.username,
+        avatar: user.avatar,
+        trip_invitations: user.notifications?.tripInvitations,
+        expense_updates: user.notifications?.expenseUpdates,
+        packing_list_reminders: user.notifications?.packingListReminders,
+        voting_polls: user.notifications?.votingPolls,
+        notification_type: user.notificationType,
+        profile_visibility: user.profileVisibility,
+        default_theme: user.defaultTheme,
+        currency_preference: user.currencyPreference,
+        onboarding_complete: user.onboarding_complete,
     }
 
-    async resetPassword(uid: string, token: string, newPassword: string, confirmPassword: string): Promise<void> {
-        const response = await fetch(`${API_URL}/user/password-reset-confirm/${uid}/${token}/`, {
-            ...this._requestConfiguration(false),
-            method: "POST",
-            body: JSON.stringify({ new_password: newPassword, confirm_password: confirmPassword }),
-        });
+    const response = await fetch(`${API_URL}/user/me/`, {
+      ...this._requestConfiguration(true),
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
 
-        if (!response.ok) {
-            throw new Error("Failed to reset password");
-        }
+    if (!response.ok) {
+      throw new Error('Failed to update user data');
     }
-
-    async updateCurrentUser(user: Partial<User>): Promise<void> {
-        const response = await fetch(`${API_URL}/user/me/`, {
-            ...this._requestConfiguration(true),
-            method: "PUT",
-            body: JSON.stringify({
-                first_name: user.name,
-                last_name: user.surname,
-                username: user.username,
-                avatar: user.avatar,
-                trip_invitations: user.notifications?.tripInvitations,
-                expense_updates: user.notifications?.expenseUpdates,
-                packing_list_reminders: user.notifications?.packingListReminders,
-                voting_polls: user.notifications?.votingPolls,
-                notification_type: user.notificationType,
-                profile_visibility: user.profileVisibility,
-                default_theme: user.defaultTheme,
-                currency_preference: user.currencyPreference,
-                onboarding_complete: user.onboarding_complete,
-            }),
-        });
-
-        if (!response.ok) {
-            throw new Error("Failed to update user data");
-        }
-    }
+  }
 }

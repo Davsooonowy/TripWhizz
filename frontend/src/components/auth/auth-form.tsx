@@ -1,19 +1,23 @@
-import React, { useState } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { FormField } from "@/components/auth/form-field.tsx";
-import { SocialLoginButton } from "@/components/auth/social-login-button.tsx";
-import { GalleryVerticalEnd } from "lucide-react";
-import { loginSchema, registerSchema, EmailSchema } from "@/components/util/form-schemas.ts";
-import { calculatePasswordStrength } from "@/components/util/password-utils.ts";
-import { UsersApiClient } from "@/lib/api/users.ts";
+import React, { useState } from 'react';
+import { useForm, SubmitHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { FormField } from '@/components/auth/form-field.tsx';
+import { SocialLoginButton } from '@/components/auth/social-login-button.tsx';
+import { GalleryVerticalEnd } from 'lucide-react';
+import {
+  loginSchema,
+  registerSchema,
+  EmailSchema,
+} from '@/components/util/form-schemas.ts';
+import { calculatePasswordStrength } from '@/components/util/password-utils.ts';
+import { UsersApiClient } from '@/lib/api/users.ts';
 
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import {authenticationProviderInstance} from "@/lib/authentication-provider.ts";
-import { useNavigate } from "react-router-dom";
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
+import { useNavigate } from 'react-router-dom';
 
 interface FormData {
   email: string;
@@ -59,10 +63,10 @@ export function AuthForm({
     try {
       const usersApiClient = new UsersApiClient(authenticationProviderInstance);
       await usersApiClient.sendPasswordResetEmail(email);
-      alert("Password reset link sent successfully");
+      alert('Password reset link sent successfully');
     } catch (error) {
-      console.error("Error sending password reset email:", error);
-      alert("Error sending password reset email");
+      console.error('Error sending password reset email:', error);
+      alert('Error sending password reset email');
     }
   };
 
@@ -78,21 +82,28 @@ export function AuthForm({
       let response;
 
       if (isRegisterMode) {
-        response = await usersApiClient.createUser({ email: data.email, password: data.password });
-        } else {
-        response = await usersApiClient.loginUser({ email: data.email, password: data.password });
+        response = await usersApiClient.createUser({
+          email: data.email,
+          password: data.password,
+        });
+      } else {
+        response = await usersApiClient.loginUser({
+          email: data.email,
+          password: data.password,
+        });
       }
 
       if (response.token) {
         authenticationProviderInstance.login(response.token);
-        if (!response.onboarding_complete) {
-            navigate("/onboarding");
+        const user = await usersApiClient.getActiveUser();
+        if (!user.onboarding_complete) {
+          navigate('/onboarding');
         } else {
-            navigate("/");
+          navigate('/');
         }
       }
     } catch (error) {
-      console.error("Error during registration:", error);
+      console.error('Error during registration:', error);
     }
   };
 

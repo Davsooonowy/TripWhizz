@@ -1,8 +1,6 @@
-# from django.contrib.auth.models import User
 import json
 
 from django.contrib.auth import authenticate
-from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.http import JsonResponse
@@ -12,25 +10,20 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from server import settings
-from .serializers import (
-    UserSerializer,
-    LoginSerializer,
-    UpdateUserSerializer,
-    EmailSerializer,
-    PasswordChangeSerializer,
-)
+from .serializers import *
 
 User = get_user_model()
 
 
 class LoginView(APIView):
+    permission_classes = [IsAuthenticated]
+
     @swagger_auto_schema(
         request_body=LoginSerializer,
         responses={200: openapi.Response("Token generated successfully")},
@@ -86,6 +79,8 @@ class AddUserView(APIView):
 
 
 class UserView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def delete(self, request, user_id):
         try:
             user = User.objects.get(id=user_id)
@@ -117,7 +112,6 @@ class UserView(APIView):
 
 
 class CurrentUserView(APIView):
-    authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):

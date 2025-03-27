@@ -16,7 +16,11 @@ interface FormData {
 export default function ResetPasswordPage() {
   const { uid, token } = useParams<{ uid: string; token: string }>();
   const navigate = useNavigate();
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
     resolver: zodResolver(resetPasswordSchema),
   });
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +28,12 @@ export default function ResetPasswordPage() {
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     try {
       const usersApiClient = new UsersApiClient(authenticationProviderInstance);
-      await usersApiClient.resetPassword(uid!, token!, data.newPassword, data.confirmPassword);
+      await usersApiClient.resetPassword(
+        uid!,
+        token!,
+        data.newPassword,
+        data.confirmPassword,
+      );
       alert('Password reset successfully');
       navigate('/login');
     } catch (error) {
@@ -51,7 +60,9 @@ export default function ResetPasswordPage() {
         register={register}
         error={errors.confirmPassword?.message}
       />
-      <Button type="submit" className="w-full">Reset Password</Button>
+      <Button type="submit" className="w-full">
+        Reset Password
+      </Button>
     </form>
   );
 }

@@ -1,12 +1,5 @@
 from django.urls import path
-from .views import (
-    UserView,
-    AddUserView,
-    LoginView,
-    CurrentUserView,
-    PasswordResetRequestView,
-    PasswordResetConfirmView,
-)
+from .views import *
 
 urlpatterns = [
     path("user/", AddUserView.as_view(), name="user_operations"),
