@@ -1,7 +1,4 @@
-'use client';
-
 import type React from 'react';
-
 import { AppSidebar } from '@/components/navigation/app-sidebar';
 import {
   Breadcrumb,
