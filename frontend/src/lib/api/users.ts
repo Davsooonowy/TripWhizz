@@ -20,16 +20,6 @@ export interface User {
   name?: string;
   surname?: string;
   avatar?: File | null;
-  notifications?: {
-    tripInvitations: boolean;
-    expenseUpdates: boolean;
-    packingListReminders: boolean;
-    votingPolls: boolean;
-  };
-  notificationType?: 'push' | 'email';
-  profileVisibility?: 'public' | 'private';
-  defaultTheme?: 'light' | 'dark';
-  currencyPreference?: 'usd' | 'eur';
   onboarding_complete?: boolean;
 }
 
@@ -116,14 +106,6 @@ export class UsersApiClient extends BaseApiClient {
         last_name: user.surname,
         username: user.username,
         avatar: user.avatar,
-        trip_invitations: user.notifications?.tripInvitations,
-        expense_updates: user.notifications?.expenseUpdates,
-        packing_list_reminders: user.notifications?.packingListReminders,
-        voting_polls: user.notifications?.votingPolls,
-        notification_type: user.notificationType,
-        profile_visibility: user.profileVisibility,
-        default_theme: user.defaultTheme,
-        currency_preference: user.currencyPreference,
         onboarding_complete: user.onboarding_complete,
     }
 

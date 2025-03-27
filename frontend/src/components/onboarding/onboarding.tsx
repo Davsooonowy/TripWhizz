@@ -61,11 +61,6 @@ export default function Onboarding() {
         surname: formData.lastName,
         username: formData.username,
         avatar: formData.avatar,
-        notifications: formData.notifications,
-        notificationType: formData.notificationType,
-        profileVisibility: formData.profileVisibility,
-        defaultTheme: formData.defaultTheme,
-        currencyPreference: formData.currencyPreference,
         onboarding_complete: true,
       });
       navigate('/no-trips');
