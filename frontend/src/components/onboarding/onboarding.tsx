@@ -5,6 +5,8 @@ import { ProgressTracker } from './progress-tracker.tsx';
 import { PersonalInfoStep } from './steps/personal-info-step';
 import { TechnicalPreferencesStep } from './steps/technical-preferences-step.tsx';
 import { CompletionStep } from './steps/completion-step';
+import { UsersApiClient } from '@/lib/api/users.ts';
+import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -51,10 +53,20 @@ export default function Onboarding() {
     }
   };
 
-  const handleComplete = () => {
-    console.log('Onboarding complete with data:', formData);
-    //TODO: Send data to backend
-    navigate('/no-trips');
+  const handleComplete = async () => {
+    const usersApiClient = new UsersApiClient(authenticationProviderInstance);
+    try {
+      await usersApiClient.updateUser({
+        name: formData.firstName,
+        surname: formData.lastName,
+        username: formData.username,
+        avatar: formData.avatar,
+        onboarding_complete: true,
+      });
+      navigate('/no-trips');
+    } catch (error) {
+      console.error('Error updating user data:', error);
+    }
   };
 
   return (

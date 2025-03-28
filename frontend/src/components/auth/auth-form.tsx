@@ -9,12 +9,15 @@ import { GalleryVerticalEnd } from 'lucide-react';
 import {
   loginSchema,
   registerSchema,
-  resetPasswordSchema,
+  EmailSchema,
 } from '@/components/util/form-schemas.ts';
 import { calculatePasswordStrength } from '@/components/util/password-utils.ts';
+import { UsersApiClient } from '@/lib/api/users.ts';
 
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
+import { useNavigate } from 'react-router-dom';
 
 interface FormData {
   email: string;
@@ -32,7 +35,7 @@ export function AuthForm({
   ...props
 }: AuthFormProps) {
   const [isRegisterMode, setIsRegisterMode] = useState(isRegister);
-  const [isSocialLogin, setIsSocialLogin] = useState(false);
+  // const [isSocialLogin, setIsSocialLogin] = useState(false);  // TODO: Add social login
   const [isResetPasswordMode, setIsResetPasswordMode] = useState(false);
   const [password, setPassword] = useState('');
   const schema = isRegisterMode ? registerSchema : loginSchema;
@@ -42,8 +45,9 @@ export function AuthForm({
     formState: { errors },
     reset,
   } = useForm<FormData>({
-    resolver: zodResolver(isResetPasswordMode ? resetPasswordSchema : schema),
+    resolver: zodResolver(isResetPasswordMode ? EmailSchema : schema),
   });
+  const navigate = useNavigate();
 
   const toggleFormMode = () => {
     setIsRegisterMode((prevMode) => !prevMode);
@@ -55,11 +59,51 @@ export function AuthForm({
     reset();
   };
 
-  const onSubmit: SubmitHandler<FormData> = (data) => {
+  const sendPasswordResetEmail = async (email: string) => {
+    try {
+      const usersApiClient = new UsersApiClient(authenticationProviderInstance);
+      await usersApiClient.sendPasswordResetEmail(email);
+      alert('Password reset link sent successfully');
+    } catch (error) {
+      console.error('Error sending password reset email:', error);
+      alert('Error sending password reset email');
+    }
+  };
+
+  const onSubmit: SubmitHandler<FormData> = async (data) => {
     if (isResetPasswordMode) {
-      console.log('Reset password for:', data.email);
-    } else if (!isSocialLogin) {
-      console.log(data);
+      await sendPasswordResetEmail(data.email);
+      toggleResetPasswordMode();
+      return;
+    }
+
+    try {
+      const usersApiClient = new UsersApiClient(authenticationProviderInstance);
+      let response;
+
+      if (isRegisterMode) {
+        response = await usersApiClient.createUser({
+          email: data.email,
+          password: data.password,
+        });
+      } else {
+        response = await usersApiClient.loginUser({
+          email: data.email,
+          password: data.password,
+        });
+      }
+
+      if (response.token) {
+        authenticationProviderInstance.login(response.token);
+        const user = await usersApiClient.getActiveUser();
+        if (!user.onboarding_complete) {
+          navigate('/onboarding');
+        } else {
+          navigate('/');
+        }
+      }
+    } catch (error) {
+      console.error('Error during registration:', error);
     }
   };
 
