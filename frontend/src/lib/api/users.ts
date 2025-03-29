@@ -102,12 +102,12 @@ export class UsersApiClient extends BaseApiClient {
 
   async updateUser(user: Partial<User>): Promise<void> {
     const payload = {
-        first_name: user.name,
-        last_name: user.surname,
-        username: user.username,
-        avatar: user.avatar,
-        onboarding_complete: user.onboarding_complete,
-    }
+      first_name: user.name,
+      last_name: user.surname,
+      username: user.username,
+      avatar: user.avatar,
+      onboarding_complete: user.onboarding_complete,
+    };
 
     const response = await fetch(`${API_URL}/user/me/`, {
       ...this._requestConfiguration(true),
