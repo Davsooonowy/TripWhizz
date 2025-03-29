@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
-export default function NoTrips() {
+export default function Start() {
   const [hoverCreate, setHoverCreate] = useState(false);
   const [hoverJoin, setHoverJoin] = useState(false);
 

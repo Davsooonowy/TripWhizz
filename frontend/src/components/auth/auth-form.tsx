@@ -107,11 +107,11 @@ export function AuthForm({
     }
   };
 
-  const handleSocialLogin = (provider: 'google' | 'apple') => {
-    setIsSocialLogin(true);
+  const handleSocialLogin = (provider: 'google' | 'facebook') => {
+    // setIsSocialLogin(true);
     if (provider === 'google') {
       window.location.href = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-    } else if (provider === 'apple') {
+    } else if (provider === 'facebook') {
       window.location.href = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
     }
   };
@@ -256,8 +256,8 @@ export function AuthForm({
               </span>
             </div>
             <SocialLoginButton
-              provider="apple"
-              onClick={() => handleSocialLogin('apple')}
+              provider="facebook"
+              onClick={() => handleSocialLogin('facebook')}
             />
             <SocialLoginButton
               provider="google"

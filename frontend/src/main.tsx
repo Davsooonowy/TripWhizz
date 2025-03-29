@@ -10,7 +10,7 @@ import LoginPage from '@/pages/login.tsx';
 import NotFound from './pages/not-found';
 import App from '@/App.tsx';
 import Layout from '@/components/layout/layout.tsx';
-import NoTripsPage from '@/pages/no-trips/index.tsx';
+import StartTripPage from '@/pages/trip/index.tsx';
 import OnboardingPage from '@/pages/onboarding/index.tsx';
 import { DarkModeProvider } from '@/components/util/dark-mode-provider.tsx';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
@@ -42,8 +42,8 @@ const router = createBrowserRouter([
     loader: protectedLoginLoader,
     children: [
       {
-        path: '/no-trips',
-        element: <NoTripsPage />,
+        path: '/trip',
+        element: <StartTripPage />,
       },
     ],
   },
