@@ -14,16 +14,15 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.contrib.auth import get_user_model
 
 from tripwhizz import settings
-from .serializers import *
+from .serializers import UserSerializer, LoginSerializer
 
 User = get_user_model()
 
 
 class LoginView(APIView):
-    permission_classes = [IsAuthenticated]
-
     @swagger_auto_schema(
         request_body=LoginSerializer,
         responses={200: openapi.Response("Token generated successfully")},
@@ -81,6 +80,20 @@ class AddUserView(APIView):
 class UserView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        request_body=UserSerializer,
+        responses={200: openapi.Response("User updated successfully")},
+    )
+    def put(self, request, user_id=None):
+        user = request.user if user_id is None else User.objects.get(id=user_id)
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"message": "User updated successfully"}, status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def delete(self, request, user_id):
         try:
             user = User.objects.get(id=user_id)
@@ -89,58 +102,24 @@ class UserView(APIView):
         except User.DoesNotExist:
             return JsonResponse({"error": "User not found"}, status=404)
 
-    @swagger_auto_schema(
-        request_body=UpdateUserSerializer,
-        responses={200: openapi.Response("User updated successfully")},
-    )
-    def put(self, request, user_id):
-        try:
-            user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            return Response(
-                {"error": "User not found"}, status=status.HTTP_404_NOT_FOUND
-            )
-
-        serializer = UpdateUserSerializer(user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(
-                {"message": "User updated successfully"}, status=status.HTTP_200_OK
-            )
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class CurrentUserView(APIView):
-    permission_classes = [IsAuthenticated]
-
     def get(self, request):
         user = request.user
         serializer = UserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(
-        request_body=UpdateUserSerializer,
-        responses={200: openapi.Response("User updated successfully")},
-    )
-    def put(self, request):
-        user = request.user
-        serializer = UpdateUserSerializer(user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(
-                {"message": "User updated successfully"}, status=status.HTTP_200_OK
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-class PasswordResetRequestView(APIView):
+class PasswordResetView(APIView):
     @swagger_auto_schema(
-        request_body=EmailSerializer,
-        responses={200: openapi.Response("Password reset link sent successfully")},
+        request_body=LoginSerializer,
+        responses={200: openapi.Response("Password reset successfully")},
     )
-    def post(self, request):
-        serializer = EmailSerializer(data=request.data)
+    def post(self, request, uidb64=None, token=None):
+        if uidb64 and token:
+            return self.confirm_reset(request, uidb64, token)
+        return self.request_reset(request)
+
+    def request_reset(self, request):
+        serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
             email = serializer.validated_data["email"]
             try:
@@ -173,18 +152,12 @@ class PasswordResetRequestView(APIView):
                 )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-class PasswordResetConfirmView(APIView):
-    @swagger_auto_schema(
-        request_body=PasswordChangeSerializer,
-        responses={200: openapi.Response("Password reset successfully")},
-    )
-    def post(self, request, uidb64, token):
+    def confirm_reset(self, request, uidb64, token):
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
             user = User.objects.get(pk=uid)
             if default_token_generator.check_token(user, token):
-                serializer = PasswordChangeSerializer(data=request.data)
+                serializer = LoginSerializer(data=request.data)
                 if serializer.is_valid():
                     user.set_password(serializer.validated_data["new_password"])
                     user.save()

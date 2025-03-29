@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useForm, SubmitHandler } from 'react-hook-form';
-import { useParams, useNavigate } from 'react-router-dom';
+import { SubmitHandler, useForm } from 'react-hook-form';
+import { useNavigate, useParams } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { resetPasswordSchema } from '@/components/util/form-schemas.ts';
 import { UsersApiClient } from '@/lib/api/users.ts';
@@ -28,12 +28,7 @@ export default function ResetPasswordPage() {
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     try {
       const usersApiClient = new UsersApiClient(authenticationProviderInstance);
-      await usersApiClient.resetPassword(
-        uid!,
-        token!,
-        data.newPassword,
-        data.confirmPassword,
-      );
+      await usersApiClient.resetPassword(uid!, token!, data.newPassword);
       alert('Password reset successfully');
       navigate('/login');
     } catch (error) {

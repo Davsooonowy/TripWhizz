@@ -81,7 +81,6 @@ export class UsersApiClient extends BaseApiClient {
     uid: string,
     token: string,
     newPassword: string,
-    confirmPassword: string,
   ): Promise<void> {
     const response = await fetch(
       `${API_URL}/user/password-reset-confirm/${uid}/${token}/`,
@@ -90,7 +89,6 @@ export class UsersApiClient extends BaseApiClient {
         method: 'POST',
         body: JSON.stringify({
           new_password: newPassword,
-          confirm_password: confirmPassword,
         }),
       },
     );
