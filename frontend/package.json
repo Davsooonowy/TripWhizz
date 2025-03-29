@@ -31,6 +31,8 @@
     "@tabler/icons-react": "^3.30.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^16.4.7",
+    "dotenv-webpack": "^8.1.0",
     "framer-motion": "^12.4.2",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.475.0",

@@ -15,7 +15,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from server import settings
+from tripwhizz import settings
 from .serializers import *
 
 User = get_user_model()
