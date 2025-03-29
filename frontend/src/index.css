@@ -10,7 +10,6 @@
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -92,8 +91,6 @@
     @apply bg-background text-foreground;
   }
 }
-
-
 
 @layer base {
   * {

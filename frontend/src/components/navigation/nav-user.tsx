@@ -58,9 +58,9 @@ export function NavUser() {
     navigate('/login');
   };
 
-    if (!user) {
-        return null;
-    }
+  if (!user) {
+    return null;
+  }
 
   return (
     <SidebarMenu>

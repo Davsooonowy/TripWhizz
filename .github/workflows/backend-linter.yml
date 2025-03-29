@@ -2,17 +2,12 @@ on:
   pull_request:
     branches:
       - main
-
-
-env:
-  LINE_LENGTH: "--line-length 90"
+  workflow_dispatch:
 
 jobs:
   lint:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: tripwhizz
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -22,12 +17,8 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Install Dependencies
-        run: |
-          pip install black flake8
+      - name: Install Ruff
+        run: pip install ruff
 
-      - name: Run Black
-        run: black $LINE_LENGTH --check .
-
-      - name: Run Flake8
-        run: flake8 backend $LINE_LENGTH
+      - name: Run Ruff
+        run: ruff check server
