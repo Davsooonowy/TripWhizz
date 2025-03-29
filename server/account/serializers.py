@@ -4,7 +4,10 @@ from rest_framework import serializers
 User = get_user_model()
 
 
-class BaseUserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
     class Meta:
         model = User
         fields = [
@@ -13,19 +16,14 @@ class BaseUserSerializer(serializers.ModelSerializer):
             "last_name",
             "avatar",
             "onboarding_complete",
+            "email",
+            "password",
         ]
         extra_kwargs = {
             "avatar": {"required": False},
             "username": {"required": False},
+            "password": {"required": False},
         }
-
-
-class UserSerializer(BaseUserSerializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
-
-    class Meta(BaseUserSerializer.Meta):
-        fields = BaseUserSerializer.Meta.fields + ["email", "password"]
 
     def create(self, validated_data):
         username = validated_data["email"]
@@ -36,13 +34,6 @@ class UserSerializer(BaseUserSerializer):
         )
         return user
 
-
-class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
-
-
-class UpdateUserSerializer(BaseUserSerializer):
     def update(self, instance, validated_data):
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -50,15 +41,7 @@ class UpdateUserSerializer(BaseUserSerializer):
         return instance
 
 
-class EmailSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-
-
-class PasswordChangeSerializer(serializers.Serializer):
-    new_password = serializers.CharField(write_only=True)
-    confirm_password = serializers.CharField(write_only=True)
-
-    def validate(self, data):
-        if data["new_password"] != data["confirm_password"]:
-            raise serializers.ValidationError("Passwords do not match")
-        return data
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=False)
+    password = serializers.CharField(write_only=True, required=False)
+    new_password = serializers.CharField(write_only=True, required=False)
