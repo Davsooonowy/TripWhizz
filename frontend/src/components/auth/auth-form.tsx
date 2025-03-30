@@ -1,6 +1,6 @@
 import type React from 'react';
 import { useState, useEffect } from 'react';
-import { useForm, type SubmitHandler } from 'react-hook-form';
+import { useForm, type SubmitHandler, type FieldValues } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -50,7 +50,7 @@ export function AuthForm({
     formState: { errors },
     reset,
   } = useForm<FormData>({
-    resolver: zodResolver(isResetPasswordMode ? EmailSchema : schema),
+    resolver: zodResolver(isResetPasswordMode ? EmailSchema : schema) as any,
   });
   const navigate = useNavigate();
 
@@ -168,7 +168,7 @@ export function AuthForm({
     <form
       className={cn('flex flex-col gap-6', className)}
       {...props}
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)}
     >
       <div className="flex flex-col items-center gap-2">
         <a href="#" className="flex flex-col items-center gap-2 font-medium">
