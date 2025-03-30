@@ -6,16 +6,21 @@ import {
   RouterProvider,
   redirect,
 } from 'react-router-dom';
-import LoginPage from '@/pages/login.tsx';
+import LoginPage from '@/pages/login';
 import NotFound from './pages/not-found';
 import App from '@/App.tsx';
 import Layout from '@/components/layout/layout.tsx';
-import NoTripsPage from '@/pages/no-trips/index.tsx';
+import StartTripPage from '@/pages/trip/index.tsx';
 import OnboardingPage from '@/pages/onboarding/index.tsx';
 import { DarkModeProvider } from '@/components/util/dark-mode-provider.tsx';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
-import ResetPasswordPage from '@/pages/reset-password-page.tsx';
+import ResetPassword from '@/pages/login/reset-password.tsx';
 import { UsersApiClient } from '@/lib/api/users.ts';
+import NotificationsPage from '@/pages/notifications';
+import SettingsPage from '@/pages/settings';
+import FriendsPage from '@/pages/friends';
+import ProfileSettingsPage from '@/pages/settings/profile';
+import { Toaster } from '@/components/ui/toaster';
 
 const protectedLoginLoader = async () => {
   if (!authenticationProviderInstance.isAuthenticated()) {
@@ -42,8 +47,24 @@ const router = createBrowserRouter([
     loader: protectedLoginLoader,
     children: [
       {
-        path: '/no-trips',
-        element: <NoTripsPage />,
+        path: '/trip',
+        element: <StartTripPage />,
+      },
+      {
+        path: '/notifications',
+        element: <NotificationsPage />,
+      },
+      {
+        path: '/friends',
+        element: <FriendsPage />,
+      },
+      {
+        path: '/settings',
+        element: <SettingsPage />,
+      },
+      {
+        path: '/settings/profile',
+        element: <ProfileSettingsPage />,
       },
     ],
   },
@@ -61,7 +82,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/reset-password/:uid/:token',
-    element: <ResetPasswordPage />,
+    element: <ResetPassword />,
   },
 ]);
 
@@ -69,6 +90,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <DarkModeProvider>
       <RouterProvider router={router} />
+      <Toaster />
     </DarkModeProvider>
   </StrictMode>,
 );

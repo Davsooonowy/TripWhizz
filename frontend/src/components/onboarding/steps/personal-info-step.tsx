@@ -1,6 +1,7 @@
 import type React from 'react';
 import { useState } from 'react';
 import { User, ArrowRight, Camera } from 'lucide-react';
+import { ImageCropper } from '@/components/util/image-cropper';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -39,12 +40,13 @@ export function PersonalInfoStep({
   });
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [imageSource, setImageSource] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     updateFormData({ [name]: value });
 
-    // Clear error when user types
     if (errors[name as keyof typeof errors]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
@@ -53,17 +55,28 @@ export function PersonalInfoStep({
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      updateFormData({ avatar: file });
-
-      // Create preview URL
       const reader = new FileReader();
       reader.onload = (e) => {
         if (e.target?.result) {
-          setAvatarPreview(e.target.result as string);
+          setImageSource(e.target.result as string);
+          setCropperOpen(true);
         }
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleCropComplete = (croppedImageUrl: string) => {
+    setAvatarPreview(croppedImageUrl);
+
+    fetch(croppedImageUrl)
+      .then((res) => res.blob())
+      .then((blob) => {
+        const file = new File([blob], 'cropped-avatar.jpg', {
+          type: 'image/jpeg',
+        });
+        updateFormData({ avatar: file });
+      });
   };
 
   const validateForm = () => {
@@ -120,9 +133,9 @@ export function PersonalInfoStep({
 
               <div className="flex flex-col items-center mb-6">
                 <div className="relative group">
-                  <Avatar className="w-24 h-24 mb-2 border-4 border-background shadow-lg group-hover:border-primary transition-all duration-300">
+                  <Avatar className="w-24 h-24 mb-2 border-4 border-background shadow-lg group-hover:border-primary transition-all duration-300 rounded-lg">
                     <AvatarImage src={avatarPreview || ''} />
-                    <AvatarFallback className="bg-primary/10 text-primary text-xl">
+                    <AvatarFallback className="bg-primary/10 text-primary text-xl rounded-lg">
                       {formData.firstName && formData.lastName
                         ? `${formData.firstName[0]}${formData.lastName[0]}`
                         : '?'}
@@ -229,6 +242,15 @@ export function PersonalInfoStep({
               <ArrowRight className="ml-2 h-5 w-5 relative z-10 group-hover:translate-x-1 transition-transform" />
               <div className="absolute inset-0 bg-primary/80 w-0 group-hover:w-full transition-all duration-300"></div>
             </Button>
+            {imageSource && (
+              <ImageCropper
+                image={imageSource}
+                open={cropperOpen}
+                onClose={() => setCropperOpen(false)}
+                onCropComplete={handleCropComplete}
+                aspectRatio={1}
+              />
+            )}
           </form>
         </Card>
       </div>

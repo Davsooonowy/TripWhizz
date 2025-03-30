@@ -1,5 +1,8 @@
+'use client';
+
 import * as React from 'react';
 import { ChevronsUpDown, Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import {
   DropdownMenu,
@@ -17,17 +20,17 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar.tsx';
 
-export function TeamSwitcher({
-  teams,
+export function TripSwitcher({
+  trips,
 }: {
-  teams: {
+  trips: {
     name: string;
     logo: React.ElementType;
-    plan: string;
+    dates: string;
   }[];
 }) {
   const { isMobile } = useSidebar();
-  const [activeTeam, setActiveTeam] = React.useState(teams[0]);
+  const [activeTrip, setActiveTrip] = React.useState(trips[0]);
 
   return (
     <SidebarMenu>
@@ -39,13 +42,13 @@ export function TeamSwitcher({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <activeTeam.logo className="size-4" />
+                <activeTrip.logo className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">
-                  {activeTeam.name}
+                  {activeTrip.name}
                 </span>
-                <span className="truncate text-xs">{activeTeam.plan}</span>
+                <span className="truncate text-xs">{activeTrip.dates}</span>
               </div>
               <ChevronsUpDown className="ml-auto" />
             </SidebarMenuButton>
@@ -57,27 +60,36 @@ export function TeamSwitcher({
             sideOffset={4}
           >
             <DropdownMenuLabel className="text-xs text-muted-foreground">
-              Teams
+              Your Trips
             </DropdownMenuLabel>
-            {teams.map((team, index) => (
+            {trips.map((trip, index) => (
               <DropdownMenuItem
-                key={team.name}
-                onClick={() => setActiveTeam(team)}
+                key={trip.name}
+                onClick={() => setActiveTrip(trip)}
                 className="gap-2 p-2"
               >
                 <div className="flex size-6 items-center justify-center rounded-sm border">
-                  <team.logo className="size-4 shrink-0" />
+                  <trip.logo className="size-4 shrink-0" />
                 </div>
-                {team.name}
+                <div className="flex flex-col">
+                  <span>{trip.name}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {trip.dates}
+                  </span>
+                </div>
                 <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 p-2">
-              <div className="flex size-6 items-center justify-center rounded-md border bg-background">
-                <Plus className="size-4" />
-              </div>
-              <div className="font-medium text-muted-foreground">Add team</div>
+            <DropdownMenuItem asChild className="gap-2 p-2">
+              <Link to="/trip">
+                <div className="flex size-6 items-center justify-center rounded-md border bg-background">
+                  <Plus className="size-4" />
+                </div>
+                <div className="font-medium text-muted-foreground">
+                  Plan New Trip
+                </div>
+              </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

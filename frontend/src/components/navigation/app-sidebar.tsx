@@ -1,22 +1,19 @@
-import * as React from 'react';
+import type * as React from 'react';
 import {
-  AudioWaveform,
-  BookOpen,
-  Bot,
-  Command,
-  Frame,
-  GalleryVerticalEnd,
+  Calendar,
+  CheckSquare,
+  DollarSign,
   Map,
-  PieChart,
-  Settings2,
-  SquareTerminal,
-  Sun as IconSun,
-  Moon as IconMoon,
+  MoonIcon as IconMoon,
+  Mountain,
+  Palmtree,
+  Plane,
+  SunIcon as IconSun,
 } from 'lucide-react';
 
 import { NavMain } from '@/components/navigation/nav-main.tsx';
 import { NavUser } from '@/components/navigation/nav-user.tsx';
-import { TeamSwitcher } from '@/components/navigation/team-switcher.tsx';
+import { TripSwitcher } from '@/components/navigation/trip-switcher.tsx';
 import {
   Sidebar,
   SidebarContent,
@@ -26,137 +23,141 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
 } from '@/components/ui/sidebar.tsx';
 import { useDarkMode } from '@/components/util/dark-mode-provider.tsx';
+import { TripCompanions } from '@/components/navigation/trip-companions';
 
-// This is sample data.
+// dummy data and dummy companions before we will implement real ones :)
 const data = {
-  user: {
-    name: 'shadcn',
-    email: 'm@example.com',
-    avatar: '/avatars/shadcn.jpg',
-  },
-  teams: [
+  trips: [
     {
-      name: 'Acme Inc',
-      logo: GalleryVerticalEnd,
-      plan: 'Enterprise',
+      name: 'Paris Adventure',
+      logo: Plane,
+      dates: 'May 15-22, 2024',
     },
     {
-      name: 'Acme Corp.',
-      logo: AudioWaveform,
-      plan: 'Startup',
+      name: 'Beach Getaway',
+      logo: Palmtree,
+      dates: 'July 10-17, 2024',
     },
     {
-      name: 'Evil Corp.',
-      logo: Command,
-      plan: 'Free',
+      name: 'Mountain Hiking',
+      logo: Mountain,
+      dates: 'Aug 5-12, 2024',
     },
   ],
   navMain: [
     {
-      title: 'Playground',
-      url: '#',
-      icon: SquareTerminal,
-      isActive: true,
+      title: 'Itinerary',
+      url: '/itinerary',
+      icon: Calendar,
       items: [
         {
-          title: 'History',
-          url: '#',
+          title: 'Day Plans',
+          url: '/itinerary/days',
         },
         {
-          title: 'Starred',
-          url: '#',
+          title: 'Activities',
+          url: '/itinerary/activities',
         },
         {
-          title: 'Settings',
-          url: '#',
+          title: 'Bookings',
+          url: '/itinerary/bookings',
         },
       ],
     },
     {
-      title: 'Models',
-      url: '#',
-      icon: Bot,
+      title: 'Expenses',
+      url: '/expenses',
+      icon: DollarSign,
       items: [
         {
-          title: 'Genesis',
-          url: '#',
+          title: 'Overview',
+          url: '/expenses/overview',
         },
         {
-          title: 'Explorer',
-          url: '#',
+          title: 'Split Bills',
+          url: '/expenses/split',
         },
         {
-          title: 'Quantum',
-          url: '#',
+          title: 'Add Expense',
+          url: '/expenses/add',
         },
       ],
     },
     {
-      title: 'Documentation',
-      url: '#',
-      icon: BookOpen,
-      items: [
-        {
-          title: 'Introduction',
-          url: '#',
-        },
-        {
-          title: 'Get Started',
-          url: '#',
-        },
-        {
-          title: 'Tutorials',
-          url: '#',
-        },
-        {
-          title: 'Changelog',
-          url: '#',
-        },
-      ],
-    },
-    {
-      title: 'Settings',
-      url: '#',
-      icon: Settings2,
-      items: [
-        {
-          title: 'General',
-          url: '#',
-        },
-        {
-          title: 'Team',
-          url: '#',
-        },
-        {
-          title: 'Billing',
-          url: '#',
-        },
-        {
-          title: 'Limits',
-          url: '#',
-        },
-      ],
-    },
-  ],
-  projects: [
-    {
-      name: 'Design Engineering',
-      url: '#',
-      icon: Frame,
-    },
-    {
-      name: 'Sales & Marketing',
-      url: '#',
-      icon: PieChart,
-    },
-    {
-      name: 'Travel',
-      url: '#',
+      title: 'Maps',
+      url: '/maps',
       icon: Map,
+      items: [
+        {
+          title: 'Destinations',
+          url: '/maps/destinations',
+        },
+        {
+          title: 'Navigation',
+          url: '/maps/navigation',
+        },
+        {
+          title: 'Points of Interest',
+          url: '/maps/poi',
+        },
+      ],
+    },
+    {
+      title: 'Packing List',
+      url: '/packing',
+      icon: CheckSquare,
+      items: [
+        {
+          title: 'My Items',
+          url: '/packing/items',
+        },
+        {
+          title: 'Shared Items',
+          url: '/packing/shared',
+        },
+        {
+          title: 'Templates',
+          url: '/packing/templates',
+        },
+      ],
     },
   ],
+  companions: [
+    {
+      name: 'Alex Johnson',
+      avatar: '/placeholder.svg?height=40&width=40',
+      color: 'bg-blue-500',
+    },
+    {
+      name: 'Sarah Miller',
+      avatar: '/placeholder.svg?height=40&width=40',
+      color: 'bg-pink-500',
+    },
+    {
+      name: 'James Wilson',
+      avatar: '/placeholder.svg?height=40&width=40',
+      color: 'bg-green-500',
+    },
+    {
+      name: 'Emily Davis',
+      avatar: '/placeholder.svg?height=40&width=40',
+      color: 'bg-purple-500',
+    },
+    {
+      name: 'David Brown',
+      avatar: '/placeholder.svg?height=40&width=40',
+      color: 'bg-amber-500',
+    },
+  ],
+  user: {
+    name: 'John Doe',
+    avatar: '/placeholder.svg?height=40&width=40',
+  },
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -165,10 +166,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <TripSwitcher trips={data.trips} />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
+        <SidebarGroup>
+          <SidebarGroupLabel>Trip Companions</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <TripCompanions companions={data.companions} />
+          </SidebarGroupContent>
+        </SidebarGroup>{' '}
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
@@ -184,7 +191,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          <NavUser user={data.user} />
+          <NavUser />
         </SidebarMenu>
       </SidebarFooter>
       <SidebarRail />

@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -12,74 +13,145 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 224 71.4% 4.1%;
-    --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
-    --primary: 262.1 83.3% 57.8%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220.9 39.3% 11%;
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
-    --accent: 220 14.3% 95.9%;
-    --accent-foreground: 220.9 39.3% 11%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 262.1 83.3% 57.8%;
+    /* Base colors */
+    --background: 204 30% 98%;
+    --foreground: 215 25% 27%;
+    --card: 204 30% 98%;
+    --card-foreground: 215 25% 27%;
+    --popover: 204 30% 98%;
+    --popover-foreground: 215 25% 27%;
+
+    /* Primary - Vibrant Blue */
+    --primary: 210 100% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary - Tropical Teal */
+    --secondary: 175 75% 42%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Muted tones */
+    --muted: 210 20% 93%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Accent - Sunset Orange */
+    --accent: 25 95% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Destructive */
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders and inputs */
+    --border: 214 20% 91%;
+    --input: 214 20% 91%;
+    --ring: 210 100% 50%;
+
+    /* Trip type colors */
+    --beach: 35 90% 65%;
+    --mountain: 140 40% 55%;
+    --city: 225 70% 60%;
+
+    /* Radius */
     --radius: 0.75rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Chart colors */
+    --chart-1: 210 100% 50%;
+    --chart-2: 175 75% 42%;
+    --chart-3: 25 95% 60%;
+    --chart-4: 280 70% 60%;
+    --chart-5: 35 90% 65%;
+
+    /* Sidebar colors */
+    --sidebar-background: 204 30% 98%;
+    --sidebar-foreground: 215 25% 27%;
+    --sidebar-primary: 210 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 25 95% 60%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 214 20% 91%;
+    --sidebar-ring: 210 100% 50%;
+
+    /* Elevation system */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.06);
+    --shadow-md:
+      0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg:
+      0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl:
+      0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+    /* Typography */
+    --font-heading: 'Montserrat', sans-serif;
+    --font-body: 'Poppins', sans-serif;
   }
 
   .dark {
-    --background: 224 71.4% 4.1%;
+    /* Base colors */
+    --background: 215 30% 12%;
     --foreground: 210 20% 98%;
-    --card: 224 71.4% 4.1%;
+    --card: 215 30% 15%;
     --card-foreground: 210 20% 98%;
-    --popover: 224 71.4% 4.1%;
+    --popover: 215 30% 15%;
     --popover-foreground: 210 20% 98%;
-    --primary: 263.4 70% 50.4%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 64.9%;
-    --accent: 215 27.9% 16.9%;
-    --accent-foreground: 210 20% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
-    --ring: 263.4 70% 50.4%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+
+    /* Primary - Vibrant Blue */
+    --primary: 210 90% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary - Tropical Teal */
+    --secondary: 175 70% 45%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Muted tones */
+    --muted: 217 33% 20%;
+    --muted-foreground: 215 20% 70%;
+
+    /* Accent - Sunset Orange */
+    --accent: 25 90% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Destructive */
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders and inputs */
+    --border: 217 33% 20%;
+    --input: 217 33% 20%;
+    --ring: 210 90% 60%;
+
+    /* Trip type colors */
+    --beach: 35 85% 60%;
+    --mountain: 140 40% 50%;
+    --city: 225 65% 55%;
+
+    /* Radius */
+    --radius: 0.75rem;
+
+    /* Chart colors */
+    --chart-1: 210 90% 60%;
+    --chart-2: 175 70% 45%;
+    --chart-3: 25 90% 55%;
+    --chart-4: 280 65% 55%;
+    --chart-5: 35 85% 60%;
+
+    /* Sidebar colors */
+    --sidebar-background: 215 30% 12%;
+    --sidebar-foreground: 210 20% 98%;
+    --sidebar-primary: 210 90% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 25 90% 55%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 217 33% 20%;
+    --sidebar-ring: 210 90% 60%;
+
+    /* Elevation system */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25), 0 1px 1px rgba(0, 0, 0, 0.2);
+    --shadow-md:
+      0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    --shadow-lg:
+      0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+    --shadow-xl:
+      0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
   }
 }
 
@@ -87,16 +159,142 @@
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-body;
+  }
+
+  .font-heading {
+    font-family: var(--font-heading);
+  }
+
+  .font-body {
+    font-family: var(--font-body);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading font-semibold;
+  }
+
+  h1 {
+    @apply text-3xl md:text-4xl lg:text-5xl;
+  }
+
+  h2 {
+    @apply text-2xl md:text-3xl;
+  }
+
+  h3 {
+    @apply text-xl md:text-2xl;
+  }
+
+  h4 {
+    @apply text-lg md:text-xl;
+  }
+
+  p {
+    @apply leading-relaxed;
   }
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
+/* Card elevation system */
+@layer components {
+  .card-shadow-sm {
+    box-shadow: var(--shadow-sm);
+    transition:
+      box-shadow 0.2s ease-in-out,
+      transform 0.2s ease-in-out;
   }
-  body {
-    @apply bg-background text-foreground;
+
+  .card-shadow-md {
+    box-shadow: var(--shadow-md);
+    transition:
+      box-shadow 0.2s ease-in-out,
+      transform 0.2s ease-in-out;
+  }
+
+  .card-shadow-lg {
+    box-shadow: var(--shadow-lg);
+    transition:
+      box-shadow 0.2s ease-in-out,
+      transform 0.2s ease-in-out;
+  }
+
+  .card-shadow-xl {
+    box-shadow: var(--shadow-xl);
+    transition:
+      box-shadow 0.2s ease-in-out,
+      transform 0.2s ease-in-out;
+  }
+
+  .card-hover:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+  }
+
+  .card-active:active {
+    transform: translateY(1px);
+  }
+
+  /* Trip type specific styles */
+  .trip-beach {
+    background: linear-gradient(
+      to right,
+      hsl(var(--beach) / 0.2),
+      hsl(var(--beach) / 0.05)
+    );
+    border-left: 3px solid hsl(var(--beach));
+  }
+
+  .trip-mountain {
+    background: linear-gradient(
+      to right,
+      hsl(var(--mountain) / 0.2),
+      hsl(var(--mountain) / 0.05)
+    );
+    border-left: 3px solid hsl(var(--mountain));
+  }
+
+  .trip-city {
+    background: linear-gradient(
+      to right,
+      hsl(var(--city) / 0.2),
+      hsl(var(--city) / 0.05)
+    );
+    border-left: 3px solid hsl(var(--city));
+  }
+
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(10px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
 }

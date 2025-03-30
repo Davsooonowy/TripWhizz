@@ -1,6 +1,15 @@
 import type React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Map, Plus, Settings, Users } from 'lucide-react';
+import {
+  Home,
+  Map,
+  Plus,
+  Settings,
+  Users,
+  FileText,
+  DollarSign,
+  Bell,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Sheet,
@@ -17,6 +26,7 @@ import { motion } from 'framer-motion';
 export function MobileNavigation() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const notificationCount = 2;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -29,7 +39,7 @@ export function MobileNavigation() {
 
   return (
     <>
-      <div className="fixed bottom-3 left-0 right-0 z-50 px-4">
+      <div className="fixed bottom-3 left-0 right-0 z-40 px-4">
         <div className="absolute left-1/2 -translate-x-1/2 -top-5 z-10">
           <Sheet open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <SheetTrigger asChild>
@@ -61,49 +71,49 @@ export function MobileNavigation() {
                   What would you like to create?
                 </SheetDescription>
               </SheetHeader>
-              <div className="grid grid-cols-2 gap-4 pt-2">
+
+              <SheetClose asChild>
+                <Link
+                  to="/trip"
+                  className="flex items-center justify-between p-5 mb-6 rounded-2xl border-2 border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5 hover:bg-primary/15 transition-all duration-300 shadow-md"
+                >
+                  <div className="flex items-center">
+                    <div className="bg-primary/20 p-3 rounded-xl mr-4">
+                      <Map className="h-8 w-8 text-primary" />
+                    </div>
+                    <div>
+                      <span className="text-lg font-semibold">New Trip</span>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Plan your next adventure
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-primary">→</div>
+                </Link>
+              </SheetClose>
+
+              <div className="grid grid-cols-2 gap-4">
                 <SheetClose asChild>
                   <Link
-                    to="/trips/new"
+                    to="/documents/new"
                     className="flex flex-col items-center justify-center p-6 rounded-2xl border hover:bg-accent transition-all duration-300 shadow-sm"
                   >
                     <div className="bg-primary/10 p-3 rounded-xl mb-3">
-                      <Map className="h-8 w-8 text-primary" />
+                      <FileText className="h-7 w-7 text-primary" />
                     </div>
-                    <span className="text-sm font-medium">New Trip</span>
+                    <span className="text-sm font-medium">New Document</span>
                   </Link>
                 </SheetClose>
-                <SheetClose asChild>
-                  <Link
-                    to="/itinerary/new"
-                    className="flex flex-col items-center justify-center p-6 rounded-2xl border hover:bg-accent transition-all duration-300 shadow-sm"
-                  >
-                    <div className="bg-primary/10 p-3 rounded-xl mb-3">
-                      <Map className="h-8 w-8 text-primary" />
-                    </div>
-                    <span className="text-sm font-medium">New Itinerary</span>
-                  </Link>
-                </SheetClose>
-                <SheetClose asChild>
-                  <Link
-                    to="/packing/new"
-                    className="flex flex-col items-center justify-center p-6 rounded-2xl border hover:bg-accent transition-all duration-300 shadow-sm"
-                  >
-                    <div className="bg-primary/10 p-3 rounded-xl mb-3">
-                      <Map className="h-8 w-8 text-primary" />
-                    </div>
-                    <span className="text-sm font-medium">Packing List</span>
-                  </Link>
-                </SheetClose>
+
                 <SheetClose asChild>
                   <Link
                     to="/expenses/new"
                     className="flex flex-col items-center justify-center p-6 rounded-2xl border hover:bg-accent transition-all duration-300 shadow-sm"
                   >
                     <div className="bg-primary/10 p-3 rounded-xl mb-3">
-                      <Map className="h-8 w-8 text-primary" />
+                      <DollarSign className="h-7 w-7 text-primary" />
                     </div>
-                    <span className="text-sm font-medium">Expense</span>
+                    <span className="text-sm font-medium">New Expense</span>
                   </Link>
                 </SheetClose>
               </div>
@@ -123,11 +133,16 @@ export function MobileNavigation() {
         >
           <div className="flex items-center justify-around h-12 px-2 relative">
             <NavItem path="/" icon={Home} label="Home" />
-            <NavItem path="/trips" icon={Map} label="Trips" />
+            <NavItem path="/friends" icon={Users} label="Friends" />
 
             <div className="w-14"></div>
 
-            <NavItem path="/friends" icon={Users} label="Friends" />
+            <NavItem
+              path="/notifications"
+              icon={Bell}
+              label="Notifications"
+              notificationCount={notificationCount}
+            />
             <NavItem path="/settings" icon={Settings} label="Settings" />
           </div>
         </motion.div>
@@ -141,10 +156,12 @@ function NavItem({
   path,
   icon: Icon,
   label,
+  notificationCount = 0,
 }: {
   path: string;
   icon: React.ElementType;
   label: string;
+  notificationCount?: number;
 }) {
   const location = useLocation();
   const active =
@@ -158,13 +175,18 @@ function NavItem({
       className="flex flex-col items-center justify-center w-14 py-1"
     >
       <div className="flex flex-col items-center justify-center">
-        <div className="flex items-center justify-center w-8 h-8">
+        <div className="flex items-center justify-center w-8 h-8 relative">
           <Icon
             className={cn(
               'h-4 w-4',
               active ? 'text-primary' : 'text-muted-foreground',
             )}
           />
+          {notificationCount > 0 && (
+            <span className="absolute -top-0.5 -right-1 flex items-center justify-center min-w-4 h-4 px-1 text-[8px] font-bold text-white bg-red-500 rounded-full z-50 shadow-sm">
+              {notificationCount > 99 ? '99+' : notificationCount}
+            </span>
+          )}
         </div>
         <span
           className={cn(

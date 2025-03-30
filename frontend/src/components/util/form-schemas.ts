@@ -16,11 +16,16 @@ export const loginSchema = z.object({
     .string()
     .email('Invalid email address')
     .nonempty('Email is required'),
-  password: passwordSchema,
+  password: z.string().min(1, 'Password is required'),
 });
 
-export const registerSchema = loginSchema
-  .extend({
+export const registerSchema = z
+  .object({
+    email: z
+      .string()
+      .email('Invalid email address')
+      .nonempty('Email is required'),
+    password: passwordSchema,
     confirmPassword: z.string().nonempty('Confirm Password is required'),
   })
   .refine((data) => data.password === data.confirmPassword, {
