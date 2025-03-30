@@ -72,11 +72,12 @@ export default function MainSettings() {
                 <AvatarImage src={user?.avatar || ''} />
                 <AvatarFallback className="bg-primary/10 text-primary text-xl rounded-lg">
                   {user?.first_name?.[0] || user?.username?.[0] || '?'}
+                  {user?.last_name?.[0] || user?.last_name?.[0] || ''}
                 </AvatarFallback>
               </Avatar>
               <div className="ml-4 flex-1">
                 <h2
-                  className="font-semibold text-lg">{isLoading ? 'Loading...' : user?.first_name || user?.username}</h2>
+                  className="font-semibold text-lg">{isLoading ? 'Loading...' : user?.username || user?.first_name}</h2>
                 <p className="text-muted-foreground text-sm">{user?.email}</p>
               </div>
               <Button variant="ghost" size="icon" className="rounded-full" asChild>

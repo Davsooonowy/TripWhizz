@@ -228,7 +228,6 @@ export default function ProfileSettings() {
           <TabsContent value="general">
             <form onSubmit={handleSubmit}>
               <div className="grid gap-8 md:grid-cols-[1fr_2fr]">
-                {/* Profile picture section */}
                 <Card>
                   <CardHeader>
                     <CardTitle>Profile Picture</CardTitle>
