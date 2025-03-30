@@ -57,8 +57,8 @@ export default function Onboarding() {
     const usersApiClient = new UsersApiClient(authenticationProviderInstance);
     try {
       await usersApiClient.updateUser({
-        name: formData.firstName,
-        surname: formData.lastName,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
         username: formData.username,
         avatar: formData.avatar,
         onboarding_complete: true,

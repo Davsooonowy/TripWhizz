@@ -6,21 +6,17 @@ const passwordSchema = z
   .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
   .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
   .regex(/[0-9]/, 'Password must contain at least one number')
-  .regex(
-    /[^A-Za-z0-9]/,
-    'Password must contain at least one special character',
-  );
+  .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character');
 
 export const loginSchema = z.object({
-  email: z
-    .string()
-    .email('Invalid email address')
-    .nonempty('Email is required'),
-  password: passwordSchema,
+  email: z.string().email('Invalid email address').nonempty('Email is required'),
+  password: z.string().min(1, 'Password is required'),
 });
 
-export const registerSchema = loginSchema
-  .extend({
+export const registerSchema = z
+  .object({
+    email: z.string().email('Invalid email address').nonempty('Email is required'),
+    password: passwordSchema,
     confirmPassword: z.string().nonempty('Confirm Password is required'),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -29,10 +25,7 @@ export const registerSchema = loginSchema
   });
 
 export const EmailSchema = z.object({
-  email: z
-    .string()
-    .email('Invalid email address')
-    .nonempty('Email is required'),
+  email: z.string().email('Invalid email address').nonempty('Email is required'),
 });
 
 export const resetPasswordSchema = z
@@ -44,3 +37,4 @@ export const resetPasswordSchema = z
     message: 'Passwords do not match',
     path: ['confirmPassword'],
   });
+

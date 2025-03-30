@@ -6,14 +6,14 @@ import { resetPasswordSchema } from '@/components/util/form-schemas.ts';
 import { UsersApiClient } from '@/lib/api/users.ts';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
 import { FormField } from '@/components/auth/form-field.tsx';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button.tsx';
 
 interface FormData {
   newPassword: string;
   confirmPassword: string;
 }
 
-export default function ResetPasswordPage() {
+export default function ResetPassword() {
   const { uid, token } = useParams<{ uid: string; token: string }>();
   const navigate = useNavigate();
   const {

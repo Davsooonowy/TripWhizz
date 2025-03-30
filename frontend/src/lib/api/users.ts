@@ -17,8 +17,8 @@ export interface User {
   id: number;
   email: string;
   username: string;
-  name?: string;
-  surname?: string;
+  first_name?: string;
+  last_name?: string;
   avatar?: File | null;
   onboarding_complete?: boolean;
 }
@@ -100,8 +100,8 @@ export class UsersApiClient extends BaseApiClient {
 
   async updateUser(user: Partial<User>): Promise<void> {
     const payload = {
-      first_name: user.name,
-      last_name: user.surname,
+      first_name: user.first_name,
+      last_name: user.last_name,
       username: user.username,
       avatar: user.avatar,
       onboarding_complete: user.onboarding_complete,
