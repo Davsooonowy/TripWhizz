@@ -1,21 +1,19 @@
-"use client"
+import type React from 'react';
 
-import type React from "react"
-
-import { useEffect, useState, useRef } from "react"
-import { motion } from "framer-motion"
-import { useNavigate } from "react-router-dom"
-import { UsersApiClient, type User } from "@/lib/api/users"
-import { authenticationProviderInstance } from "@/lib/authentication-provider"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Camera, Check, Loader2, Mail, UserIcon, X, Lock, AlertCircle } from "lucide-react"
-import { toast } from "@/components/ui/use-toast"
-import { ToastAction } from "@/components/ui/toast"
+import { useEffect, useState, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { UsersApiClient, type User } from '@/lib/api/users';
+import { authenticationProviderInstance } from '@/lib/authentication-provider';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Camera, Check, Loader2, Mail, UserIcon, X, Lock, AlertCircle } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
+import { ToastAction } from '@/components/ui/toast';
 import {
   Dialog,
   DialogContent,
@@ -24,47 +22,50 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { z } from "zod"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+} from '@/components/ui/dialog';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ImageCropper } from '@/components/util/image-cropper';
 
 const passwordResetSchema = z
   .object({
-    currentPassword: z.string().min(1, "Current password is required"),
+    currentPassword: z.string().min(1, 'Current password is required'),
     newPassword: z
       .string()
-      .min(8, "Password must be at least 8 characters long")
-      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-      .regex(/[0-9]/, "Password must contain at least one number")
-      .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character"),
-    confirmPassword: z.string().min(1, "Please confirm your password"),
+      .min(8, 'Password must be at least 8 characters long')
+      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+      .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+      .regex(/[0-9]/, 'Password must contain at least one number')
+      .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  })
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 type PasswordResetFormData = z.infer<typeof passwordResetSchema>
 
 export default function ProfileSettings() {
-  const navigate = useNavigate()
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [passwordResetError, setPasswordResetError] = useState<string | null>(null)
-  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false)
+  const navigate = useNavigate();
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [passwordResetError, setPasswordResetError] = useState<string | null>(null);
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [imageSource, setImageSource] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
-    username: "",
+    first_name: '',
+    last_name: '',
+    username: '',
     avatar: null as File | null,
-  })
+  });
 
   const {
     register: registerPasswordReset,
@@ -74,129 +75,137 @@ export default function ProfileSettings() {
     reset: resetPasswordForm,
   } = useForm<PasswordResetFormData>({
     resolver: zodResolver(passwordResetSchema),
-  })
+  });
 
-  const newPassword = watch("newPassword", "")
+  const newPassword = watch('newPassword', '');
 
   const passwordRequirements = [
-    { text: "At least 8 characters", met: newPassword.length >= 8 },
-    { text: "At least one uppercase letter", met: /[A-Z]/.test(newPassword) },
-    { text: "At least one lowercase letter", met: /[a-z]/.test(newPassword) },
-    { text: "At least one number", met: /[0-9]/.test(newPassword) },
-    { text: "At least one special character", met: /[^A-Za-z0-9]/.test(newPassword) },
-  ]
+    { text: 'At least 8 characters', met: newPassword.length >= 8 },
+    { text: 'At least one uppercase letter', met: /[A-Z]/.test(newPassword) },
+    { text: 'At least one lowercase letter', met: /[a-z]/.test(newPassword) },
+    { text: 'At least one number', met: /[0-9]/.test(newPassword) },
+    { text: 'At least one special character', met: /[^A-Za-z0-9]/.test(newPassword) },
+  ];
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const apiClient = new UsersApiClient(authenticationProviderInstance)
-        const userData = await apiClient.getActiveUser()
-        setUser(userData)
+        const apiClient = new UsersApiClient(authenticationProviderInstance);
+        const userData = await apiClient.getActiveUser();
+        setUser(userData);
         setFormData({
-          first_name: userData.first_name || "",
-          last_name: userData.last_name || "",
-          username: userData.username || "",
+          first_name: userData.first_name || '',
+          last_name: userData.last_name || '',
+          username: userData.username || '',
           avatar: null,
-        })
+        });
       } catch (error) {
-        console.error("Error fetching user data:", error)
+        console.error('Error fetching user data:', error);
         toast({
-          variant: "destructive",
-          title: "Failed to load profile",
-          description: "We couldn't load your profile information. Please try again.",
+          variant: 'destructive',
+          title: 'Failed to load profile',
+          description: 'We couldn\'t load your profile information. Please try again.',
           action: <ToastAction altText="Try again">Try again</ToastAction>,
-        })
+        });
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchUser()
-  }, [])
+    fetchUser();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prevData) => ({ ...prevData, [name]: value }))
-  }
+    const { name, value } = e.target;
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
+  };
 
   const handleAvatarClick = () => {
-    fileInputRef.current?.click()
-  }
+    fileInputRef.current?.click();
+  };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
-      setFormData((prevData) => ({ ...prevData, avatar: file }))
-
-      const reader = new FileReader()
+      const file = e.target.files[0];
+      const reader = new FileReader();
       reader.onload = (e) => {
         if (e.target?.result) {
-          setAvatarPreview(e.target.result as string)
+          setImageSource(e.target.result as string);
+          setCropperOpen(true);
         }
-      }
-      reader.readAsDataURL(file)
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
+
+  const handleCropComplete = (croppedImageUrl: string) => {
+    setAvatarPreview(croppedImageUrl);
+    fetch(croppedImageUrl)
+      .then(res => res.blob())
+      .then(blob => {
+        const file = new File([blob], 'cropped-avatar.jpg', { type: 'image/jpeg' });
+        setFormData(prev => ({ ...prev, avatar: file }));
+      });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSaving(true)
+    e.preventDefault();
+    setIsSaving(true);
 
     try {
-      const apiClient = new UsersApiClient(authenticationProviderInstance)
-      await apiClient.updateUser(formData)
+      const apiClient = new UsersApiClient(authenticationProviderInstance);
+      await apiClient.updateUser(formData);
 
       toast({
-        title: "Profile updated",
-        description: "Your profile information has been successfully updated.",
+        title: 'Profile updated',
+        description: 'Your profile information has been successfully updated.',
         action: <Check className="h-4 w-4 text-green-500" />,
-      })
+      });
 
-      setTimeout(() => navigate("/settings"), 1500)
+      setTimeout(() => navigate('/settings'), 1500);
     } catch (error) {
-      console.error("Error updating user data:", error)
+      console.error('Error updating user data:', error);
       toast({
-        variant: "destructive",
-        title: "Update failed",
-        description: "We couldn't update your profile. Please try again.",
+        variant: 'destructive',
+        title: 'Update failed',
+        description: 'We couldn\'t update your profile. Please try again.',
         action: <ToastAction altText="Try again">Try again</ToastAction>,
-      })
+      });
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
+  //TODO for mati
   const handlePasswordReset = async (data: PasswordResetFormData) => {
-    setPasswordResetError(null)
-
+    setPasswordResetError(null);
     try {
-      // Simulate API call for password reset
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       toast({
-        title: "Password updated",
-        description: "Your password has been successfully changed.",
+        title: 'Password updated',
+        description: 'Your password has been successfully changed.',
         action: <Check className="h-4 w-4 text-green-500" />,
-      })
+      });
 
-      resetPasswordForm()
-      setIsResetDialogOpen(false)
+      resetPasswordForm();
+      setIsResetDialogOpen(false);
     } catch (error) {
-      console.error("Error resetting password:", error)
-      setPasswordResetError("Failed to reset password. Please check your current password and try again.")
+      console.error('Error resetting password:', error);
+      setPasswordResetError('Failed to reset password. Please check your current password and try again.');
     }
-  }
+  };
 
   const handleCancel = () => {
-    navigate("/settings")
-  }
+    navigate('/settings');
+  };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[70vh]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
-    )
+    );
   }
 
   return (
@@ -204,7 +213,7 @@ export default function ProfileSettings() {
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">Profile Settings</h1>
-          <Button variant="ghost" onClick={() => navigate("/settings")}>
+          <Button variant="ghost" onClick={() => navigate('/settings')}>
             <X className="h-4 w-4 mr-2" />
             Cancel
           </Button>
@@ -227,14 +236,17 @@ export default function ProfileSettings() {
                   </CardHeader>
                   <CardContent className="flex flex-col items-center">
                     <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
-                      <Avatar className="h-32 w-32 border-4 border-background shadow-lg group-hover:border-primary transition-all duration-300">
-                        <AvatarImage src={avatarPreview || user?.avatar || ""} />
-                        <AvatarFallback className="bg-primary/10 text-primary text-4xl">
-                          {formData.first_name?.[0] || user?.username?.[0] || "?"}
+                      <Avatar
+                        className="h-32 w-32 border-4 border-background shadow-lg group-hover:border-primary transition-all duration-300 rounded-lg">
+                        <AvatarImage src={avatarPreview || user?.avatar || ''} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-4xl rounded-lg">
+                          {formData.first_name?.[0] || user?.username?.[0] || '?'}
+                          {formData.last_name?.[0] || user?.last_name?.[0] || ''}
                         </AvatarFallback>
                       </Avatar>
 
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div
+                        className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <Camera className="h-8 w-8 text-white" />
                       </div>
 
@@ -253,7 +265,6 @@ export default function ProfileSettings() {
                   </CardContent>
                 </Card>
 
-                {/* Personal information section */}
                 <Card>
                   <CardHeader>
                     <CardTitle>Personal Information</CardTitle>
@@ -306,7 +317,7 @@ export default function ProfileSettings() {
                         <Input
                           id="email"
                           type="email"
-                          value={user?.email || ""}
+                          value={user?.email || ''}
                           disabled
                           className="pl-10 bg-muted/50"
                         />
@@ -343,8 +354,8 @@ export default function ProfileSettings() {
                               <Input
                                 id="currentPassword"
                                 type="password"
-                                {...registerPasswordReset("currentPassword")}
-                                className={passwordErrors.currentPassword ? "border-red-500" : ""}
+                                {...registerPasswordReset('currentPassword')}
+                                className={passwordErrors.currentPassword ? 'border-red-500' : ''}
                               />
                               {passwordErrors.currentPassword && (
                                 <p className="text-sm text-red-500 mt-1">{passwordErrors.currentPassword.message}</p>
@@ -356,8 +367,8 @@ export default function ProfileSettings() {
                               <Input
                                 id="newPassword"
                                 type="password"
-                                {...registerPasswordReset("newPassword")}
-                                className={passwordErrors.newPassword ? "border-red-500" : ""}
+                                {...registerPasswordReset('newPassword')}
+                                className={passwordErrors.newPassword ? 'border-red-500' : ''}
                               />
                               {passwordErrors.newPassword && (
                                 <p className="text-sm text-red-500 mt-1">{passwordErrors.newPassword.message}</p>
@@ -374,7 +385,7 @@ export default function ProfileSettings() {
                                     )}
                                     <span
                                       className={
-                                        req.met ? "text-green-700 dark:text-green-400" : "text-muted-foreground"
+                                        req.met ? 'text-green-700 dark:text-green-400' : 'text-muted-foreground'
                                       }
                                     >
                                       {req.text}
@@ -389,8 +400,8 @@ export default function ProfileSettings() {
                               <Input
                                 id="confirmPassword"
                                 type="password"
-                                {...registerPasswordReset("confirmPassword")}
-                                className={passwordErrors.confirmPassword ? "border-red-500" : ""}
+                                {...registerPasswordReset('confirmPassword')}
+                                className={passwordErrors.confirmPassword ? 'border-red-500' : ''}
                               />
                               {passwordErrors.confirmPassword && (
                                 <p className="text-sm text-red-500 mt-1">{passwordErrors.confirmPassword.message}</p>
@@ -419,10 +430,19 @@ export default function ProfileSettings() {
                           Saving...
                         </>
                       ) : (
-                        "Save Changes"
+                        'Save Changes'
                       )}
                     </Button>
                   </CardFooter>
+                  {imageSource && (
+                    <ImageCropper
+                      image={imageSource}
+                      open={cropperOpen}
+                      onClose={() => setCropperOpen(false)}
+                      onCropComplete={handleCropComplete}
+                      aspectRatio={1}
+                    />
+                  )}
                 </Card>
               </div>
             </form>
@@ -444,5 +464,5 @@ export default function ProfileSettings() {
         </Tabs>
       </motion.div>
     </div>
-  )
+  );
 }
