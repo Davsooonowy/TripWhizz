@@ -1,7 +1,11 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
-import { createBrowserRouter, RouterProvider, redirect } from 'react-router-dom';
+import {
+  createBrowserRouter,
+  RouterProvider,
+  redirect,
+} from 'react-router-dom';
 import LoginPage from '@/pages/login';
 import NotFound from './pages/not-found';
 import App from '@/App.tsx';

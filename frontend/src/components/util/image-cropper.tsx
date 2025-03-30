@@ -1,28 +1,34 @@
-import { useState, useCallback } from "react"
-import Cropper from "react-easy-crop"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Slider } from "@/components/ui/slider"
-import { Label } from "@/components/ui/label"
+import { useState, useCallback } from 'react';
+import Cropper from 'react-easy-crop';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Slider } from '@/components/ui/slider';
+import { Label } from '@/components/ui/label';
 
 interface Point {
-  x: number
-  y: number
+  x: number;
+  y: number;
 }
 
 interface Area {
-  x: number
-  y: number
-  width: number
-  height: number
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 interface ImageCropperProps {
-  image: string
-  open: boolean
-  onClose: () => void
-  onCropComplete: (croppedImageUrl: string) => void
-  aspectRatio?: number
+  image: string;
+  open: boolean;
+  onClose: () => void;
+  onCropComplete: (croppedImageUrl: string) => void;
+  aspectRatio?: number;
 }
 
 export function ImageCropper({
@@ -32,36 +38,36 @@ export function ImageCropper({
   onCropComplete,
   aspectRatio = 1,
 }: ImageCropperProps) {
-  const [crop, setCrop] = useState<Point>({ x: 0, y: 0 })
-  const [zoom, setZoom] = useState(1)
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
+  const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
   const onCropChange = useCallback((location: Point) => {
-    setCrop(location)
-  }, [])
+    setCrop(location);
+  }, []);
 
   const onZoomChange = useCallback((value: number[]) => {
-    setZoom(value[0])
-  }, [])
+    setZoom(value[0]);
+  }, []);
 
   const onCropCompleteCallback = useCallback(
     (_: Area, croppedAreaPixels: Area) => {
-      setCroppedAreaPixels(croppedAreaPixels)
+      setCroppedAreaPixels(croppedAreaPixels);
     },
-    []
-  )
+    [],
+  );
 
   const createCroppedImage = useCallback(async () => {
-    if (!croppedAreaPixels) return
+    if (!croppedAreaPixels) return;
 
     try {
-      const croppedImage = await getCroppedImg(image, croppedAreaPixels)
-      onCropComplete(croppedImage)
-      onClose()
+      const croppedImage = await getCroppedImg(image, croppedAreaPixels);
+      onCropComplete(croppedImage);
+      onClose();
     } catch (e) {
-      console.error("Error creating cropped image:", e)
+      console.error('Error creating cropped image:', e);
     }
-  }, [croppedAreaPixels, image, onCropComplete, onClose])
+  }, [croppedAreaPixels, image, onCropComplete, onClose]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -105,57 +111,60 @@ export function ImageCropper({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
-async function getCroppedImg(imageSrc: string, pixelCrop: Area): Promise<string> {
-  const image = await createImage(imageSrc)
-  const canvas = document.createElement("canvas")
-  const ctx = canvas.getContext("2d")
+async function getCroppedImg(
+  imageSrc: string,
+  pixelCrop: Area,
+): Promise<string> {
+  const image = await createImage(imageSrc);
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
 
   if (!ctx) {
-    throw new Error("No 2d context")
+    throw new Error('No 2d context');
   }
 
-  const maxSize = Math.max(image.width, image.height)
-  const safeArea = 2 * ((maxSize / 2) * Math.sqrt(2))
+  const maxSize = Math.max(image.width, image.height);
+  const safeArea = 2 * ((maxSize / 2) * Math.sqrt(2));
 
-  canvas.width = safeArea
-  canvas.height = safeArea
+  canvas.width = safeArea;
+  canvas.height = safeArea;
 
   ctx.drawImage(
     image,
     safeArea / 2 - image.width / 2,
-    safeArea / 2 - image.height / 2
-  )
+    safeArea / 2 - image.height / 2,
+  );
 
-  const data = ctx.getImageData(0, 0, safeArea, safeArea)
+  const data = ctx.getImageData(0, 0, safeArea, safeArea);
 
-  canvas.width = pixelCrop.width
-  canvas.height = pixelCrop.height
+  canvas.width = pixelCrop.width;
+  canvas.height = pixelCrop.height;
 
   ctx.putImageData(
     data,
     0 - safeArea / 2 + image.width / 2 - pixelCrop.x,
-    0 - safeArea / 2 + image.height / 2 - pixelCrop.y
-  )
+    0 - safeArea / 2 + image.height / 2 - pixelCrop.y,
+  );
 
   return new Promise((resolve) => {
     canvas.toBlob((blob) => {
       if (!blob) {
-        throw new Error("Canvas is empty")
+        throw new Error('Canvas is empty');
       }
-      resolve(URL.createObjectURL(blob))
-    }, "image/jpeg")
-  })
+      resolve(URL.createObjectURL(blob));
+    }, 'image/jpeg');
+  });
 }
 
 function createImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
-    const image = new Image()
-    image.crossOrigin = "anonymous"
-    image.addEventListener("load", () => resolve(image))
-    image.addEventListener("error", (error) => reject(error))
-    image.src = url
-  })
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.addEventListener('load', () => resolve(image));
+    image.addEventListener('error', (error) => reject(error));
+    image.src = url;
+  });
 }

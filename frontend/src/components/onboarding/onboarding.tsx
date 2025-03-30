@@ -12,14 +12,12 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
-    // Personal info
     firstName: '',
     lastName: '',
     username: '',
     email: '',
     avatar: null as File | null,
 
-    // Travel preferences
     notifications: {
       tripInvitations: true,
       expenseUpdates: true,
@@ -31,6 +29,8 @@ export default function Onboarding() {
     defaultTheme: 'light',
     language: 'english',
     currencyPreference: 'usd',
+    defaultMapView: 'standard',
+    tripReminderFrequency: 'weekly',
   });
 
   const updateFormData = (data: Partial<typeof formData>) => {

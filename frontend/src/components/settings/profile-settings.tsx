@@ -10,8 +10,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Camera, Check, Loader2, Mail, UserIcon, X, Lock, AlertCircle } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Camera,
+  Check,
+  Loader2,
+  Mail,
+  UserIcon,
+  X,
+  Lock,
+  AlertCircle,
+} from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { ToastAction } from '@/components/ui/toast';
 import {
@@ -38,7 +54,10 @@ const passwordResetSchema = z
       .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
       .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
       .regex(/[0-9]/, 'Password must contain at least one number')
-      .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
+      .regex(
+        /[^A-Za-z0-9]/,
+        'Password must contain at least one special character',
+      ),
     confirmPassword: z.string().min(1, 'Please confirm your password'),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
@@ -46,7 +65,7 @@ const passwordResetSchema = z
     path: ['confirmPassword'],
   });
 
-type PasswordResetFormData = z.infer<typeof passwordResetSchema>
+type PasswordResetFormData = z.infer<typeof passwordResetSchema>;
 
 export default function ProfileSettings() {
   const navigate = useNavigate();
@@ -55,7 +74,9 @@ export default function ProfileSettings() {
   const [isSaving, setIsSaving] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [passwordResetError, setPasswordResetError] = useState<string | null>(null);
+  const [passwordResetError, setPasswordResetError] = useState<string | null>(
+    null,
+  );
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [cropperOpen, setCropperOpen] = useState(false);
   const [imageSource, setImageSource] = useState<string | null>(null);
@@ -84,7 +105,10 @@ export default function ProfileSettings() {
     { text: 'At least one uppercase letter', met: /[A-Z]/.test(newPassword) },
     { text: 'At least one lowercase letter', met: /[a-z]/.test(newPassword) },
     { text: 'At least one number', met: /[0-9]/.test(newPassword) },
-    { text: 'At least one special character', met: /[^A-Za-z0-9]/.test(newPassword) },
+    {
+      text: 'At least one special character',
+      met: /[^A-Za-z0-9]/.test(newPassword),
+    },
   ];
 
   useEffect(() => {
@@ -104,7 +128,8 @@ export default function ProfileSettings() {
         toast({
           variant: 'destructive',
           title: 'Failed to load profile',
-          description: 'We couldn\'t load your profile information. Please try again.',
+          description:
+            "We couldn't load your profile information. Please try again.",
           action: <ToastAction altText="Try again">Try again</ToastAction>,
         });
       } finally {
@@ -141,10 +166,12 @@ export default function ProfileSettings() {
   const handleCropComplete = (croppedImageUrl: string) => {
     setAvatarPreview(croppedImageUrl);
     fetch(croppedImageUrl)
-      .then(res => res.blob())
-      .then(blob => {
-        const file = new File([blob], 'cropped-avatar.jpg', { type: 'image/jpeg' });
-        setFormData(prev => ({ ...prev, avatar: file }));
+      .then((res) => res.blob())
+      .then((blob) => {
+        const file = new File([blob], 'cropped-avatar.jpg', {
+          type: 'image/jpeg',
+        });
+        setFormData((prev) => ({ ...prev, avatar: file }));
       });
   };
 
@@ -168,7 +195,7 @@ export default function ProfileSettings() {
       toast({
         variant: 'destructive',
         title: 'Update failed',
-        description: 'We couldn\'t update your profile. Please try again.',
+        description: "We couldn't update your profile. Please try again.",
         action: <ToastAction altText="Try again">Try again</ToastAction>,
       });
     } finally {
@@ -177,7 +204,7 @@ export default function ProfileSettings() {
   };
 
   //TODO for mati
-  const handlePasswordReset = async (data: PasswordResetFormData) => {
+  const handlePasswordReset = async () => {
     setPasswordResetError(null);
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -192,10 +219,11 @@ export default function ProfileSettings() {
       setIsResetDialogOpen(false);
     } catch (error) {
       console.error('Error resetting password:', error);
-      setPasswordResetError('Failed to reset password. Please check your current password and try again.');
+      setPasswordResetError(
+        'Failed to reset password. Please check your current password and try again.',
+      );
     }
   };
-
   const handleCancel = () => {
     navigate('/settings');
   };
@@ -210,7 +238,11 @@ export default function ProfileSettings() {
 
   return (
     <div className="container max-w-4xl mx-auto px-4 py-8 pb-20 md:pb-10">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">Profile Settings</h1>
           <Button variant="ghost" onClick={() => navigate('/settings')}>
@@ -231,21 +263,35 @@ export default function ProfileSettings() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Profile Picture</CardTitle>
-                    <CardDescription>This will be displayed on your profile</CardDescription>
+                    <CardDescription>
+                      This will be displayed on your profile
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="flex flex-col items-center">
-                    <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
-                      <Avatar
-                        className="h-32 w-32 border-4 border-background shadow-lg group-hover:border-primary transition-all duration-300 rounded-lg">
-                        <AvatarImage src={avatarPreview || user?.avatar || ''} />
+                    <div
+                      className="relative group cursor-pointer"
+                      onClick={handleAvatarClick}
+                    >
+                      <Avatar className="h-32 w-32 border-4 border-background shadow-lg group-hover:border-primary transition-all duration-300 rounded-lg">
+                        <AvatarImage
+                          src={
+                            avatarPreview ||
+                            (typeof user?.avatar === 'string'
+                              ? user.avatar
+                              : '')
+                          }
+                        />
                         <AvatarFallback className="bg-primary/10 text-primary text-4xl rounded-lg">
-                          {formData.first_name?.[0] || user?.username?.[0] || '?'}
-                          {formData.last_name?.[0] || user?.last_name?.[0] || ''}
+                          {formData.first_name?.[0] ||
+                            user?.username?.[0] ||
+                            '?'}
+                          {formData.last_name?.[0] ||
+                            user?.last_name?.[0] ||
+                            ''}
                         </AvatarFallback>
                       </Avatar>
 
-                      <div
-                        className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <Camera className="h-8 w-8 text-white" />
                       </div>
 
@@ -267,7 +313,9 @@ export default function ProfileSettings() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Personal Information</CardTitle>
-                    <CardDescription>Update your personal details</CardDescription>
+                    <CardDescription>
+                      Update your personal details
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -327,9 +375,16 @@ export default function ProfileSettings() {
                     </div>
 
                     <div className="pt-2">
-                      <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+                      <Dialog
+                        open={isResetDialogOpen}
+                        onOpenChange={setIsResetDialogOpen}
+                      >
                         <DialogTrigger asChild>
-                          <Button variant="outline" type="button" className="w-full">
+                          <Button
+                            variant="outline"
+                            type="button"
+                            className="w-full"
+                          >
                             <Lock className="h-4 w-4 mr-2" />
                             Change Password
                           </Button>
@@ -337,27 +392,44 @@ export default function ProfileSettings() {
                         <DialogContent className="sm:max-w-md">
                           <DialogHeader>
                             <DialogTitle>Change Password</DialogTitle>
-                            <DialogDescription>Update your password to keep your account secure</DialogDescription>
+                            <DialogDescription>
+                              Update your password to keep your account secure
+                            </DialogDescription>
                           </DialogHeader>
 
                           {passwordResetError && (
                             <Alert variant="destructive" className="mb-2">
                               <AlertCircle className="h-4 w-4" />
-                              <AlertDescription>{passwordResetError}</AlertDescription>
+                              <AlertDescription>
+                                {passwordResetError}
+                              </AlertDescription>
                             </Alert>
                           )}
 
-                          <form onSubmit={handlePasswordResetSubmit(handlePasswordReset)} className="space-y-4 py-2">
+                          <form
+                            onSubmit={handlePasswordResetSubmit(
+                              handlePasswordReset,
+                            )}
+                            className="space-y-4 py-2"
+                          >
                             <div className="space-y-2">
-                              <Label htmlFor="currentPassword">Current Password</Label>
+                              <Label htmlFor="currentPassword">
+                                Current Password
+                              </Label>
                               <Input
                                 id="currentPassword"
                                 type="password"
                                 {...registerPasswordReset('currentPassword')}
-                                className={passwordErrors.currentPassword ? 'border-red-500' : ''}
+                                className={
+                                  passwordErrors.currentPassword
+                                    ? 'border-red-500'
+                                    : ''
+                                }
                               />
                               {passwordErrors.currentPassword && (
-                                <p className="text-sm text-red-500 mt-1">{passwordErrors.currentPassword.message}</p>
+                                <p className="text-sm text-red-500 mt-1">
+                                  {passwordErrors.currentPassword.message}
+                                </p>
                               )}
                             </div>
 
@@ -367,16 +439,27 @@ export default function ProfileSettings() {
                                 id="newPassword"
                                 type="password"
                                 {...registerPasswordReset('newPassword')}
-                                className={passwordErrors.newPassword ? 'border-red-500' : ''}
+                                className={
+                                  passwordErrors.newPassword
+                                    ? 'border-red-500'
+                                    : ''
+                                }
                               />
                               {passwordErrors.newPassword && (
-                                <p className="text-sm text-red-500 mt-1">{passwordErrors.newPassword.message}</p>
+                                <p className="text-sm text-red-500 mt-1">
+                                  {passwordErrors.newPassword.message}
+                                </p>
                               )}
 
                               <div className="mt-3 text-xs space-y-1.5">
-                                <p className="font-medium text-sm mb-1">Password requirements:</p>
+                                <p className="font-medium text-sm mb-1">
+                                  Password requirements:
+                                </p>
                                 {passwordRequirements.map((req, index) => (
-                                  <div key={index} className="flex items-center">
+                                  <div
+                                    key={index}
+                                    className="flex items-center"
+                                  >
                                     {req.met ? (
                                       <Check className="h-3.5 w-3.5 text-green-500 mr-2" />
                                     ) : (
@@ -384,7 +467,9 @@ export default function ProfileSettings() {
                                     )}
                                     <span
                                       className={
-                                        req.met ? 'text-green-700 dark:text-green-400' : 'text-muted-foreground'
+                                        req.met
+                                          ? 'text-green-700 dark:text-green-400'
+                                          : 'text-muted-foreground'
                                       }
                                     >
                                       {req.text}
@@ -395,20 +480,32 @@ export default function ProfileSettings() {
                             </div>
 
                             <div className="space-y-2">
-                              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                              <Label htmlFor="confirmPassword">
+                                Confirm New Password
+                              </Label>
                               <Input
                                 id="confirmPassword"
                                 type="password"
                                 {...registerPasswordReset('confirmPassword')}
-                                className={passwordErrors.confirmPassword ? 'border-red-500' : ''}
+                                className={
+                                  passwordErrors.confirmPassword
+                                    ? 'border-red-500'
+                                    : ''
+                                }
                               />
                               {passwordErrors.confirmPassword && (
-                                <p className="text-sm text-red-500 mt-1">{passwordErrors.confirmPassword.message}</p>
+                                <p className="text-sm text-red-500 mt-1">
+                                  {passwordErrors.confirmPassword.message}
+                                </p>
                               )}
                             </div>
 
                             <DialogFooter className="pt-4">
-                              <Button type="button" variant="outline" onClick={() => setIsResetDialogOpen(false)}>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setIsResetDialogOpen(false)}
+                              >
                                 Cancel
                               </Button>
                               <Button type="submit">Update Password</Button>
@@ -419,7 +516,11 @@ export default function ProfileSettings() {
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-between">
-                    <Button type="button" variant="outline" onClick={handleCancel}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleCancel}
+                    >
                       Cancel
                     </Button>
                     <Button type="submit" disabled={isSaving}>
@@ -451,7 +552,9 @@ export default function ProfileSettings() {
             <Card>
               <CardHeader>
                 <CardTitle>Account Preferences</CardTitle>
-                <CardDescription>Manage your account settings and preferences</CardDescription>
+                <CardDescription>
+                  Manage your account settings and preferences
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-muted-foreground text-center py-8">

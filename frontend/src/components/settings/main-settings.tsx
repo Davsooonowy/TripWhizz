@@ -58,7 +58,11 @@ export default function MainSettings() {
   return (
     <div className="pb-20 md:pb-10">
       <div className="container max-w-2xl mx-auto px-4 py-6">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <h1 className="text-2xl font-bold mb-6">Settings</h1>
 
           <motion.div
@@ -69,18 +73,28 @@ export default function MainSettings() {
           >
             <div className="flex items-center">
               <Avatar className="h-16 w-16 border-2 border-background rounded-lg">
-                <AvatarImage src={user?.avatar || ''} />
+                <AvatarImage
+                  src={typeof user?.avatar === 'string' ? user.avatar : ''}
+                />{' '}
                 <AvatarFallback className="bg-primary/10 text-primary text-xl rounded-lg">
                   {user?.first_name?.[0] || user?.username?.[0] || '?'}
                   {user?.last_name?.[0] || user?.last_name?.[0] || ''}
                 </AvatarFallback>
               </Avatar>
               <div className="ml-4 flex-1">
-                <h2
-                  className="font-semibold text-lg">{isLoading ? 'Loading...' : user?.username || user?.first_name}</h2>
+                <h2 className="font-semibold text-lg">
+                  {isLoading
+                    ? 'Loading...'
+                    : user?.username || user?.first_name}
+                </h2>
                 <p className="text-muted-foreground text-sm">{user?.email}</p>
               </div>
-              <Button variant="ghost" size="icon" className="rounded-full" asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full"
+                asChild
+              >
                 <Link to="/settings/profile">
                   <ChevronRight className="h-5 w-5" />
                 </Link>
@@ -89,21 +103,40 @@ export default function MainSettings() {
           </motion.div>
 
           <div className="space-y-6">
-
             <SettingsSection title="Preferences" delay={0.3}>
               <SettingsItem
-                icon={isDarkMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                icon={
+                  isDarkMode ? (
+                    <Moon className="h-5 w-5" />
+                  ) : (
+                    <Sun className="h-5 w-5" />
+                  )
+                }
                 title="Dark Mode"
-                action={<Switch checked={isDarkMode} onCheckedChange={toggleDarkMode} />}
+                action={
+                  <Switch
+                    checked={isDarkMode}
+                    onCheckedChange={toggleDarkMode}
+                  />
+                }
               />
-              <SettingsItem icon={<Palette className="h-5 w-5" />} title="Appearance" to="/appearance" />
+              <SettingsItem
+                icon={<Palette className="h-5 w-5" />}
+                title="Appearance"
+                to="/appearance"
+              />
               <SettingsItem
                 icon={<Languages className="h-5 w-5" />}
                 title="Language"
                 subtitle="English"
                 to="/language"
               />
-              <SettingsItem icon={<Globe className="h-5 w-5" />} title="Region" subtitle="United States" to="/region" />
+              <SettingsItem
+                icon={<Globe className="h-5 w-5" />}
+                title="Region"
+                subtitle="United States"
+                to="/region"
+              />
             </SettingsSection>
 
             <SettingsSection title="Travel Preferences" delay={0.4}>
@@ -122,12 +155,24 @@ export default function MainSettings() {
             </SettingsSection>
 
             <SettingsSection title="Privacy" delay={0.5}>
-              <SettingsItem icon={<Shield className="h-5 w-5" />} title="Privacy Settings" to="/privacy" />
-              <SettingsItem icon={<Bell className="h-5 w-5" />} title="Notification Preferences" to="/notifications" />
+              <SettingsItem
+                icon={<Shield className="h-5 w-5" />}
+                title="Privacy Settings"
+                to="/privacy"
+              />
+              <SettingsItem
+                icon={<Bell className="h-5 w-5" />}
+                title="Notification Preferences"
+                to="/notifications"
+              />
             </SettingsSection>
 
             <SettingsSection title="Support" delay={0.6}>
-              <SettingsItem icon={<HelpCircle className="h-5 w-5" />} title="Help Center" to="/help" />
+              <SettingsItem
+                icon={<HelpCircle className="h-5 w-5" />}
+                title="Help Center"
+                to="/help"
+              />
               <SettingsItem
                 icon={<Info className="h-5 w-5" />}
                 title="About TripWhizz"
@@ -142,7 +187,11 @@ export default function MainSettings() {
               transition={{ duration: 0.3, delay: 0.7 }}
               className="pt-4"
             >
-              <Button variant="destructive" className="w-full" onClick={handleLogout}>
+              <Button
+                variant="destructive"
+                className="w-full"
+                onClick={handleLogout}
+              >
                 <LogOut className="h-5 w-5 mr-2" />
                 Log Out
               </Button>
@@ -162,9 +211,17 @@ interface SettingsSectionProps {
 
 function SettingsSection({ title, children, delay = 0 }: SettingsSectionProps) {
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay }}>
-      <h2 className="text-sm font-medium text-muted-foreground mb-2 px-1">{title}</h2>
-      <div className="bg-card rounded-2xl overflow-hidden shadow-sm border">{children}</div>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay }}
+    >
+      <h2 className="text-sm font-medium text-muted-foreground mb-2 px-1">
+        {title}
+      </h2>
+      <div className="bg-card rounded-2xl overflow-hidden shadow-sm border">
+        {children}
+      </div>
     </motion.div>
   );
 }
@@ -178,14 +235,23 @@ interface SettingsItemProps {
   onClick?: () => void;
 }
 
-function SettingsItem({ icon, title, subtitle, to, action, onClick }: SettingsItemProps) {
+function SettingsItem({
+  icon,
+  title,
+  subtitle,
+  to,
+  action,
+  onClick,
+}: SettingsItemProps) {
   const content = (
     <div className="flex items-center justify-between py-3.5 px-4 hover:bg-muted/50 transition-colors">
       <div className="flex items-center">
         <div className="text-primary mr-3">{icon}</div>
         <div>
           <p className="font-medium">{title}</p>
-          {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+          {subtitle && (
+            <p className="text-sm text-muted-foreground">{subtitle}</p>
+          )}
         </div>
       </div>
       {action || <ChevronRight className="h-5 w-5 text-muted-foreground/70" />}

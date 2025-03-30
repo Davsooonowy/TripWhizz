@@ -30,7 +30,6 @@ import {
 import { useDarkMode } from '@/components/util/dark-mode-provider.tsx';
 import { TripCompanions } from '@/components/navigation/trip-companions';
 
-
 // dummy data and dummy companions before we will implement real ones :)
 const data = {
   trips: [
@@ -155,6 +154,10 @@ const data = {
       color: 'bg-amber-500',
     },
   ],
+  user: {
+    name: 'John Doe',
+    avatar: '/placeholder.svg?height=40&width=40',
+  },
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -172,7 +175,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroupContent>
             <TripCompanions companions={data.companions} />
           </SidebarGroupContent>
-        </SidebarGroup> </SidebarContent>
+        </SidebarGroup>{' '}
+      </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -182,10 +186,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               ) : (
                 <IconMoon className="h-5 w-5 flex-shrink-0" />
               )}
-              <span className="text-sm w-24 truncate">{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+              <span className="text-sm w-24 truncate">
+                {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+              </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          <NavUser user={data.user} />
+          <NavUser />
         </SidebarMenu>
       </SidebarFooter>
       <SidebarRail />

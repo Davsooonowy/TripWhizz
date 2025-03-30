@@ -7,7 +7,11 @@ import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/auth/form-field.tsx';
 import { SocialLoginButton } from '@/components/auth/social-login-button.tsx';
 import { GalleryVerticalEnd, AlertCircle, Check } from 'lucide-react';
-import { loginSchema, registerSchema, EmailSchema } from '@/components/util/form-schemas.ts';
+import {
+  loginSchema,
+  registerSchema,
+  EmailSchema,
+} from '@/components/util/form-schemas.ts';
 import { calculatePasswordStrength } from '@/components/util/password-utils.ts';
 import { UsersApiClient } from '@/lib/api/users.ts';
 
@@ -27,7 +31,11 @@ interface AuthFormProps extends React.ComponentPropsWithoutRef<'form'> {
   isRegister?: boolean;
 }
 
-export function AuthForm({ className, isRegister = false, ...props }: AuthFormProps) {
+export function AuthForm({
+  className,
+  isRegister = false,
+  ...props
+}: AuthFormProps) {
   const [isRegisterMode, setIsRegisterMode] = useState(isRegister);
   const [isResetPasswordMode, setIsResetPasswordMode] = useState(false);
   const [password, setPassword] = useState('');
@@ -150,11 +158,18 @@ export function AuthForm({ className, isRegister = false, ...props }: AuthFormPr
     { text: 'At least one uppercase letter', met: /[A-Z]/.test(password) },
     { text: 'At least one lowercase letter', met: /[a-z]/.test(password) },
     { text: 'At least one number', met: /[0-9]/.test(password) },
-    { text: 'At least one special character', met: /[^A-Za-z0-9]/.test(password) },
+    {
+      text: 'At least one special character',
+      met: /[^A-Za-z0-9]/.test(password),
+    },
   ];
 
   return (
-    <form className={cn('flex flex-col gap-6', className)} {...props} onSubmit={handleSubmit(onSubmit)}>
+    <form
+      className={cn('flex flex-col gap-6', className)}
+      {...props}
+      onSubmit={handleSubmit(onSubmit)}
+    >
       <div className="flex flex-col items-center gap-2">
         <a href="#" className="flex flex-col items-center gap-2 font-medium">
           <div className="flex h-8 w-8 items-center justify-center rounded-md">
@@ -264,7 +279,11 @@ export function AuthForm({ className, isRegister = false, ...props }: AuthFormPr
                 className={errors.password ? 'border-red-500' : ''}
                 onChange={(e) => setPassword(e.target.value)}
               />
-              {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>}
+              {errors.password && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.password.message}
+                </p>
+              )}
 
               {isRegisterMode && (
                 <>
@@ -280,7 +299,9 @@ export function AuthForm({ className, isRegister = false, ...props }: AuthFormPr
                   </div>
 
                   <div className="mt-3 text-xs space-y-1.5">
-                    <p className="font-medium text-sm mb-1">Password requirements:</p>
+                    <p className="font-medium text-sm mb-1">
+                      Password requirements:
+                    </p>
                     {passwordRequirements.map((req, index) => (
                       <div key={index} className="flex items-center">
                         {req.met ? (
@@ -288,9 +309,15 @@ export function AuthForm({ className, isRegister = false, ...props }: AuthFormPr
                         ) : (
                           <div className="h-3.5 w-3.5 border border-gray-300 rounded-full mr-2" />
                         )}
-                        <span className={req.met ? 'text-green-700 dark:text-green-400' : 'text-muted-foreground'}>
-                              {req.text}
-                            </span>
+                        <span
+                          className={
+                            req.met
+                              ? 'text-green-700 dark:text-green-400'
+                              : 'text-muted-foreground'
+                          }
+                        >
+                          {req.text}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -309,21 +336,30 @@ export function AuthForm({ className, isRegister = false, ...props }: AuthFormPr
             <Button type="submit" className="w-full">
               {isRegisterMode ? 'Register' : 'Login'}
             </Button>
-            <div
-              className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
-              <span className="relative z-10 bg-background px-2 text-muted-foreground">Or continue with</span>
+            <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
+              <span className="relative z-10 bg-background px-2 text-muted-foreground">
+                Or continue with
+              </span>
             </div>
 
             <div className="flex gap-4">
-              <SocialLoginButton provider="facebook" onClick={() => handleSocialLogin('facebook')} className="flex-1" />
-              <SocialLoginButton provider="google" onClick={() => handleSocialLogin('google')} className="flex-1" />
+              <SocialLoginButton
+                provider="facebook"
+                onClick={() => handleSocialLogin('facebook')}
+                className="flex-1"
+              />
+              <SocialLoginButton
+                provider="google"
+                onClick={() => handleSocialLogin('google')}
+                className="flex-1"
+              />
             </div>
           </>
         )}
       </div>
-      <div
-        className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+      <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary">
+        By clicking continue, you agree to our <a href="#">Terms of Service</a>{' '}
+        and <a href="#">Privacy Policy</a>.
       </div>
     </form>
   );

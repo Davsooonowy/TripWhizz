@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { User, ArrowRight, Camera } from 'lucide-react';
 import { ImageCropper } from '@/components/util/image-cropper';
 
@@ -29,10 +29,10 @@ const personalInfoSchema = z.object({
 });
 
 export function PersonalInfoStep({
-                                   formData,
-                                   updateFormData,
-                                   onNext,
-                                 }: PersonalInfoStepProps) {
+  formData,
+  updateFormData,
+  onNext,
+}: PersonalInfoStepProps) {
   const [errors, setErrors] = useState({
     firstName: '',
     lastName: '',
@@ -70,9 +70,11 @@ export function PersonalInfoStep({
     setAvatarPreview(croppedImageUrl);
 
     fetch(croppedImageUrl)
-      .then(res => res.blob())
-      .then(blob => {
-        const file = new File([blob], 'cropped-avatar.jpg', { type: 'image/jpeg' });
+      .then((res) => res.blob())
+      .then((blob) => {
+        const file = new File([blob], 'cropped-avatar.jpg', {
+          type: 'image/jpeg',
+        });
         updateFormData({ avatar: file });
       });
   };
@@ -131,8 +133,7 @@ export function PersonalInfoStep({
 
               <div className="flex flex-col items-center mb-6">
                 <div className="relative group">
-                  <Avatar
-                    className="w-24 h-24 mb-2 border-4 border-background shadow-lg group-hover:border-primary transition-all duration-300 rounded-lg">
+                  <Avatar className="w-24 h-24 mb-2 border-4 border-background shadow-lg group-hover:border-primary transition-all duration-300 rounded-lg">
                     <AvatarImage src={avatarPreview || ''} />
                     <AvatarFallback className="bg-primary/10 text-primary text-xl rounded-lg">
                       {formData.firstName && formData.lastName

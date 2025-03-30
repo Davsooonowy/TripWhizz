@@ -42,7 +42,7 @@ export default function LoginPage() {
         <div
           className="absolute inset-0 z-0 bg-cover bg-center"
           style={{
-            backgroundImage: 'url(\'/src/assets/login_image.jpg\')',
+            backgroundImage: "url('/src/assets/login_image.jpg')",
           }}
         />
 
@@ -57,14 +57,17 @@ export default function LoginPage() {
             transition={{ duration: 1 }}
             className="bg-black/30 backdrop-blur-sm p-6 rounded-xl border border-white/10"
           >
-            <p className="text-white text-xl font-light italic mb-4">{currentQuote}</p>
+            <p className="text-white text-xl font-light italic mb-4">
+              {currentQuote}
+            </p>
             <div className="flex items-center">
               <MapPin className="text-primary mr-2" />
-              <p className="text-white/80 text-sm">Discover your next adventure</p>
+              <p className="text-white/80 text-sm">
+                Discover your next adventure
+              </p>
             </div>
           </motion.div>
         </div>
-
       </motion.div>
     </div>
   );
