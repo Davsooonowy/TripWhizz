@@ -15,13 +15,28 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Separator } from '@/components/ui/separator';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [pageTitle, setPageTitle] = useState('Home');
+
+  // dummy useEffect for demo in future we will change it with real stuff ;P
+  //TODO: mati my favorite backend engineer will do it
+  useEffect(() => {
+    const checkTrips = async () => {
+      const hasTrips = true;
+      if (!hasTrips && location.pathname === '/') {
+        navigate('/trip');
+      }
+    };
+
+    checkTrips();
+  }, [location, navigate]);
 
   useEffect(() => {
     const path = location.pathname;

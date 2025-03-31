@@ -162,20 +162,23 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
+  const hasTrips = data.trips.length > 0;
 
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TripSwitcher trips={data.trips} />
+        <TripSwitcher trips={data.trips} hasTrips={hasTrips} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <SidebarGroup>
-          <SidebarGroupLabel>Trip Companions</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <TripCompanions companions={data.companions} />
-          </SidebarGroupContent>
-        </SidebarGroup>{' '}
+        <NavMain items={data.navMain} hasTrips={hasTrips} />
+        {hasTrips && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Trip Companions</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <TripCompanions companions={data.companions} />
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
