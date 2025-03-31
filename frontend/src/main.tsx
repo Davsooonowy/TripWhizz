@@ -20,6 +20,7 @@ import NotificationsPage from '@/pages/notifications';
 import SettingsPage from '@/pages/settings';
 import FriendsPage from '@/pages/friends';
 import ProfileSettingsPage from '@/pages/settings/profile';
+import TripTypePage from '@/pages/trip/new';
 import { Toaster } from '@/components/ui/toaster';
 
 const protectedLoginLoader = async () => {
@@ -49,6 +50,10 @@ const router = createBrowserRouter([
       {
         path: '/trip',
         element: <StartTripPage />,
+      },
+      {
+        path: '/trip/new',
+        element: <TripTypePage />,
       },
       {
         path: '/notifications',
