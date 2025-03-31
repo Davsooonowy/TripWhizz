@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Card } from '@/components/ui/card';
+import { Link } from 'react-router-dom';
 
 export default function Start() {
   const [hoverCreate, setHoverCreate] = useState(false);
@@ -72,9 +73,11 @@ export default function Start() {
                   <p className="mt-2 text-sm text-muted-foreground">
                     Start planning your next adventure from scratch
                   </p>
-                  <Button className="w-full mt-4" size="lg">
-                    Create Trip
-                  </Button>
+                  <Link to="/trip/new">
+                    <Button className="w-full mt-4" size="lg">
+                      Create Trip
+                    </Button>
+                  </Link>
                 </div>
               </Card>
             </motion.div>
