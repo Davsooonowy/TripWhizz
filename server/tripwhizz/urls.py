@@ -25,7 +25,7 @@ schema_view = get_schema_view(
     openapi.Info(
         title="API Documentation",
         default_version="v1",
-        description="API documentation for your Django application",
+        description="TripWhizz API",
     ),
     public=True,
     permission_classes=[permissions.AllowAny],
@@ -33,7 +33,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/", include("account.urls")),
+    path("api/", include("user_account.urls")),
     path(
         "swagger/",
         schema_view.with_ui("swagger", cache_timeout=0),
