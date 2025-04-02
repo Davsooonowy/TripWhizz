@@ -2,22 +2,27 @@ import json
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.utils.crypto import get_random_string
 from django.utils.encoding import force_str, force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.db import transaction
+from django.conf import settings
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.contrib.auth import get_user_model
+import requests
 
 from tripwhizz import settings
-from .serializers import UserSerializer, LoginSerializer
+from .serializers import UserSerializer, LoginSerializer, GoogleAuthResponseSerializer
 
 User = get_user_model()
 
@@ -173,3 +178,49 @@ class PasswordResetView(APIView):
             return Response(
                 {"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class GoogleAuthView(GenericAPIView):
+    def post(self, request):
+        try:
+            credential = request.data.get('credential')
+            response = requests.get('https://oauth2.googleapis.com/tokeninfo', params={'id_token': credential})
+            response_data = response.json()
+            if 'error' in response_data:
+                return Response({
+                    "status": "error",
+                    "message": "Wrong google token / this google token is already expired.",
+                    "payload": {}
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception:
+            return Response({
+                "status": "error",
+                "message": "Unexpected error occurred, contact support for more info",
+                "payload": {}
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        google_response_serializer = GoogleAuthResponseSerializer(data=response_data)
+        if google_response_serializer.is_valid() is False:
+            return Response({
+                "status": "error",
+                "message": "Unexpected error occurred, contact support for more info",
+                "payload": {}
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        validated_data = google_response_serializer.validated_data
+        email = validated_data['email'].lower()
+        given_name = validated_data["given_name"]
+        family_name = validated_data.get("family_name", "")
+
+        with transaction.atomic():
+            user = User.objects.filter(email=email).first()
+            if user is None:
+                username = email
+                password = get_random_string(12)
+                user = User.objects.create_user(
+                    username=username, password=password, email=email, first_name=given_name, last_name=family_name
+                )
+
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({"token": token.key}, status=status.HTTP_200_OK)

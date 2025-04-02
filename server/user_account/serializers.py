@@ -45,3 +45,12 @@ class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField(required=False)
     password = serializers.CharField(write_only=True, required=False)
     new_password = serializers.CharField(write_only=True, required=False)
+
+
+class GoogleAuthResponseSerializer(serializers.Serializer):
+    sub = serializers.CharField()
+    email = serializers.EmailField()
+    email_verified = serializers.BooleanField()
+    name = serializers.CharField()
+    given_name = serializers.CharField()
+    family_name = serializers.CharField(required=False)

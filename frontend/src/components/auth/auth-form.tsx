@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
 import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import GoogleLoginButton from "@/components/auth/GoogleLoginButton.tsx";
 
 interface FormData {
   email: string;
@@ -348,11 +349,7 @@ export function AuthForm({
                 onClick={() => handleSocialLogin('facebook')}
                 className="flex-1"
               />
-              <SocialLoginButton
-                provider="google"
-                onClick={() => handleSocialLogin('google')}
-                className="flex-1"
-              />
+              <GoogleLoginButton />
             </div>
           </>
         )}
