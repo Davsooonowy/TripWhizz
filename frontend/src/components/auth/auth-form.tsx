@@ -1,16 +1,15 @@
 import type React from 'react';
-import { useState, useEffect } from 'react';
-import { useForm, type SubmitHandler, type FieldValues } from 'react-hook-form';
+import { useEffect, useState } from 'react';
+import { type FieldValues, type SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/auth/form-field.tsx';
-import { SocialLoginButton } from '@/components/auth/social-login-button.tsx';
-import { GalleryVerticalEnd, AlertCircle, Check } from 'lucide-react';
+import { AlertCircle, Check, GalleryVerticalEnd } from 'lucide-react';
 import {
+  EmailSchema,
   loginSchema,
   registerSchema,
-  EmailSchema,
 } from '@/components/util/form-schemas.ts';
 import { calculatePasswordStrength } from '@/components/util/password-utils.ts';
 import { UsersApiClient } from '@/lib/api/users.ts';
@@ -20,7 +19,8 @@ import { Input } from '@/components/ui/input';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
 import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import GoogleLoginButton from "@/components/auth/GoogleLoginButton.tsx";
+import GoogleLoginButton from '@/components/auth/GoogleLoginButton.tsx';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 interface FormData {
   email: string;
@@ -141,14 +141,6 @@ export function AuthForm({
           ? 'Registration failed. Please check your information and try again.'
           : `Login failed. ${loginAttempts - 1} attempts left.`,
       );
-    }
-  };
-
-  const handleSocialLogin = (provider: 'google' | 'facebook') => {
-    if (provider === 'google') {
-      window.location.href = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-    } else if (provider === 'facebook') {
-      window.location.href = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
     }
   };
 
@@ -342,15 +334,11 @@ export function AuthForm({
                 Or continue with
               </span>
             </div>
-
-            <div className="flex gap-4">
-              <SocialLoginButton
-                provider="facebook"
-                onClick={() => handleSocialLogin('facebook')}
-                className="flex-1"
-              />
-              <GoogleLoginButton />
-            </div>
+            <GoogleOAuthProvider
+              clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID as string}
+            >
+              <GoogleLoginButton setFormError={setFormError} />
+            </GoogleOAuthProvider>
           </>
         )}
       </div>

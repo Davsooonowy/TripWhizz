@@ -25,25 +25,24 @@ function WelcomeDialog({ isOpen, onClose }: WelcomeDialogProps) {
     {
       title: 'Welcome to TripWhizz',
       description:
-        'Discover a powerful collection of components designed to enhance your development workflow.',
+        'Plan your trips effortlessly with friends and explore the world together.',
     },
     {
-      title: 'Customizable Components',
+      title: 'Seamless Collaboration',
       description:
-        'Each component is fully customizable and built with modern web standards in mind.',
+        'Coordinate itineraries, share expenses, and make group decisions with ease.',
     },
     {
-      title: 'Ready to Start?',
+      title: 'Smart Recommendations',
       description:
-        'Begin building amazing interfaces with our comprehensive component library.',
+        'Discover must-visit spots and hidden gems curated just for your trip.',
     },
     {
-      title: 'Get Support',
+      title: 'Ready to Embark?',
       description:
-        'Access our extensive documentation and community resources to make the most of Origin UI.',
+        'Start planning your adventure now and make unforgettable memories!',
     },
   ];
-
   const totalSteps = stepContent.length;
 
   const handleContinue = () => {
