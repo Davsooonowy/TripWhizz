@@ -33,7 +33,11 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   });
 
   return (
-    <Button variant="outline" className="flex items-center" onClick={login}>
+    <Button
+      variant="outline"
+      className="flex items-center"
+      onClick={() => login}
+    >
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
