@@ -34,7 +34,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
 
   return (
     <Button
-        type="button"
+      type="button"
       variant="outline"
       className="flex items-center"
       onClick={() => login()}
