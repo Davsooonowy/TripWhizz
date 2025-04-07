@@ -10,21 +10,21 @@ import { OTPInput, SlotProps } from 'input-otp';
 import { useRef, useState } from 'react';
 import { KeyRound } from 'lucide-react';
 import PropTypes from 'prop-types';
-
-// dummy code for demo purposes
-//TODO: replace with actual code, after implementing the backend log for login authentication
-const CORRECT_CODE = '6548';
+import { UsersApiClient } from '@/lib/api/users.ts';
+import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
 
 interface OtpDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (token: string) => void;
+  email: string | null;
 }
 
 export default function OtpDialog({
   isOpen,
   onClose,
   onSuccess,
+  email,
 }: OtpDialogProps) {
   const [value, setValue] = useState('');
   const [hasGuessed, setHasGuessed] = useState<undefined | boolean>(undefined);
@@ -36,17 +36,19 @@ export default function OtpDialog({
     inputRef.current?.select();
     await new Promise((r) => setTimeout(r, 100));
 
-    const isCorrect = value === CORRECT_CODE;
-    setHasGuessed(isCorrect);
-
-    if (isCorrect) {
+    try {
+      const usersApiClient = new UsersApiClient(authenticationProviderInstance);
+      const response = await usersApiClient.verifyOtp(email, value);
+      setHasGuessed(true);
       setValue('');
       setTimeout(() => {
         inputRef.current?.blur();
         onClose();
-        onSuccess();
+        onSuccess(response.token);
       }, 20);
-    } else {
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
+      setHasGuessed(false);
       setValue('');
       setTimeout(() => {
         inputRef.current?.blur();
@@ -91,7 +93,7 @@ export default function OtpDialog({
                 value={value}
                 onChange={setValue}
                 containerClassName="flex items-center gap-3 has-disabled:opacity-50"
-                maxLength={4}
+                maxLength={6}
                 onFocus={() => setHasGuessed(undefined)}
                 render={({ slots }) => (
                   <div className="flex gap-2">
@@ -128,6 +130,7 @@ OtpDialog.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   onSuccess: PropTypes.func.isRequired,
+  email: PropTypes.string,
 };
 
 function Slot(props: SlotProps) {

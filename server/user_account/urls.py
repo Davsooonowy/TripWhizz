@@ -18,4 +18,5 @@ urlpatterns = [
         name="password_reset_confirm",
     ),
     path("google_login/", views.GoogleAuthView.as_view(), name="google_login"),
+    path("user/verify/", views.OTPVerifyView.as_view(), name="verify_otp"),
 ]

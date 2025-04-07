@@ -117,4 +117,18 @@ export class UsersApiClient extends BaseApiClient {
       throw new Error('Failed to update user data');
     }
   }
+
+  async verifyOtp(email: string, code: string): Promise<RegisterUserResponse> {
+    const response = await fetch(`${API_URL}/user/verify/`, {
+      ...this._requestConfiguration(false),
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to verify OTP');
+    }
+
+    return await response.json();
+  }
 }
