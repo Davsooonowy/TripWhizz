@@ -118,7 +118,10 @@ export class UsersApiClient extends BaseApiClient {
     }
   }
 
-  async verifyOtp(email: string, code: string): Promise<RegisterUserResponse> {
+  async verifyOtp(
+    email: string | null,
+    code: string,
+  ): Promise<RegisterUserResponse> {
     const response = await fetch(`${API_URL}/user/verify/`, {
       ...this._requestConfiguration(false),
       method: 'POST',
