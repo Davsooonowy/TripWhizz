@@ -35,7 +35,7 @@ export class UsersApiClient extends BaseApiClient {
       throw new Error(`Error HTTP: ${response.status}`);
     }
 
-    return await response.json();
+    return (await response.json()) as Promise<RegisterUserResponse>;
   }
 
   async loginUser(user: BasicUserData): Promise<RegisterUserResponse> {
@@ -49,7 +49,7 @@ export class UsersApiClient extends BaseApiClient {
       throw new Error('Invalid credentials');
     }
 
-    return response.json();
+    return (await response.json()) as Promise<RegisterUserResponse>;
   }
 
   async getActiveUser(): Promise<User> {
@@ -62,7 +62,7 @@ export class UsersApiClient extends BaseApiClient {
       throw new Error('Failed to fetch user data');
     }
 
-    return response.json();
+    return (await response.json()) as Promise<User>;
   }
 
   async sendPasswordResetEmail(email: string): Promise<void> {
@@ -115,6 +115,35 @@ export class UsersApiClient extends BaseApiClient {
 
     if (!response.ok) {
       throw new Error('Failed to update user data');
+    }
+  }
+
+  async verifyOtp(
+    email: string | null,
+    code: string,
+  ): Promise<RegisterUserResponse> {
+    const response = await fetch(`${API_URL}/user/verify/`, {
+      ...this._requestConfiguration(false),
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to verify OTP');
+    }
+
+    return (await response.json()) as Promise<RegisterUserResponse>;
+  }
+
+  async resendOtp(email: string | null): Promise<void> {
+    const response = await fetch(`${API_URL}/user/resend-otp/`, {
+      ...this._requestConfiguration(false),
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to resend OTP');
     }
   }
 }

@@ -21,6 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import GoogleLoginButton from '@/components/auth/GoogleLoginButton.tsx';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import OtpDialog from '@/components/util/otp-dialog';
 
 interface FormData {
   email: string;
@@ -44,6 +45,8 @@ export function AuthForm({
   const [loginAttempts, setLoginAttempts] = useState(10);
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockTime, setBlockTime] = useState<number | null>(null);
+  const [isOtpDialogOpen, setIsOtpDialogOpen] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const schema = isRegisterMode ? registerSchema : loginSchema;
   const {
     register,
@@ -113,6 +116,8 @@ export function AuthForm({
           email: data.email,
           password: data.password,
         });
+        setPendingEmail(data.email);
+        setIsOtpDialogOpen(true);
       } else {
         response = await usersApiClient.loginUser({
           email: data.email,
@@ -144,6 +149,20 @@ export function AuthForm({
     }
   };
 
+  const handleOtpSuccess = async (token: string) => {
+    setIsOtpDialogOpen(false);
+    if (token) {
+      authenticationProviderInstance.login(token);
+      const usersApiClient = new UsersApiClient(authenticationProviderInstance);
+      const user = await usersApiClient.getActiveUser();
+      if (!user.onboarding_complete) {
+        navigate('/onboarding');
+      } else {
+        navigate('/');
+      }
+    }
+  };
+
   const passwordStrength = calculatePasswordStrength(password);
 
   const passwordRequirements = [
@@ -158,194 +177,202 @@ export function AuthForm({
   ];
 
   return (
-    <form
-      className={cn('flex flex-col gap-6', className)}
-      {...props}
-      onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)}
-    >
-      <div className="flex flex-col items-center gap-2">
-        <a href="#" className="flex flex-col items-center gap-2 font-medium">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md">
-            <GalleryVerticalEnd className="size-6" />
-          </div>
-          <span className="sr-only">Acme Inc.</span>
-        </a>
-        <h1 className="text-xl font-bold">Welcome to TripWhizz</h1>
-        {!isResetPasswordMode && (
-          <div className="text-center text-sm">
-            {isRegisterMode ? (
-              <>
-                Already have an account?{' '}
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    toggleFormMode();
-                  }}
-                  className="underline underline-offset-4"
-                >
-                  Sign in
-                </a>
-              </>
-            ) : (
-              <>
-                Don&apos;t have an account?{' '}
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    toggleFormMode();
-                  }}
-                  className="underline underline-offset-4"
-                >
-                  Sign up
-                </a>
-              </>
-            )}
-          </div>
-        )}
-      </div>
-
-      {formError && (
-        <Alert variant="destructive" className="mb-2">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{formError}</AlertDescription>
-        </Alert>
-      )}
-
-      <div className="grid gap-6">
-        {isResetPasswordMode ? (
-          <div className="grid gap-2">
-            <FormField
-              id="email"
-              label="Email"
-              type="email"
-              register={register}
-              error={errors.email?.message}
-              placeholder="m@example.com"
-            />
-            <Button type="submit" className="w-full">
-              Reset Password
-            </Button>
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                toggleResetPasswordMode();
-              }}
-              className="underline underline-offset-4 text-center"
-            >
-              Back to Login
-            </a>
-          </div>
-        ) : (
-          <>
-            <FormField
-              id="email"
-              label="Email"
-              type="email"
-              register={register}
-              error={errors.email?.message}
-              placeholder="m@example.com"
-            />
-            <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
-                {!isRegisterMode && (
+    <>
+      <form
+        className={cn('flex flex-col gap-6', className)}
+        {...props}
+        onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)}
+      >
+        <div className="flex flex-col items-center gap-2">
+          <a href="#" className="flex flex-col items-center gap-2 font-medium">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md">
+              <GalleryVerticalEnd className="size-6" />
+            </div>
+            <span className="sr-only">Acme Inc.</span>
+          </a>
+          <h1 className="text-xl font-bold">Welcome to TripWhizz</h1>
+          {!isResetPasswordMode && (
+            <div className="text-center text-sm">
+              {isRegisterMode ? (
+                <>
+                  Already have an account?{' '}
                   <a
                     href="#"
-                    className="ml-auto text-sm underline-offset-4 hover:underline"
                     onClick={(e) => {
                       e.preventDefault();
-                      toggleResetPasswordMode();
+                      toggleFormMode();
                     }}
+                    className="underline underline-offset-4"
                   >
-                    Forgot your password?
+                    Sign in
                   </a>
-                )}
-              </div>
-              <Input
-                id="password"
-                type="password"
-                {...register('password')}
-                aria-invalid={errors.password ? 'true' : 'false'}
-                className={errors.password ? 'border-red-500' : ''}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              {errors.password && (
-                <p className="text-sm text-red-500 mt-1">
-                  {errors.password.message}
-                </p>
-              )}
-
-              {isRegisterMode && (
+                </>
+              ) : (
                 <>
-                  <div className="relative w-full h-2 bg-gray-200 rounded mt-1">
-                    <div
-                      className={cn('absolute h-full rounded', {
-                        'bg-red-500': passwordStrength <= 2,
-                        'bg-yellow-500': passwordStrength === 3,
-                        'bg-green-500': passwordStrength >= 4,
-                      })}
-                      style={{ width: `${(passwordStrength / 5) * 100}%` }}
-                    />
-                  </div>
-
-                  <div className="mt-3 text-xs space-y-1.5">
-                    <p className="font-medium text-sm mb-1">
-                      Password requirements:
-                    </p>
-                    {passwordRequirements.map((req, index) => (
-                      <div key={index} className="flex items-center">
-                        {req.met ? (
-                          <Check className="h-3.5 w-3.5 text-green-500 mr-2" />
-                        ) : (
-                          <div className="h-3.5 w-3.5 border border-gray-300 rounded-full mr-2" />
-                        )}
-                        <span
-                          className={
-                            req.met
-                              ? 'text-green-700 dark:text-green-400'
-                              : 'text-muted-foreground'
-                          }
-                        >
-                          {req.text}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                  Don&apos;t have an account?{' '}
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toggleFormMode();
+                    }}
+                    className="underline underline-offset-4"
+                  >
+                    Sign up
+                  </a>
                 </>
               )}
             </div>
-            {isRegisterMode && (
-              <FormField
-                id="confirmPassword"
-                label="Confirm Password"
-                type="password"
-                register={register}
-                error={errors.confirmPassword?.message}
-              />
-            )}
-            <Button type="submit" className="w-full">
-              {isRegisterMode ? 'Register' : 'Login'}
-            </Button>
-            <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
-              <span className="relative z-10 bg-background px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
-            <GoogleOAuthProvider
-              clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID as string}
-            >
-              <GoogleLoginButton setFormError={setFormError} />
-            </GoogleOAuthProvider>
-          </>
+          )}
+        </div>
+
+        {formError && (
+          <Alert variant="destructive" className="mb-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{formError}</AlertDescription>
+          </Alert>
         )}
-      </div>
-      <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{' '}
-        and <a href="#">Privacy Policy</a>.
-      </div>
-    </form>
+
+        <div className="grid gap-6">
+          {isResetPasswordMode ? (
+            <div className="grid gap-2">
+              <FormField
+                id="email"
+                label="Email"
+                type="email"
+                register={register}
+                error={errors.email?.message}
+                placeholder="m@example.com"
+              />
+              <Button type="submit" className="w-full">
+                Reset Password
+              </Button>
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  toggleResetPasswordMode();
+                }}
+                className="underline underline-offset-4 text-center"
+              >
+                Back to Login
+              </a>
+            </div>
+          ) : (
+            <>
+              <FormField
+                id="email"
+                label="Email"
+                type="email"
+                register={register}
+                error={errors.email?.message}
+                placeholder="m@example.com"
+              />
+              <div className="grid gap-2">
+                <div className="flex items-center">
+                  <Label htmlFor="password">Password</Label>
+                  {!isRegisterMode && (
+                    <a
+                      href="#"
+                      className="ml-auto text-sm underline-offset-4 hover:underline"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        toggleResetPasswordMode();
+                      }}
+                    >
+                      Forgot your password?
+                    </a>
+                  )}
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  {...register('password')}
+                  aria-invalid={errors.password ? 'true' : 'false'}
+                  className={errors.password ? 'border-red-500' : ''}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                {errors.password && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.password.message}
+                  </p>
+                )}
+
+                {isRegisterMode && (
+                  <>
+                    <div className="relative w-full h-2 bg-gray-200 rounded mt-1">
+                      <div
+                        className={cn('absolute h-full rounded', {
+                          'bg-red-500': passwordStrength <= 2,
+                          'bg-yellow-500': passwordStrength === 3,
+                          'bg-green-500': passwordStrength >= 4,
+                        })}
+                        style={{ width: `${(passwordStrength / 5) * 100}%` }}
+                      />
+                    </div>
+
+                    <div className="mt-3 text-xs space-y-1.5">
+                      <p className="font-medium text-sm mb-1">
+                        Password requirements:
+                      </p>
+                      {passwordRequirements.map((req, index) => (
+                        <div key={index} className="flex items-center">
+                          {req.met ? (
+                            <Check className="h-3.5 w-3.5 text-green-500 mr-2" />
+                          ) : (
+                            <div className="h-3.5 w-3.5 border border-gray-300 rounded-full mr-2" />
+                          )}
+                          <span
+                            className={
+                              req.met
+                                ? 'text-green-700 dark:text-green-400'
+                                : 'text-muted-foreground'
+                            }
+                          >
+                            {req.text}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+              {isRegisterMode && (
+                <FormField
+                  id="confirmPassword"
+                  label="Confirm Password"
+                  type="password"
+                  register={register}
+                  error={errors.confirmPassword?.message}
+                />
+              )}
+              <Button type="submit" className="w-full">
+                {isRegisterMode ? 'Register' : 'Login'}
+              </Button>
+              <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
+                <span className="relative z-10 bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+              <GoogleOAuthProvider
+                clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID as string}
+              >
+                <GoogleLoginButton setFormError={setFormError} />
+              </GoogleOAuthProvider>
+            </>
+          )}
+        </div>
+        <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary">
+          By clicking continue, you agree to our{' '}
+          <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+        </div>
+      </form>
+      <OtpDialog
+        isOpen={isOtpDialogOpen}
+        onClose={() => setIsOtpDialogOpen(false)}
+        onSuccess={async (token) => handleOtpSuccess(token)}
+        email={pendingEmail}
+      />
+    </>
   );
 }

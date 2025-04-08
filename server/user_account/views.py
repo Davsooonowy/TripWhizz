@@ -22,7 +22,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .models import PendingUser, Profile
 from .serializers import UserSerializer, LoginSerializer, GoogleAuthResponseSerializer
+from .utils import generate_otp, send_otp_email
 
 User = get_user_model()
 
@@ -64,22 +66,24 @@ class AddUserView(APIView):
     )
     def post(self, request):
         data = json.loads(request.body)
-        serializer = UserSerializer(data=data)
+        email = data.get("email")
+        password = data.get("password")
 
-        if serializer.is_valid():
-            user = serializer.save()
-            token, created = Token.objects.get_or_create(user=user)
-            return Response(
-                {
-                    "message": "User created successfully",
-                    "user_id": user.id,
-                    "token": token.key,
-                    "onboarding_complete": user.onboarding_complete,
-                },
-                status=status.HTTP_201_CREATED,
-            )
+        if User.objects.filter(email=email).exists():
+            return Response({"error": "User already exists"}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        otp_code = generate_otp()
+        pending_user, created = PendingUser.objects.get_or_create(email=email)
+        pending_user.password = password
+        pending_user.otp = otp_code
+        pending_user.save()
+
+        send_otp_email(pending_user, otp_code)
+
+        return Response({
+            "message": "OTP sent. Please verify.",
+            "email": str(pending_user.email)
+        })
 
 
 class UserView(APIView):
@@ -234,3 +238,53 @@ class GoogleAuthView(GenericAPIView):
 
         token, created = Token.objects.get_or_create(user=user)
         return Response({"token": token.key}, status=status.HTTP_200_OK)
+
+
+class OTPVerifyView(APIView):
+    def post(self, request):
+        email = request.data.get("email")
+        otp = request.data.get("code")
+
+        try:
+            pending_user = PendingUser.objects.get(email=email)
+        except PendingUser.DoesNotExist:
+            return Response({"error": "Invalid session"}, status=404)
+
+        if pending_user.otp != otp:
+            return Response({"error": "Invalid OTP"}, status=400)
+
+        user = Profile.objects.create_user(
+            username=pending_user.email,
+            email=pending_user.email,
+            password=pending_user.password
+        )
+
+        token, _ = Token.objects.get_or_create(user=user)
+        pending_user.delete()
+
+        return Response({
+                "message": "User created successfully!",
+                "token": token.key,
+                "user_id": user.id,
+                "onboarding_complete": user.onboarding_complete,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class ResendOtpView(APIView):
+    def post(self, request):
+        email = request.data.get("email")
+
+        try:
+            pending_user = PendingUser.objects.get(email=email)
+        except PendingUser.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        otp_code = generate_otp()
+        pending_user.otp = otp_code
+        pending_user.save()
+
+        send_otp_email(pending_user, otp_code)
+
+        return Response({"message": "OTP resent successfully"}, status=status.HTTP_200_OK)
