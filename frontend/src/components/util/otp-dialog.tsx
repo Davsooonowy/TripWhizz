@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { OTPInput, SlotProps } from 'input-otp';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { KeyRound } from 'lucide-react';
 import PropTypes from 'prop-types';
 import { UsersApiClient } from '@/lib/api/users.ts';
@@ -28,6 +28,7 @@ export default function OtpDialog({
 }: OtpDialogProps) {
   const [value, setValue] = useState('');
   const [hasGuessed, setHasGuessed] = useState<undefined | boolean>(undefined);
+  const [remainingTime, setRemainingTime] = useState(600);
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function onSubmit(e?: React.FormEvent<HTMLFormElement>) {
@@ -46,8 +47,7 @@ export default function OtpDialog({
         onClose();
         onSuccess(response.token);
       }, 20);
-    } catch (error) {
-      console.error('Error verifying OTP:', error);
+    } catch {
       setHasGuessed(false);
       setValue('');
       setTimeout(() => {
@@ -55,6 +55,40 @@ export default function OtpDialog({
       }, 20);
     }
   }
+
+  async function handleResendOtp() {
+    const usersApiClient = new UsersApiClient(authenticationProviderInstance);
+    await usersApiClient.resendOtp(email);
+    setRemainingTime(600);
+  }
+
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setInterval(() => {
+        setRemainingTime((prevTime) => {
+          if (prevTime <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prevTime - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setRemainingTime(600);
+    }
+  }, [isOpen]);
+
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -115,9 +149,21 @@ export default function OtpDialog({
               </p>
             )}
             <p className="text-center text-sm">
-              <a className="underline hover:no-underline" href="#">
+              <a
+                className="underline hover:no-underline"
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleResendOtp();
+                }}
+              >
                 Resend code
               </a>
+            </p>
+            <p className="text-center text-sm color text-red-500">
+              {remainingTime > 0
+                ? `Code expires in: ${formatTime(remainingTime)}`
+                : 'Code expired'}
             </p>
           </div>
         )}

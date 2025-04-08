@@ -22,7 +22,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import PendingUser, Profile  # wherever you place the OTP model
+from .models import PendingUser, Profile
 from .serializers import UserSerializer, LoginSerializer, GoogleAuthResponseSerializer
 from .utils import generate_otp, send_otp_email
 
@@ -73,11 +73,11 @@ class AddUserView(APIView):
             return Response({"error": "User already exists"}, status=status.HTTP_400_BAD_REQUEST)
 
         otp_code = generate_otp()
-        pending_user = PendingUser.objects.create(
-            email=email,
-            password=password,
-            otp=otp_code,
-        )
+        pending_user, created = PendingUser.objects.get_or_create(email=email)
+        pending_user.password = password
+        pending_user.otp = otp_code
+        pending_user.save()
+
         send_otp_email(pending_user, otp_code)
 
         return Response({
@@ -270,3 +270,21 @@ class OTPVerifyView(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+class ResendOtpView(APIView):
+    def post(self, request):
+        email = request.data.get("email")
+
+        try:
+            pending_user = PendingUser.objects.get(email=email)
+        except PendingUser.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        otp_code = generate_otp()
+        pending_user.otp = otp_code
+        pending_user.save()
+
+        send_otp_email(pending_user, otp_code)
+
+        return Response({"message": "OTP resent successfully"}, status=status.HTTP_200_OK)
