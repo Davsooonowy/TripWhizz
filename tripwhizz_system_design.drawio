@@ -1,0 +1,130 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36" version="26.2.12">
+  <diagram name="Strona-1" id="fGwzy9PLXMhSgV61CA2c">
+    <mxGraphModel>
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="Frontend" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="343" y="135" width="395" height="104" as="geometry" />
+        </mxCell>
+        <mxCell id="3" value="Backend" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="202" y="463" width="322" height="104" as="geometry" />
+        </mxCell>
+        <mxCell id="4" value="Database" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="19" y="639" width="292" height="273" as="geometry" />
+        </mxCell>
+        <mxCell id="5" value="Services" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="554" y="311" width="477" height="432" as="geometry" />
+        </mxCell>
+        <mxCell id="6" value="User Interface" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="498" y="8" width="162" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="7" value="React Frontend" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="495" y="160" width="170" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="8" value="Django REST API" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="295" y="488" width="176" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="9" value="Database" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="102" y="664" width="125" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="10" value="PostgreSQL" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;strokeWidth=2;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="118" y="816" width="94" height="71" as="geometry" />
+        </mxCell>
+        <mxCell id="11" value="Auth Service" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="589" y="336" width="150" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="12" value="Notification Service" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="589" y="664" width="201" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="13" value="Push Service" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="615" y="824" width="149" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="14" value="Third-Party APIs" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="155" y="336" width="174" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="15" value="Cloud Storage" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="8" y="488" width="159" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="16" value="Email Service" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="841" y="664" width="156" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="17" value="Interacts with" style="curved=1;startArrow=none;endArrow=block;exitX=0.5;exitY=1;entryX=0.5;entryY=-0.01;" edge="1" parent="1" source="6" target="7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="18" value="API Requests" style="curved=1;startArrow=none;endArrow=block;exitX=0;exitY=0.98;entryX=0.58;entryY=-0.01;" edge="1" parent="1" source="7" target="8">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="412" y="239" />
+              <mxPoint x="412" y="463" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="19" value="CRUD Operations" style="curved=1;startArrow=none;endArrow=block;exitX=0.08;exitY=0.99;entryX=0.83;entryY=0;" edge="1" parent="1" source="8" target="9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="242" y="567" />
+              <mxPoint x="242" y="639" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="20" value="Data Storage" style="curved=1;startArrow=none;endArrow=block;exitX=0.5;exitY=1;entryX=0.5;entryY=-0.01;" edge="1" parent="1" source="9" target="10">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="21" value="User Authentication" style="curved=1;startArrow=none;endArrow=block;exitX=0.76;exitY=0.99;entryX=0.5;entryY=0;" edge="1" parent="1" source="7" target="11">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="664" y="239" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="22" value="JWT Tokens" style="curved=1;startArrow=none;endArrow=block;exitX=0.5;exitY=1;entryX=1;entryY=0.19;" edge="1" parent="1" source="11" target="8">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="664" y="463" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="23" value="Sends Notifications" style="curved=1;startArrow=none;endArrow=block;exitX=0.46;exitY=0.99;entryX=0.5;entryY=0;" edge="1" parent="1" source="8" target="12">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="368" y="567" />
+              <mxPoint x="690" y="603" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="24" value="Push Notifications" style="curved=1;startArrow=none;endArrow=block;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="12" target="13">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="25" value="Data Integration" style="curved=1;startArrow=none;endArrow=block;exitX=0.5;exitY=1;entryX=0.08;entryY=-0.01;" edge="1" parent="1" source="14" target="8">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="242" y="463" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="26" value="File Handling" style="curved=1;startArrow=none;endArrow=block;exitX=0.5;exitY=0.99;entryX=0.18;entryY=0;" edge="1" parent="1" source="15" target="9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="88" y="639" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="27" value="Sends Emails" style="curved=1;startArrow=none;endArrow=block;exitX=0.74;exitY=0.99;entryX=0.5;entryY=0;" edge="1" parent="1" source="8" target="16">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="463" y="567" />
+              <mxPoint x="919" y="603" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
