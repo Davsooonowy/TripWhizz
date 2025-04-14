@@ -164,10 +164,12 @@ export default function TripType() {
             </Button>
           </Link>
 
-          <Button disabled={!selectedOption} onClick={handleContinue}>
-            Continue
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
+          <Link to={selectedOption ? `/trip/new/${selectedOption}` : '#'}>
+            <Button disabled={!selectedOption}>
+              Continue
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
         </div>
       </div>
     </div>

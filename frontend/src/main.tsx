@@ -22,6 +22,10 @@ import FriendsPage from '@/pages/friends';
 import ProfileSettingsPage from '@/pages/settings/profile';
 import TripTypePage from '@/pages/trip/new';
 import { Toaster } from '@/components/ui/toaster';
+import PrivateTripPage from '@/pages/trip/new/private';
+import PublicTripPage from '@/pages/trip/new/public';
+import PrivateTripStagesPage from '@/pages/trip/new/private/stages';
+import PublicTripStagesPage from '@/pages/trip/new/public/stages';
 
 const protectedLoginLoader = async () => {
   if (!authenticationProviderInstance.isAuthenticated()) {
@@ -54,6 +58,22 @@ const router = createBrowserRouter([
       {
         path: '/trip/new',
         element: <TripTypePage />,
+      },
+      {
+        path: '/trip/new/private',
+        element: <PrivateTripPage />,
+      },
+      {
+        path: '/trip/new/public',
+        element: <PublicTripPage />,
+      },
+      {
+        path: '/trip/new/private/stages',
+        element: <PrivateTripStagesPage />,
+      },
+      {
+        path: '/trip/new/public/stages',
+        element: <PublicTripStagesPage />,
       },
       {
         path: '/notifications',

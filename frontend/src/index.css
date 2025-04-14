@@ -232,14 +232,14 @@
       transform 0.2s ease-in-out;
   }
 
-  .card-hover:hover {
-    box-shadow: var(--shadow-lg);
-    transform: translateY(-2px);
-  }
+  /*.card-hover:hover {*/
+  /*  box-shadow: var(--shadow-lg);*/
+  /*  transform: translateY(-2px);*/
+  /*}*/
 
-  .card-active:active {
-    transform: translateY(1px);
-  }
+  /*.card-active:active {*/
+  /*  transform: translateY(1px);*/
+  /*}*/
 
   /* Trip type specific styles */
   .trip-beach {
@@ -297,4 +297,47 @@
       opacity: 1;
     }
   }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .touch-handle {
+    position: relative;
+    z-index: 10;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  .stage-item {
+    position: relative;
+  }
+
+  .stage-item.dragging {
+    opacity: 0.7;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 20;
+  }
+
+  .stage-item.drag-over {
+    border-top: 2px solid hsl(var(--primary));
+  }
+}
+
+/* Save & Exit button animation */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.save-pulse {
+  animation: pulse 2s infinite;
 }

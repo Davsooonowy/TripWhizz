@@ -7,6 +7,7 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
+    avatar_url = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -15,6 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "avatar",
+            "avatar_url",
             "onboarding_complete",
             "email",
             "password",
@@ -24,6 +26,14 @@ class UserSerializer(serializers.ModelSerializer):
             "username": {"required": False},
             "password": {"required": False},
         }
+
+    def get_avatar_url(self, obj):
+        if obj.avatar and hasattr(obj.avatar, 'url'):
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.avatar.url)
+            return obj.avatar.url
+        return None
 
     def create(self, validated_data):
         username = validated_data["email"]

@@ -24,6 +24,7 @@ import { type User, UsersApiClient } from '@/lib/api/users.ts';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
+import { getInitials } from '@/components/util/avatar-utils';
 
 export function NavUser() {
   const { isMobile } = useSidebar();
@@ -53,6 +54,13 @@ export function NavUser() {
     return null;
   }
 
+  const userInitials = getInitials(
+    user.first_name && user.last_name
+      ? `${user.first_name} ${user.last_name}`
+      : user.email || user.username || '',
+  );
+  console.log(user.avatar_url);
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -64,14 +72,11 @@ export function NavUser() {
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage
-                  src={
-                    typeof user.avatar === 'string' ? user.avatar : undefined
-                  }
-                  alt={user.first_name}
+                  src={user.avatar_url || undefined}
+                  alt={user.first_name || user.username}
                 />
-                <AvatarFallback className="rounded-lg">
-                  {user?.first_name?.[0] || user?.username?.[0] || '?'}
-                  {user?.last_name?.[0] || ''}
+                <AvatarFallback className="rounded-lg bg-primary/10 text-primary">
+                  {userInitials}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
@@ -94,14 +99,11 @@ export function NavUser() {
               >
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage
-                    src={
-                      typeof user.avatar === 'string' ? user.avatar : undefined
-                    }
+                    src={user.avatar_url || undefined}
                     alt={user.username}
                   />
-                  <AvatarFallback className="rounded-lg">
-                    {user?.first_name?.[0] || user?.username?.[0] || '?'}
-                    {user?.last_name?.[0] || ''}
+                  <AvatarFallback className="rounded-lg bg-primary/10 text-primary">
+                    {userInitials}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
@@ -136,7 +138,7 @@ export function NavUser() {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
-              <LogOut />
+              <LogOut className="mr-2 h-4 w-4" />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

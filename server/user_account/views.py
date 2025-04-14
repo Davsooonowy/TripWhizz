@@ -95,12 +95,13 @@ class UserView(APIView):
     )
     def put(self, request, user_id=None):
         user = request.user if user_id is None else User.objects.get(id=user_id)
-        serializer = UserSerializer(user, data=request.data, partial=True)
+
+        data = request.data.copy()
+
+        serializer = UserSerializer(user, data=data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.save()
-            return Response(
-                {"message": "User updated successfully"}, status=status.HTTP_200_OK
-            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, user_id):
@@ -113,7 +114,7 @@ class UserView(APIView):
 
     def get(self, request):
         user = request.user
-        serializer = UserSerializer(user)
+        serializer = UserSerializer(user, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -201,11 +202,11 @@ class GoogleAuthView(GenericAPIView):
             response_data = response.json()
 
             if 'error' in response_data:
-                    return Response({
-                        "status": "error",
-                        "message": "Wrong google token / this google token is already expired.",
-                        "payload": {}
-                    }, status=status.HTTP_400_BAD_REQUEST)
+                return Response({
+                    "status": "error",
+                    "message": "Wrong google token / this google token is already expired.",
+                    "payload": {}
+                }, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception:
             return Response({
@@ -263,11 +264,11 @@ class OTPVerifyView(APIView):
         pending_user.delete()
 
         return Response({
-                "message": "User created successfully!",
-                "token": token.key,
-                "user_id": user.id,
-                "onboarding_complete": user.onboarding_complete,
-            },
+            "message": "User created successfully!",
+            "token": token.key,
+            "user_id": user.id,
+            "onboarding_complete": user.onboarding_complete,
+        },
             status=status.HTTP_201_CREATED,
         )
 
