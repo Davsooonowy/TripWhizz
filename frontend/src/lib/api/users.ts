@@ -26,7 +26,7 @@ export interface User {
 
 export class UsersApiClient extends BaseApiClient {
   async createUser(user: BasicUserData): Promise<RegisterUserResponse> {
-    const response = await fetch(`${API_URL}/user/`, {
+    const response = await fetch(`${API_URL}/api/user/`, {
       ...this._requestConfiguration(false),
       method: 'POST',
       body: JSON.stringify(user),
@@ -40,7 +40,7 @@ export class UsersApiClient extends BaseApiClient {
   }
 
   async loginUser(user: BasicUserData): Promise<RegisterUserResponse> {
-    const response = await fetch(`${API_URL}/user/login/`, {
+    const response = await fetch(`${API_URL}/api/user/login/`, {
       ...this._requestConfiguration(false),
       method: 'POST',
       body: JSON.stringify(user),
@@ -54,7 +54,7 @@ export class UsersApiClient extends BaseApiClient {
   }
 
   async getActiveUser(): Promise<User> {
-    const response = await fetch(`${API_URL}/user/me/`, {
+    const response = await fetch(`${API_URL}/api/user/me/`, {
       ...this._requestConfiguration(true),
       method: 'GET',
     });
@@ -67,7 +67,7 @@ export class UsersApiClient extends BaseApiClient {
   }
 
   async sendPasswordResetEmail(email: string): Promise<void> {
-    const response = await fetch(`${API_URL}/user/password-reset/`, {
+    const response = await fetch(`${API_URL}/api/user/password-reset/`, {
       ...this._requestConfiguration(false),
       method: 'POST',
       body: JSON.stringify({ email }),
@@ -84,7 +84,7 @@ export class UsersApiClient extends BaseApiClient {
     newPassword: string,
   ): Promise<void> {
     const response = await fetch(
-      `${API_URL}/user/password-reset-confirm/${uid}/${token}/`,
+      `${API_URL}/api/user/password-reset-confirm/${uid}/${token}/`,
       {
         ...this._requestConfiguration(false),
         method: 'POST',
@@ -115,13 +115,13 @@ export class UsersApiClient extends BaseApiClient {
         String(userData.onboarding_complete),
       );
 
-    // Add avatar if it's a File
+    // @ts-ignore
     if (userData.avatar instanceof File) {
       formData.append('avatar', userData.avatar);
     }
 
     // Send the request
-    const response = await fetch(`${API_URL}/user/me/`, {
+    const response = await fetch(`${API_URL}/api/user/me/`, {
       headers: {
         Authorization: `Token ${this.authenticationProvider.token}`,
       },
@@ -154,7 +154,7 @@ export class UsersApiClient extends BaseApiClient {
   }
 
   async resendOtp(email: string | null): Promise<void> {
-    const response = await fetch(`${API_URL}/user/resend-otp/`, {
+    const response = await fetch(`${API_URL}/api/user/resend-otp/`, {
       ...this._requestConfiguration(false),
       method: 'POST',
       body: JSON.stringify({ email }),

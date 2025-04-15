@@ -135,7 +135,6 @@ export default function CreateTripForm({ tripType }: CreateTripFormProps) {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // Clear error when user types
     if (errors[name as keyof typeof errors]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
@@ -154,10 +153,6 @@ export default function CreateTripForm({ tripType }: CreateTripFormProps) {
 
   const handleColorSelect = (index: number) => {
     setFormData((prev) => ({ ...prev, selectedColor: index }));
-  };
-
-  const handlePrivacyChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, privacyType: value }));
   };
 
   const handleInvitePermissionChange = (value: string) => {
@@ -217,21 +212,10 @@ export default function CreateTripForm({ tripType }: CreateTripFormProps) {
         invite_permission: formData.invitePermission,
       };
 
-      // Add dates if it's a public trip
-      if (
-        tripType === 'public' &&
-        formData.dateRange.from &&
-        formData.dateRange.to
-      ) {
-        tripData.start_date = formData.dateRange.from.toISOString();
-        tripData.end_date = formData.dateRange.to.toISOString();
-      }
-
       tripsApiClient
         .createTrip(tripData)
         .then((response) => {
           setIsSubmitting(false);
-          // Navigate to the next step with the created trip ID
           navigate(`/trip/new/${tripType}/stages`, {
             state: {
               tripData: formData,
