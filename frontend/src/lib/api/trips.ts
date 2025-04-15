@@ -29,7 +29,7 @@ export interface TripData {
 
 export class TripsApiClient extends BaseApiClient {
   async getTrips() {
-    const response = await fetch(`${API_URL}/trips/`, {
+    const response = await fetch(`${API_URL}/trip/`, {
       ...this._requestConfiguration(true),
       method: 'GET',
     });
@@ -53,7 +53,7 @@ export class TripsApiClient extends BaseApiClient {
         : undefined,
     };
 
-    const response = await fetch(`${API_URL}/trips/`, {
+    const response = await fetch(`${API_URL}/trip/`, {
       ...this._requestConfiguration(true),
       method: 'POST',
       body: JSON.stringify(formattedData),
@@ -67,7 +67,7 @@ export class TripsApiClient extends BaseApiClient {
   }
 
   async getTripDetails(tripId: number) {
-    const response = await fetch(`${API_URL}/trips/${tripId}/`, {
+    const response = await fetch(`${API_URL}/trip/${tripId}/`, {
       ...this._requestConfiguration(true),
       method: 'GET',
     });
@@ -91,7 +91,7 @@ export class TripsApiClient extends BaseApiClient {
         : undefined,
     };
 
-    const response = await fetch(`${API_URL}/trips/${tripId}/`, {
+    const response = await fetch(`${API_URL}/trip/${tripId}/`, {
       ...this._requestConfiguration(true),
       method: 'PUT',
       body: JSON.stringify(formattedData),
@@ -105,7 +105,7 @@ export class TripsApiClient extends BaseApiClient {
   }
 
   async deleteTrip(tripId: number) {
-    const response = await fetch(`${API_URL}/trips/${tripId}/`, {
+    const response = await fetch(`${API_URL}/trip/${tripId}/`, {
       ...this._requestConfiguration(true),
       method: 'DELETE',
     });
@@ -130,7 +130,7 @@ export class TripsApiClient extends BaseApiClient {
     }));
 
     const response = await fetch(
-      `${API_URL}/trips/${tripId}/batch-create-stages/`,
+      `${API_URL}/trip/${tripId}/batch-create-stages/`,
       {
         ...this._requestConfiguration(true),
         method: 'POST',
@@ -146,7 +146,7 @@ export class TripsApiClient extends BaseApiClient {
   }
 
   async reorderStages(tripId: number, stageIds: string[]) {
-    const response = await fetch(`${API_URL}/trips/${tripId}/reorder-stages/`, {
+    const response = await fetch(`${API_URL}/trip/${tripId}/reorder-stages/`, {
       ...this._requestConfiguration(true),
       method: 'POST',
       body: JSON.stringify({ stage_ids: stageIds }),
