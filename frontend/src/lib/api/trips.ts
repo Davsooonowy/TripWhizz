@@ -13,7 +13,7 @@ export interface TripStage {
   custom_category_color?: string;
 }
 
-export interface Trip {
+export interface TripData {
   id?: number;
   name: string;
   destination: string;
@@ -28,8 +28,8 @@ export interface Trip {
 }
 
 export class TripsApiClient extends BaseApiClient {
-  async getTrips(): Promise<Trip[]> {
-    const response = await fetch(`${API_URL}/api/trip/`, {
+  async getTrips() {
+    const response = await fetch(`${API_URL}/trip/`, {
       ...this._requestConfiguration(true),
       method: 'GET',
     });
@@ -38,60 +38,11 @@ export class TripsApiClient extends BaseApiClient {
       throw new Error(`Error HTTP: ${response.status}`);
     }
 
-    return (await response.json()) as Trip[];
+    return await response.json();
   }
 
-  async createTrip(tripData: {
-    name: string;
-    destination: string;
-    description: string;
-    trip_type: 'private' | 'public';
-    icon: string;
-    icon_color: string;
-    tags: string[];
-    invite_permission: string
-  }): Promise<Trip> {
-      if (!this.authenticationProvider.isAuthenticated()) {
-    console.error("User is not authenticated");
-    throw new Error("Authentication required to create a trip");
-  }
-    const formattedData = {
-      ...tripData
-      // start_date: tripData.start_date
-      //   ? new Date(tripData.start_date).toISOString().split('T')[0]
-      //   : undefined,
-      // end_date: tripData.end_date
-      //   ? new Date(tripData.end_date).toISOString().split('T')[0]
-      //   : undefined,
-    };
-
-    const response = await fetch(`${API_URL}/api/trip/`, {
-      ...this._requestConfiguration(true),
-      method: 'POST',
-      body: JSON.stringify(formattedData),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Error HTTP: ${response.status}`);
-    }
-
-    return (await response.json()) as Trip;
-  }
-
-  async getTripDetails(tripId: number): Promise<Trip> {
-    const response = await fetch(`${API_URL}/api/trip/${tripId}/`, {
-      ...this._requestConfiguration(true),
-      method: 'GET',
-    });
-
-    if (!response.ok) {
-      throw new Error(`Error HTTP: ${response.status}`);
-    }
-
-    return (await response.json()) as Trip;
-  }
-
-  async updateTrip(tripId: number, tripData: Partial<Trip>): Promise<Trip> {
+  async createTrip(tripData: TripData) {
+    // Convert date objects to ISO strings if they exist
     const formattedData = {
       ...tripData,
       start_date: tripData.start_date
@@ -102,7 +53,45 @@ export class TripsApiClient extends BaseApiClient {
         : undefined,
     };
 
-    const response = await fetch(`${API_URL}/api/trip/${tripId}/`, {
+    const response = await fetch(`${API_URL}/trip/`, {
+      ...this._requestConfiguration(true),
+      method: 'POST',
+      body: JSON.stringify(formattedData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error HTTP: ${response.status}`);
+    }
+
+    return await response.json();
+  }
+
+  async getTripDetails(tripId: number) {
+    const response = await fetch(`${API_URL}/trip/${tripId}/`, {
+      ...this._requestConfiguration(true),
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error HTTP: ${response.status}`);
+    }
+
+    return await response.json();
+  }
+
+  async updateTrip(tripId: number, tripData: Partial<TripData>) {
+    // Convert date objects to ISO strings if they exist
+    const formattedData = {
+      ...tripData,
+      start_date: tripData.start_date
+        ? new Date(tripData.start_date).toISOString().split('T')[0]
+        : undefined,
+      end_date: tripData.end_date
+        ? new Date(tripData.end_date).toISOString().split('T')[0]
+        : undefined,
+    };
+
+    const response = await fetch(`${API_URL}/trip/${tripId}/`, {
       ...this._requestConfiguration(true),
       method: 'PUT',
       body: JSON.stringify(formattedData),
@@ -112,11 +101,11 @@ export class TripsApiClient extends BaseApiClient {
       throw new Error(`Error HTTP: ${response.status}`);
     }
 
-    return (await response.json()) as Trip;
+    return await response.json();
   }
 
-  async deleteTrip(tripId: number): Promise<void> {
-    const response = await fetch(`${API_URL}/api/trip/${tripId}/`, {
+  async deleteTrip(tripId: number) {
+    const response = await fetch(`${API_URL}/trip/${tripId}/`, {
       ...this._requestConfiguration(true),
       method: 'DELETE',
     });
@@ -124,9 +113,12 @@ export class TripsApiClient extends BaseApiClient {
     if (!response.ok) {
       throw new Error(`Error HTTP: ${response.status}`);
     }
+
+    return true;
   }
 
-  async createStages(tripId: number, stages: TripStage[]): Promise<TripStage[]> {
+  async createStages(tripId: number, stages: TripStage[]) {
+    // Format dates for each stage
     const formattedStages = stages.map((stage) => ({
       ...stage,
       start_date: stage.start_date
@@ -138,7 +130,7 @@ export class TripsApiClient extends BaseApiClient {
     }));
 
     const response = await fetch(
-      `${API_URL}/api/trip/${tripId}/batch-create-stages/`,
+      `${API_URL}/trip/${tripId}/batch-create-stages/`,
       {
         ...this._requestConfiguration(true),
         method: 'POST',
@@ -150,11 +142,11 @@ export class TripsApiClient extends BaseApiClient {
       throw new Error(`Error HTTP: ${response.status}`);
     }
 
-    return (await response.json()) as TripStage[];
+    return await response.json();
   }
 
-  async reorderStages(tripId: number, stageIds: string[]): Promise<void> {
-    const response = await fetch(`${API_URL}/api/trip/${tripId}/reorder-stages/`, {
+  async reorderStages(tripId: number, stageIds: string[]) {
+    const response = await fetch(`${API_URL}/trip/${tripId}/reorder-stages/`, {
       ...this._requestConfiguration(true),
       method: 'POST',
       body: JSON.stringify({ stage_ids: stageIds }),
@@ -163,5 +155,7 @@ export class TripsApiClient extends BaseApiClient {
     if (!response.ok) {
       throw new Error(`Error HTTP: ${response.status}`);
     }
+
+    return await response.json();
   }
 }
