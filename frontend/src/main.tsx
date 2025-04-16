@@ -10,6 +10,7 @@ import { DarkModeProvider } from '@/components/util/dark-mode-provider.tsx';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
 import { UsersApiClient } from '@/lib/api/users.ts';
 import { Toaster } from '@/components/ui/toaster';
+import { AppLoader } from '@/components/ui/app-loader';
 
 const LoginPage = React.lazy(() => import('@/pages/login'));
 const NotFound = React.lazy(() => import('./pages/not-found'));
@@ -137,7 +138,7 @@ const router = createBrowserRouter([
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <DarkModeProvider>
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<AppLoader />}>
         <RouterProvider router={router} />
       </Suspense>
       <Toaster />
