@@ -1,3 +1,5 @@
+'use client';
+
 import type * as React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -612,7 +614,14 @@ export default function TripStagesBuilder({
         setIsSubmitting(false);
         // Clear saved data on successful submission
         localStorage.removeItem(STORAGE_KEY);
-        setShowSuccessDialog(true);
+
+        // Navigate to the invite friends page instead of showing success dialog
+        navigate(`/trip/new/${tripType}/invite`, {
+          state: {
+            tripData: location.state?.tripData,
+            tripId: tripId,
+          },
+        });
       })
       .catch((error) => {
         console.error('Error creating stages:', error);

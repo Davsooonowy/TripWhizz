@@ -1,4 +1,4 @@
-import { StrictMode } from 'react';
+import React, { StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import {
@@ -6,26 +6,41 @@ import {
   RouterProvider,
   redirect,
 } from 'react-router-dom';
-import LoginPage from '@/pages/login';
-import NotFound from './pages/not-found';
-import App from '@/App.tsx';
-import Layout from '@/components/layout/layout.tsx';
-import StartTripPage from '@/pages/trip/index.tsx';
-import OnboardingPage from '@/pages/onboarding/index.tsx';
 import { DarkModeProvider } from '@/components/util/dark-mode-provider.tsx';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
-import ResetPassword from '@/pages/login/reset-password.tsx';
 import { UsersApiClient } from '@/lib/api/users.ts';
-import NotificationsPage from '@/pages/notifications';
-import SettingsPage from '@/pages/settings';
-import FriendsPage from '@/pages/friends';
-import ProfileSettingsPage from '@/pages/settings/profile';
-import TripTypePage from '@/pages/trip/new';
 import { Toaster } from '@/components/ui/toaster';
-import PrivateTripPage from '@/pages/trip/new/private';
-import PublicTripPage from '@/pages/trip/new/public';
-import PrivateTripStagesPage from '@/pages/trip/new/private/stages';
-import PublicTripStagesPage from '@/pages/trip/new/public/stages';
+
+const LoginPage = React.lazy(() => import('@/pages/login'));
+const NotFound = React.lazy(() => import('./pages/not-found'));
+const App = React.lazy(() => import('@/App.tsx'));
+const Layout = React.lazy(() => import('@/components/layout/layout.tsx'));
+const StartTripPage = React.lazy(() => import('@/pages/trip/index.tsx'));
+const OnboardingPage = React.lazy(() => import('@/pages/onboarding/index.tsx'));
+const ResetPassword = React.lazy(
+  () => import('@/pages/login/reset-password.tsx'),
+);
+const NotificationsPage = React.lazy(() => import('@/pages/notifications'));
+const SettingsPage = React.lazy(() => import('@/pages/settings'));
+const FriendsPage = React.lazy(() => import('@/pages/friends'));
+const ProfileSettingsPage = React.lazy(
+  () => import('@/pages/settings/profile'),
+);
+const TripTypePage = React.lazy(() => import('@/pages/trip/new'));
+const PrivateTripPage = React.lazy(() => import('@/pages/trip/new/private'));
+const PublicTripPage = React.lazy(() => import('@/pages/trip/new/public'));
+const PrivateTripStagesPage = React.lazy(
+  () => import('@/pages/trip/new/private/stages'),
+);
+const PublicTripStagesPage = React.lazy(
+  () => import('@/pages/trip/new/public/stages'),
+);
+const PrivateTripInvitePage = React.lazy(
+  () => import('@/pages/trip/new/private/invite'),
+);
+const PublicTripInvitePage = React.lazy(
+  () => import('@/pages/trip/new/public/invite'),
+);
 
 const protectedLoginLoader = async () => {
   if (!authenticationProviderInstance.isAuthenticated()) {
@@ -66,6 +81,14 @@ const router = createBrowserRouter([
       {
         path: '/trip/new/public',
         element: <PublicTripPage />,
+      },
+      {
+        path: '/trip/new/private/invite',
+        element: <PrivateTripInvitePage />,
+      },
+      {
+        path: '/trip/new/public/invite',
+        element: <PublicTripInvitePage />,
       },
       {
         path: '/trip/new/private/stages',
@@ -114,7 +137,9 @@ const router = createBrowserRouter([
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <DarkModeProvider>
-      <RouterProvider router={router} />
+      <Suspense fallback={<div>Loading...</div>}>
+        <RouterProvider router={router} />
+      </Suspense>
       <Toaster />
     </DarkModeProvider>
   </StrictMode>,
