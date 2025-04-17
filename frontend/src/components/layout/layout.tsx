@@ -118,7 +118,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   </Breadcrumb>
                 </div>
 
-                <div className="ml-auto">
+                <div className="ml-auto mr-4 hidden md:block">
                   <NotificationDropdown />
                 </div>
               </div>
@@ -146,7 +146,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </Breadcrumb>
             </div>
 
-            <div className="ml-auto mr-4">
+            <div className="ml-auto mr-4 hidden md:block">
               <NotificationDropdown />
             </div>
           </header>

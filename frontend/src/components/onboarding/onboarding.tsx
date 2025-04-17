@@ -63,7 +63,7 @@ export default function Onboarding() {
         avatar: formData.avatar,
         onboarding_complete: true,
       });
-      navigate('/no-trips');
+      navigate('/trip/new');
     } catch (error) {
       console.error('Error updating user data:', error);
     }

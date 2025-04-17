@@ -1,10 +1,5 @@
-import { FeatureNotAvailable } from '@/components/not-available/feature-not-available.tsx';
+import NotificationsView from '@/components/notifications/notifications-view.tsx';
 
-export default function NotificationsPage() {
-  return (
-    <FeatureNotAvailable
-      title="Notifications Coming Soon"
-      message="We're working on allowing you to check your notifications!"
-    />
-  );
+export default function FriendsPage() {
+  return <NotificationsView />;
 }

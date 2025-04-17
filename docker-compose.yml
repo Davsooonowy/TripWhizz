@@ -22,7 +22,7 @@ services:
       - redis_data:/data
     command: redis-server --requirepass 1234
     environment:
-      - REDIS_PASSWORD=your_password
+      - REDIS_PASSWORD=1234
 
 volumes:
   postgres_data:

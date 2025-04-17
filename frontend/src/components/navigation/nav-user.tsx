@@ -59,7 +59,6 @@ export function NavUser() {
       ? `${user.first_name} ${user.last_name}`
       : user.email || user.username || '',
   );
-  console.log(user.avatar_url);
 
   return (
     <SidebarMenu>

@@ -24,7 +24,8 @@ import {
 } from '@/lib/api/notifications';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
 import { formatDistanceToNow } from 'date-fns';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function NotificationDropdown() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -32,6 +33,8 @@ export function NotificationDropdown() {
   const [isLoading, setIsLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   const fetchNotifications = async () => {
     try {
@@ -155,10 +158,23 @@ export function NotificationDropdown() {
     }
   };
 
+  const handleBellClick = () => {
+    if (isMobile) {
+      navigate('/notifications');
+    } else {
+      setIsOpen(!isOpen);
+    }
+  };
+
   return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+    <DropdownMenu open={isMobile ? false : isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative"
+          onClick={handleBellClick}
+        >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <Badge
@@ -202,7 +218,7 @@ export function NotificationDropdown() {
         ) : notifications.length > 0 ? (
           <ScrollArea className="max-h-80">
             <DropdownMenuGroup>
-              {notifications.map((notification) => (
+              {notifications.slice(0, 5).map((notification) => (
                 <DropdownMenuItem
                   key={notification.id}
                   asChild
@@ -258,6 +274,14 @@ export function NotificationDropdown() {
                   </Link>
                 </DropdownMenuItem>
               ))}
+              {notifications.length > 5 && (
+                <DropdownMenuItem
+                  asChild
+                  className="justify-center py-2 font-medium text-primary"
+                >
+                  <Link to="/notifications">See all notifications</Link>
+                </DropdownMenuItem>
+              )}
             </DropdownMenuGroup>
           </ScrollArea>
         ) : (
