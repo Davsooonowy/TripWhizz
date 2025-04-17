@@ -44,6 +44,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ImageCropper } from '@/components/util/image-cropper';
+import { getInitials } from '@/components/util/avatar-utils';
 
 const passwordResetSchema = z
   .object({
@@ -168,7 +169,7 @@ export default function ProfileSettings() {
     fetch(croppedImageUrl)
       .then((res) => res.blob())
       .then((blob) => {
-        const file = new File([blob], 'cropped-avatar.jpg', {
+        const file = new File([blob], 'avatar.jpg', {
           type: 'image/jpeg',
         });
         setFormData((prev) => ({ ...prev, avatar: file }));
@@ -181,7 +182,9 @@ export default function ProfileSettings() {
 
     try {
       const apiClient = new UsersApiClient(authenticationProviderInstance);
-      await apiClient.updateUser(formData);
+      const updatedUser = await apiClient.updateUser(formData);
+
+      setUser(updatedUser);
 
       toast({
         title: 'Profile updated',
@@ -236,6 +239,12 @@ export default function ProfileSettings() {
     );
   }
 
+  const userInitials = getInitials(
+    formData.first_name && formData.last_name
+      ? `${formData.first_name} ${formData.last_name}`
+      : user?.email || user?.username || '',
+  );
+
   return (
     <div className="container max-w-4xl mx-auto px-4 py-8 pb-20 md:pb-10">
       <motion.div
@@ -274,20 +283,11 @@ export default function ProfileSettings() {
                     >
                       <Avatar className="h-32 w-32 border-4 border-background shadow-lg group-hover:border-primary transition-all duration-300 rounded-lg">
                         <AvatarImage
-                          src={
-                            avatarPreview ||
-                            (typeof user?.avatar === 'string'
-                              ? user.avatar
-                              : '')
-                          }
+                          src={avatarPreview || user?.avatar_url || undefined}
+                          alt={user?.first_name || user?.username || 'User'}
                         />
                         <AvatarFallback className="bg-primary/10 text-primary text-4xl rounded-lg">
-                          {formData.first_name?.[0] ||
-                            user?.username?.[0] ||
-                            '?'}
-                          {formData.last_name?.[0] ||
-                            user?.last_name?.[0] ||
-                            ''}
+                          {userInitials}
                         </AvatarFallback>
                       </Avatar>
 

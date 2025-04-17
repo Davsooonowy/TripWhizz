@@ -19,7 +19,8 @@ export interface User {
   username: string;
   first_name?: string;
   last_name?: string;
-  avatar?: File | null;
+  avatar?: string | null;
+  avatar_url?: string | null;
   onboarding_complete?: boolean;
 }
 
@@ -98,24 +99,41 @@ export class UsersApiClient extends BaseApiClient {
     }
   }
 
-  async updateUser(user: Partial<User>): Promise<void> {
-    const payload = {
-      first_name: user.first_name,
-      last_name: user.last_name,
-      username: user.username,
-      avatar: user.avatar,
-      onboarding_complete: user.onboarding_complete,
-    };
+  async updateUser(
+    userData: Partial<User> & { avatar?: File | null },
+  ): Promise<User> {
+    // Create FormData for multipart/form-data requests (needed for file uploads)
+    const formData = new FormData();
 
+    // Add all user data to FormData
+    if (userData.first_name) formData.append('first_name', userData.first_name);
+    if (userData.last_name) formData.append('last_name', userData.last_name);
+    if (userData.username) formData.append('username', userData.username);
+    if (userData.onboarding_complete !== undefined)
+      formData.append(
+        'onboarding_complete',
+        String(userData.onboarding_complete),
+      );
+
+    // @ts-ignore
+    if (userData.avatar instanceof File) {
+      formData.append('avatar', userData.avatar);
+    }
+
+    // Send the request
     const response = await fetch(`${API_URL}/user/me/`, {
-      ...this._requestConfiguration(true),
+      headers: {
+        Authorization: `Token ${this.authenticationProvider.token}`,
+      },
       method: 'PUT',
-      body: JSON.stringify(payload),
+      body: formData,
     });
 
     if (!response.ok) {
       throw new Error('Failed to update user data');
     }
+
+    return await response.json();
   }
 
   async verifyOtp(

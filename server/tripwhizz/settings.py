@@ -34,34 +34,38 @@ ALLOWED_HOSTS = json.loads(os.environ.get('DJANGO_ALLOWED_HOSTS', default='[]'))
 # Application definition
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
-    "rest_framework",
-    "rest_framework.authtoken",
-    "corsheaders",
-    "drf_yasg",
-    "user_account",
+   "django.contrib.admin",
+   "django.contrib.auth",
+   "django.contrib.contenttypes",
+   "django.contrib.sessions",
+   "django.contrib.messages",
+   "django.contrib.staticfiles",
+   "rest_framework",
+   "rest_framework.authtoken",
+   "corsheaders",
+   "drf_yasg",
+   "channels",
+   "django_celery_beat",
+   "django_celery_results",
+   "user_account",
+   "trip",
 ]
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
-    ],
+   "DEFAULT_AUTHENTICATION_CLASSES": [
+       "rest_framework.authentication.TokenAuthentication",
+   ],
 }
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
-    "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+   "corsheaders.middleware.CorsMiddleware",
+   "django.middleware.security.SecurityMiddleware",
+   "django.contrib.sessions.middleware.SessionMiddleware",
+   "django.middleware.common.CommonMiddleware",
+   "django.middleware.csrf.CsrfViewMiddleware",
+   "django.contrib.auth.middleware.AuthenticationMiddleware",
+   "django.contrib.messages.middleware.MessageMiddleware",
+   "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
 CORS_ALLOWED_ORIGINS = json.loads(os.environ.get('DJANGO_CORS_ALLOWED_ORIGINS', default='[]'))
@@ -69,46 +73,39 @@ CORS_ALLOWED_ORIGINS = json.loads(os.environ.get('DJANGO_CORS_ALLOWED_ORIGINS', 
 ROOT_URLCONF = "tripwhizz.urls"
 
 TEMPLATES = [
-    {
-        "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
-        "APP_DIRS": True,
-        "OPTIONS": {
-            "context_processors": [
-                "django.template.context_processors.debug",
-                "django.template.context_processors.request",
-                "django.contrib.auth.context_processors.auth",
-                "django.contrib.messages.context_processors.messages",
-            ],
-        },
-    },
+   {
+       "BACKEND": "django.template.backends.django.DjangoTemplates",
+       "DIRS": [],
+       "APP_DIRS": True,
+       "OPTIONS": {
+           "context_processors": [
+               "django.template.context_processors.debug",
+               "django.template.context_processors.request",
+               "django.contrib.auth.context_processors.auth",
+               "django.contrib.messages.context_processors.messages",
+           ],
+       },
+   },
 ]
 
-WSGI_APPLICATION = "tripwhizz.wsgi.application"
+# WSGI_APPLICATION = "tripwhizz.wsgi.application"
+ASGI_APPLICATION = "tripwhizz.asgi.application"
+
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME"),
-        "USER": os.getenv("DB_USER"),
-        "PASSWORD": os.getenv("DB_PASSWORD"),
-        "HOST": os.getenv("DB_HOST"),
-        "PORT": os.getenv("DB_PORT"),
-        'ATOMIC_REQUESTS': True,
-    }
+   "default": {
+       "ENGINE": "django.db.backends.postgresql",
+       "NAME": os.getenv("DB_NAME"),
+       "USER": os.getenv("DB_USER"),
+       "PASSWORD": os.getenv("DB_PASSWORD"),
+       "HOST": os.getenv("DB_HOST"),
+       "PORT": os.getenv("DB_PORT"),
+       'ATOMIC_REQUESTS': True,
+   }
 }
-
-EMAIL_BACKEND = os.getenv("EMAIL_BACKEND")
-EMAIL_HOST = os.getenv("EMAIL_HOST")
-EMAIL_PORT = os.getenv("EMAIL_PORT")
-EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS")
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
-FRONTEND_URL = os.getenv("FRONTEND_URL")
 
 AUTH_USER_MODEL = "user_account.Profile"
 
@@ -116,18 +113,18 @@ AUTH_USER_MODEL = "user_account.Profile"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+   {
+       "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+   },
+   {
+       "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+   },
+   {
+       "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+   },
+   {
+       "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+   },
 ]
 
 # Internationalization
@@ -145,8 +142,52 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Media files (User uploads)
+MEDIA_URL = '/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+REDIS_HOST = os.getenv("REDIS_HOST")
+REDIS_PORT = os.getenv("REDIS_PORT")
+REDIS_DB = os.getenv("REDIS_DB")
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
+
+REDIS_URL = f"redis://{':' + REDIS_PASSWORD + '@' if REDIS_PASSWORD else ''}{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [REDIS_URL],
+        },
+    },
+}
+
+CELERY_BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = REDIS_URL
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_TRACK_STARTED = os.getenv("CELERY_TASK_TRACK_STARTED", "True") == "True"
+CELERY_TASK_TIME_LIMIT = int(os.getenv("CELERY_TASK_TIME_LIMIT"))
+CELERY_BEAT_SCHEDULER = os.getenv("CELERY_BEAT_SCHEDULER")
+FRIEND_REQUEST_RATE_LIMIT = {
+    "max_requests": int(os.getenv("FRIEND_REQUEST_RATE_LIMIT_MAX_REQUESTS", 10)),
+    "time_window": int(os.getenv("FRIEND_REQUEST_RATE_LIMIT_TIME_WINDOW", 3600)),
+}
+
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND")
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_PORT = os.getenv("EMAIL_PORT")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
+FRONTEND_URL = os.getenv("FRONTEND_URL")
