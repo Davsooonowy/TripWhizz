@@ -49,7 +49,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         const lastSegment = segments[segments.length - 1];
         setPageTitle(
           lastSegment.charAt(0).toUpperCase() +
-          lastSegment.slice(1).replace(/-/g, ' '),
+            lastSegment.slice(1).replace(/-/g, ' '),
         );
       }
     }
@@ -118,9 +118,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   </Breadcrumb>
                 </div>
 
-            <div className="ml-auto mr-4 hidden md:block">
-              <NotificationDropdown />
-            </div>
+                <div className="ml-auto mr-4 hidden md:block">
+                  <NotificationDropdown />
+                </div>
               </div>
             </div>
           </motion.header>

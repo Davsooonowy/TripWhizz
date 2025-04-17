@@ -1,7 +1,16 @@
-import type React from "react"
-import { Link, useLocation } from "react-router-dom"
-import { Home, Map, Plus, Settings, Users, FileText, DollarSign, Bell } from "lucide-react"
-import { cn } from "@/lib/utils"
+import type React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import {
+  Home,
+  Map,
+  Plus,
+  Settings,
+  Users,
+  FileText,
+  DollarSign,
+  Bell,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
   Sheet,
   SheetContent,
@@ -10,90 +19,94 @@ import {
   SheetTitle,
   SheetTrigger,
   SheetClose,
-} from "@/components/ui/sheet"
-import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
-import { NotificationsApiClient } from "@/lib/api/notifications"
-import { authenticationProviderInstance } from "@/lib/authentication-provider"
+} from '@/components/ui/sheet';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { NotificationsApiClient } from '@/lib/api/notifications';
+import { authenticationProviderInstance } from '@/lib/authentication-provider';
 
 export function MobileNavigation() {
-  const [isCreateOpen, setIsCreateOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
-  const [notificationCount, setNotificationCount] = useState(0)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fetch notification count on component mount and periodically
   useEffect(() => {
     const fetchNotificationCount = async () => {
       try {
-        setIsLoading(true)
-        const notificationsApiClient = new NotificationsApiClient(authenticationProviderInstance)
-        const countData = await notificationsApiClient.getUnreadCount()
-        setNotificationCount(countData.count)
+        setIsLoading(true);
+        const notificationsApiClient = new NotificationsApiClient(
+          authenticationProviderInstance,
+        );
+        const countData = await notificationsApiClient.getUnreadCount();
+        setNotificationCount(countData.count);
       } catch (error) {
-        console.error("Error fetching notification count:", error)
+        console.error('Error fetching notification count:', error);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
     // Initial fetch
-    fetchNotificationCount()
+    fetchNotificationCount();
 
     // Set up polling for real-time updates (every 30 seconds)
-    const intervalId = setInterval(fetchNotificationCount, 30000)
+    const intervalId = setInterval(fetchNotificationCount, 30000);
 
     // Clean up interval on component unmount
-    return () => clearInterval(intervalId)
-  }, [])
+    return () => clearInterval(intervalId);
+  }, []);
 
   // Set up WebSocket connection for real-time updates (if available)
   useEffect(() => {
     // Check if WebSockets are supported in the browser
-    if ("WebSocket" in window) {
-      const token = authenticationProviderInstance.token
-      if (!token) return
+    if ('WebSocket' in window) {
+      const token = authenticationProviderInstance.token;
+      if (!token) return;
 
       // Connect to notification WebSocket
-      const socket = new WebSocket(`${import.meta.env.VITE_WS_URL}/ws/notifications/`)
+      const socket = new WebSocket(
+        `${import.meta.env.VITE_WS_URL}/ws/notifications/`,
+      );
 
       // Handle incoming messages
       socket.onmessage = (event) => {
         try {
-          const data = JSON.parse(event.data)
-          if (data.type === "unread_count") {
-            setNotificationCount(data.count)
-          } else if (data.type === "new_notification") {
+          const data = JSON.parse(event.data);
+          if (data.type === 'unread_count') {
+            setNotificationCount(data.count);
+          } else if (data.type === 'new_notification') {
             // Increment the notification count
-            setNotificationCount((prev) => prev + 1)
+            setNotificationCount((prev) => prev + 1);
           }
         } catch (error) {
-          console.error("Error parsing WebSocket message:", error)
+          console.error('Error parsing WebSocket message:', error);
         }
-      }
+      };
 
       // Handle connection errors
       socket.onerror = (error) => {
-        console.error("WebSocket error:", error)
-      }
+        console.error('WebSocket error:', error);
+      };
 
       // Clean up WebSocket connection on component unmount
       return () => {
         if (socket.readyState === WebSocket.OPEN) {
-          socket.close()
+          socket.close();
         }
-      }
+      };
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20)
-    }
+      setScrolled(window.scrollY > 20);
+    };
 
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <>
@@ -106,10 +119,10 @@ export function MobileNavigation() {
                 whileTap={{ scale: 0.92 }}
                 whileHover={{
                   scale: 1.05,
-                  boxShadow: "0 8px 20px -5px rgba(124, 58, 237, 0.5)",
+                  boxShadow: '0 8px 20px -5px rgba(124, 58, 237, 0.5)',
                 }}
                 transition={{
-                  type: "spring",
+                  type: 'spring',
                   stiffness: 400,
                   damping: 15,
                 }}
@@ -122,8 +135,12 @@ export function MobileNavigation() {
               className="h-auto max-h-[80vh] overflow-auto rounded-t-3xl px-6 py-8 border-t-0"
             >
               <SheetHeader className="text-left pb-6">
-                <SheetTitle className="text-2xl font-bold">Create New</SheetTitle>
-                <SheetDescription className="text-base">What would you like to create?</SheetDescription>
+                <SheetTitle className="text-2xl font-bold">
+                  Create New
+                </SheetTitle>
+                <SheetDescription className="text-base">
+                  What would you like to create?
+                </SheetDescription>
               </SheetHeader>
 
               <SheetClose asChild>
@@ -137,7 +154,9 @@ export function MobileNavigation() {
                     </div>
                     <div>
                       <span className="text-lg font-semibold">New Trip</span>
-                      <p className="text-xs text-muted-foreground mt-1">Plan your next adventure</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Plan your next adventure
+                      </p>
                     </div>
                   </div>
                   <div className="text-primary">→</div>
@@ -176,8 +195,8 @@ export function MobileNavigation() {
 
         <motion.div
           className={cn(
-            "bg-white/95 dark:bg-slate-900/95 border border-gray-200/50 dark:border-gray-800/50 shadow-lg rounded-full overflow-hidden",
-            scrolled ? "shadow-xl" : "shadow-md",
+            'bg-white/95 dark:bg-slate-900/95 border border-gray-200/50 dark:border-gray-800/50 shadow-lg rounded-full overflow-hidden',
+            scrolled ? 'shadow-xl' : 'shadow-md',
           )}
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -202,7 +221,7 @@ export function MobileNavigation() {
       </div>
       <div className="h-16" />
     </>
-  )
+  );
 }
 
 function NavItem({
@@ -212,34 +231,50 @@ function NavItem({
   notificationCount = 0,
   isLoading = false,
 }: {
-  path: string
-  icon: React.ElementType
-  label: string
-  notificationCount?: number
-  isLoading?: boolean
+  path: string;
+  icon: React.ElementType;
+  label: string;
+  notificationCount?: number;
+  isLoading?: boolean;
 }) {
-  const location = useLocation()
-  const active = path === "/" ? location.pathname === "/" : location.pathname.startsWith(path)
+  const location = useLocation();
+  const active =
+    path === '/'
+      ? location.pathname === '/'
+      : location.pathname.startsWith(path);
 
   return (
-    <Link to={path} className="flex flex-col items-center justify-center w-14 py-1">
+    <Link
+      to={path}
+      className="flex flex-col items-center justify-center w-14 py-1"
+    >
       <div className="flex flex-col items-center justify-center">
         <div className="flex items-center justify-center w-8 h-8 relative">
-          <Icon className={cn("h-4 w-4", active ? "text-primary" : "text-muted-foreground")} />
+          <Icon
+            className={cn(
+              'h-4 w-4',
+              active ? 'text-primary' : 'text-muted-foreground',
+            )}
+          />
           {!isLoading && notificationCount > 0 && (
             <motion.span
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               className="absolute -top-0.5 -right-1 flex items-center justify-center min-w-4 h-4 px-1 text-[8px] font-bold text-white bg-red-500 rounded-full z-50 shadow-sm"
             >
-              {notificationCount > 99 ? "99+" : notificationCount}
+              {notificationCount > 99 ? '99+' : notificationCount}
             </motion.span>
           )}
         </div>
-        <span className={cn("text-[10px] -mt-1", active ? "font-medium text-primary" : "text-muted-foreground")}>
+        <span
+          className={cn(
+            'text-[10px] -mt-1',
+            active ? 'font-medium text-primary' : 'text-muted-foreground',
+          )}
+        >
           {label}
         </span>
       </div>
     </Link>
-  )
+  );
 }
