@@ -1,16 +1,9 @@
-import type React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import {
-  Home,
-  Map,
-  Plus,
-  Settings,
-  Users,
-  FileText,
-  DollarSign,
-  Bell,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+"use client"
+
+import type React from "react"
+import { Link, useLocation } from "react-router-dom"
+import { Home, Map, Plus, Settings, Users, FileText, DollarSign, Bell } from "lucide-react"
+import { cn } from "@/lib/utils"
 import {
   Sheet,
   SheetContent,
@@ -19,23 +12,23 @@ import {
   SheetTitle,
   SheetTrigger,
   SheetClose,
-} from '@/components/ui/sheet';
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+} from "@/components/ui/sheet"
+import { useState, useEffect } from "react"
+import { motion } from "framer-motion"
 
 export function MobileNavigation() {
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const notificationCount = 2;
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const notificationCount = 2
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
+      setScrolled(window.scrollY > 20)
+    }
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
   return (
     <>
@@ -48,10 +41,10 @@ export function MobileNavigation() {
                 whileTap={{ scale: 0.92 }}
                 whileHover={{
                   scale: 1.05,
-                  boxShadow: '0 8px 20px -5px rgba(124, 58, 237, 0.5)',
+                  boxShadow: "0 8px 20px -5px rgba(124, 58, 237, 0.5)",
                 }}
                 transition={{
-                  type: 'spring',
+                  type: "spring",
                   stiffness: 400,
                   damping: 15,
                 }}
@@ -64,12 +57,8 @@ export function MobileNavigation() {
               className="h-auto max-h-[80vh] overflow-auto rounded-t-3xl px-6 py-8 border-t-0"
             >
               <SheetHeader className="text-left pb-6">
-                <SheetTitle className="text-2xl font-bold">
-                  Create New
-                </SheetTitle>
-                <SheetDescription className="text-base">
-                  What would you like to create?
-                </SheetDescription>
+                <SheetTitle className="text-2xl font-bold">Create New</SheetTitle>
+                <SheetDescription className="text-base">What would you like to create?</SheetDescription>
               </SheetHeader>
 
               <SheetClose asChild>
@@ -83,9 +72,7 @@ export function MobileNavigation() {
                     </div>
                     <div>
                       <span className="text-lg font-semibold">New Trip</span>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Plan your next adventure
-                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Plan your next adventure</p>
                     </div>
                   </div>
                   <div className="text-primary">→</div>
@@ -124,8 +111,8 @@ export function MobileNavigation() {
 
         <motion.div
           className={cn(
-            'bg-white/95 dark:bg-slate-900/95 border border-gray-200/50 dark:border-gray-800/50 shadow-lg rounded-full overflow-hidden',
-            scrolled ? 'shadow-xl' : 'shadow-md',
+            "bg-white/95 dark:bg-slate-900/95 border border-gray-200/50 dark:border-gray-800/50 shadow-lg rounded-full overflow-hidden",
+            scrolled ? "shadow-xl" : "shadow-md",
           )}
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -137,19 +124,14 @@ export function MobileNavigation() {
 
             <div className="w-14"></div>
 
-            <NavItem
-              path="/notifications"
-              icon={Bell}
-              label="Notifications"
-              notificationCount={notificationCount}
-            />
+            <NavItem path="/notifications" icon={Bell} label="Notifications" notificationCount={notificationCount} />
             <NavItem path="/settings" icon={Settings} label="Settings" />
           </div>
         </motion.div>
       </div>
       <div className="h-16" />
     </>
-  );
+  )
 }
 
 function NavItem({
@@ -158,45 +140,29 @@ function NavItem({
   label,
   notificationCount = 0,
 }: {
-  path: string;
-  icon: React.ElementType;
-  label: string;
-  notificationCount?: number;
+  path: string
+  icon: React.ElementType
+  label: string
+  notificationCount?: number
 }) {
-  const location = useLocation();
-  const active =
-    path === '/'
-      ? location.pathname === '/'
-      : location.pathname.startsWith(path);
+  const location = useLocation()
+  const active = path === "/" ? location.pathname === "/" : location.pathname.startsWith(path)
 
   return (
-    <Link
-      to={path}
-      className="flex flex-col items-center justify-center w-14 py-1"
-    >
+    <Link to={path} className="flex flex-col items-center justify-center w-14 py-1">
       <div className="flex flex-col items-center justify-center">
         <div className="flex items-center justify-center w-8 h-8 relative">
-          <Icon
-            className={cn(
-              'h-4 w-4',
-              active ? 'text-primary' : 'text-muted-foreground',
-            )}
-          />
+          <Icon className={cn("h-4 w-4", active ? "text-primary" : "text-muted-foreground")} />
           {notificationCount > 0 && (
             <span className="absolute -top-0.5 -right-1 flex items-center justify-center min-w-4 h-4 px-1 text-[8px] font-bold text-white bg-red-500 rounded-full z-50 shadow-sm">
-              {notificationCount > 99 ? '99+' : notificationCount}
+              {notificationCount > 99 ? "99+" : notificationCount}
             </span>
           )}
         </div>
-        <span
-          className={cn(
-            'text-[10px] -mt-1',
-            active ? 'font-medium text-primary' : 'text-muted-foreground',
-          )}
-        >
+        <span className={cn("text-[10px] -mt-1", active ? "font-medium text-primary" : "text-muted-foreground")}>
           {label}
         </span>
       </div>
     </Link>
-  );
+  )
 }
