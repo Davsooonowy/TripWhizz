@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 import { Link, useLocation } from "react-router-dom"
 import { Home, Map, Plus, Settings, Users, FileText, DollarSign, Bell } from "lucide-react"
@@ -15,11 +13,78 @@ import {
 } from "@/components/ui/sheet"
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
+import { NotificationsApiClient } from "@/lib/api/notifications"
+import { authenticationProviderInstance } from "@/lib/authentication-provider"
 
 export function MobileNavigation() {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const notificationCount = 2
+  const [notificationCount, setNotificationCount] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Fetch notification count on component mount and periodically
+  useEffect(() => {
+    const fetchNotificationCount = async () => {
+      try {
+        setIsLoading(true)
+        const notificationsApiClient = new NotificationsApiClient(authenticationProviderInstance)
+        const countData = await notificationsApiClient.getUnreadCount()
+        setNotificationCount(countData.count)
+      } catch (error) {
+        console.error("Error fetching notification count:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    // Initial fetch
+    fetchNotificationCount()
+
+    // Set up polling for real-time updates (every 30 seconds)
+    const intervalId = setInterval(fetchNotificationCount, 30000)
+
+    // Clean up interval on component unmount
+    return () => clearInterval(intervalId)
+  }, [])
+
+  // Set up WebSocket connection for real-time updates (if available)
+  useEffect(() => {
+    // Check if WebSockets are supported in the browser
+    if ("WebSocket" in window) {
+      const token = authenticationProviderInstance.token
+      if (!token) return
+
+      // Connect to notification WebSocket
+      const socket = new WebSocket(`${import.meta.env.VITE_WS_URL}/ws/notifications/`)
+
+      // Handle incoming messages
+      socket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data)
+          if (data.type === "unread_count") {
+            setNotificationCount(data.count)
+          } else if (data.type === "new_notification") {
+            // Increment the notification count
+            setNotificationCount((prev) => prev + 1)
+          }
+        } catch (error) {
+          console.error("Error parsing WebSocket message:", error)
+        }
+      }
+
+      // Handle connection errors
+      socket.onerror = (error) => {
+        console.error("WebSocket error:", error)
+      }
+
+      // Clean up WebSocket connection on component unmount
+      return () => {
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.close()
+        }
+      }
+    }
+  }, [])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -124,7 +189,13 @@ export function MobileNavigation() {
 
             <div className="w-14"></div>
 
-            <NavItem path="/notifications" icon={Bell} label="Notifications" notificationCount={notificationCount} />
+            <NavItem
+              path="/notifications"
+              icon={Bell}
+              label="Notifications"
+              notificationCount={notificationCount}
+              isLoading={isLoading}
+            />
             <NavItem path="/settings" icon={Settings} label="Settings" />
           </div>
         </motion.div>
@@ -139,11 +210,13 @@ function NavItem({
   icon: Icon,
   label,
   notificationCount = 0,
+  isLoading = false,
 }: {
   path: string
   icon: React.ElementType
   label: string
   notificationCount?: number
+  isLoading?: boolean
 }) {
   const location = useLocation()
   const active = path === "/" ? location.pathname === "/" : location.pathname.startsWith(path)
@@ -153,10 +226,14 @@ function NavItem({
       <div className="flex flex-col items-center justify-center">
         <div className="flex items-center justify-center w-8 h-8 relative">
           <Icon className={cn("h-4 w-4", active ? "text-primary" : "text-muted-foreground")} />
-          {notificationCount > 0 && (
-            <span className="absolute -top-0.5 -right-1 flex items-center justify-center min-w-4 h-4 px-1 text-[8px] font-bold text-white bg-red-500 rounded-full z-50 shadow-sm">
+          {!isLoading && notificationCount > 0 && (
+            <motion.span
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="absolute -top-0.5 -right-1 flex items-center justify-center min-w-4 h-4 px-1 text-[8px] font-bold text-white bg-red-500 rounded-full z-50 shadow-sm"
+            >
               {notificationCount > 99 ? "99+" : notificationCount}
-            </span>
+            </motion.span>
           )}
         </div>
         <span className={cn("text-[10px] -mt-1", active ? "font-medium text-primary" : "text-muted-foreground")}>
