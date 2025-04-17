@@ -20,4 +20,17 @@ urlpatterns = [
     path("google-login/", views.GoogleAuthView.as_view(), name="google_login"),
     path("user/verify/", views.OTPVerifyView.as_view(), name="verify_otp"),
     path("user/resend-otp/", views.ResendOtpView.as_view(), name="resend_otp"),
+
+    path("friends/", views.FriendListView.as_view(), name="friend_list"),
+    path("friends/requests/", views.FriendRequestListView.as_view(), name="friend_request_list"),
+    path("friends/request/", views.SendFriendRequestView.as_view(), name="send_friend_request"),
+    path("friends/request/<int:pk>/", views.FriendRequestActionView.as_view(), name="friend_request_action"),
+    path("friends/search/", views.FriendSearchView.as_view(), name="friend_search"),
+    path("friends/<int:pk>/", views.FriendDeleteView.as_view(), name="friend_delete"),
+
+    # Notification endpoints
+    path("notifications/", views.NotificationListView.as_view(), name="notification_list"),
+    path("notifications/count/", views.NotificationCountView.as_view(), name="notification_count"),
+    path("notifications/read/", views.NotificationMarkReadView.as_view(), name="mark_all_notifications_read"),
+    path("notifications/read/<int:pk>/", views.NotificationMarkReadView.as_view(), name="mark_notification_read"),
 ]

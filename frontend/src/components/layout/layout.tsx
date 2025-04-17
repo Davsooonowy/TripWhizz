@@ -17,6 +17,7 @@ import { useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Separator } from '@/components/ui/separator';
+import { NotificationDropdown } from '@/components/navigation/notification-dropdown';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
@@ -79,9 +80,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           >
             <div
               className={`
-              backdrop-blur-xl transition-all duration-300 border-b
-              ${scrolled ? 'bg-background/85 border-border/30 shadow-sm' : 'bg-background/70 border-transparent'}
-            `}
+             backdrop-blur-xl transition-all duration-300 border-b
+             ${scrolled ? 'bg-background/85 border-border/30 shadow-sm' : 'bg-background/70 border-transparent'}
+           `}
             >
               <div className="flex items-center h-12 px-4">
                 <div className="flex items-center gap-2">
@@ -116,13 +117,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     </BreadcrumbList>
                   </Breadcrumb>
                 </div>
+
+                <div className="ml-auto">
+                  <NotificationDropdown />
+                </div>
               </div>
             </div>
           </motion.header>
         )}
 
         {!isMobile && (
-          <header className="flex h-16 shrink-0 items-center gap-2  transition-[width,height] ease-linear">
+          <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear">
             <div className="flex items-center gap-2 px-4">
               <SidebarTrigger className="-ml-1" />
               <Separator orientation="vertical" className="mr-2 h-4" />
@@ -139,6 +144,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
+            </div>
+
+            <div className="ml-auto mr-4">
+              <NotificationDropdown />
             </div>
           </header>
         )}

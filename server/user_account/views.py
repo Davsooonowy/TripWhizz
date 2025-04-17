@@ -7,7 +7,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.db import transaction
+from django.db import transaction, models
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
@@ -15,15 +15,18 @@ from django.utils.encoding import force_str, force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status
+from rest_framework import status, filters
 from rest_framework.authtoken.models import Token
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import PendingUser, Profile
-from .serializers import UserSerializer, LoginSerializer, GoogleAuthResponseSerializer
+from .models import PendingUser, Profile, Friendship, Notification
+from .serializers import (
+    UserSerializer, LoginSerializer, GoogleAuthResponseSerializer,
+    FriendshipSerializer, FriendListSerializer, NotificationSerializer
+)
 from .utils import generate_otp, send_otp_email
 
 User = get_user_model()
@@ -289,3 +292,216 @@ class ResendOtpView(APIView):
         send_otp_email(pending_user, otp_code)
 
         return Response({"message": "OTP resent successfully"}, status=status.HTTP_200_OK)
+
+
+# Friend views
+class FriendListView(ListAPIView):
+    """View to list all accepted friends"""
+    permission_classes = [IsAuthenticated]
+    serializer_class = FriendListSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        # Get all accepted friendships where the user is either sender or receiver
+        friendships = Friendship.objects.filter(
+            (models.Q(sender=user) | models.Q(receiver=user)) &
+            models.Q(status='accepted')
+        )
+
+        # Extract the friend from each friendship
+        friend_ids = []
+        for friendship in friendships:
+            if friendship.sender == user:
+                friend_ids.append(friendship.receiver.id)
+            else:
+                friend_ids.append(friendship.sender.id)
+
+        return User.objects.filter(id__in=friend_ids)
+
+
+class FriendRequestListView(APIView):
+    """View to list all pending friend requests"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        # Get sent requests
+        sent_requests = Friendship.objects.filter(
+            sender=user,
+            status='pending'
+        )
+        sent_serializer = FriendshipSerializer(sent_requests, many=True, context={'request': request})
+
+        # Get received requests
+        received_requests = Friendship.objects.filter(
+            receiver=user,
+            status='pending'
+        )
+        received_serializer = FriendshipSerializer(received_requests, many=True, context={'request': request})
+
+        return Response({
+            'sent': sent_serializer.data,
+            'received': received_serializer.data
+        })
+
+
+class SendFriendRequestView(APIView):
+    """View to send a friend request"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = FriendshipSerializer(
+            data=request.data,
+            context={'request': request}
+        )
+
+        if serializer.is_valid():
+            friendship = serializer.save()
+            return Response(
+                FriendshipSerializer(friendship, context={'request': request}).data,
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class FriendRequestActionView(APIView):
+    """View to accept or reject a friend request"""
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, pk):
+        try:
+            friendship = Friendship.objects.get(pk=pk, receiver=request.user, status='pending')
+        except Friendship.DoesNotExist:
+            return Response(
+                {"error": "Friend request not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        action = request.data.get('action')
+        if action not in ['accept', 'reject']:
+            return Response(
+                {"error": "Invalid action. Use 'accept' or 'reject'"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        friendship.status = 'accepted' if action == 'accept' else 'rejected'
+        friendship.save()
+
+        # Create notification if request is accepted
+        if action == 'accept':
+            Notification.objects.create(
+                recipient=friendship.sender,
+                sender=request.user,
+                notification_type='friend_accept',
+                title='Friend Request Accepted',
+                message=f'{request.user.username} accepted your friend request',
+                related_object_id=friendship.id
+            )
+
+        return Response(
+            FriendshipSerializer(friendship, context={'request': request}).data
+        )
+
+
+class FriendSearchView(ListAPIView):
+    """View to search for users to add as friends"""
+    permission_classes = [IsAuthenticated]
+    serializer_class = FriendListSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['username', 'email', 'first_name', 'last_name']
+
+    def get_queryset(self):
+        user = self.request.user
+        # Exclude current user and existing friends
+
+        # Get all friendship IDs where the user is involved
+        friendships = Friendship.objects.filter(
+            (models.Q(sender=user) | models.Q(receiver=user)) &
+            models.Q(status='accepted')
+        )
+
+        # Extract the friend IDs
+        friend_ids = []
+        for friendship in friendships:
+            if friendship.sender == user:
+                friend_ids.append(friendship.receiver.id)
+            else:
+                friend_ids.append(friendship.sender.id)
+
+        # Exclude the user and their friends
+        exclude_ids = [user.id] + friend_ids
+        return User.objects.exclude(id__in=exclude_ids)
+
+
+class FriendDeleteView(APIView):
+    """View to remove a friend"""
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk):
+        user = request.user
+        try:
+            friend = User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Find the friendship
+        friendship = Friendship.objects.filter(
+            (models.Q(sender=user, receiver=friend) |
+             models.Q(sender=friend, receiver=user)) &
+            models.Q(status='accepted')
+        ).first()
+
+        if not friendship:
+            return Response(
+                {"error": "Friendship not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        friendship.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# Notification views
+class NotificationListView(ListAPIView):
+    """View to list all notifications for the current user"""
+    permission_classes = [IsAuthenticated]
+    serializer_class = NotificationSerializer
+
+    def get_queryset(self):
+        return Notification.objects.filter(recipient=self.request.user)
+
+
+class NotificationCountView(APIView):
+    """View to get the count of unread notifications"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        count = Notification.objects.filter(recipient=request.user, is_read=False).count()
+        return Response({'count': count})
+
+
+class NotificationMarkReadView(APIView):
+    """View to mark notifications as read"""
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, pk=None):
+        if pk:
+            # Mark a specific notification as read
+            try:
+                notification = Notification.objects.get(pk=pk, recipient=request.user)
+                notification.is_read = True
+                notification.save()
+                return Response(NotificationSerializer(notification).data)
+            except Notification.DoesNotExist:
+                return Response(
+                    {"error": "Notification not found"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            # Mark all notifications as read
+            Notification.objects.filter(recipient=request.user).update(is_read=True)
+            return Response({"message": "All notifications marked as read"})

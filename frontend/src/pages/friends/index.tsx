@@ -1,10 +1,5 @@
-import { FeatureNotAvailable } from '@/components/not-available/feature-not-available.tsx';
+import FriendsView from '@/components/friends/friends-view.tsx';
 
 export default function FriendsPage() {
-  return (
-    <FeatureNotAvailable
-      title="Friend list Coming Soon"
-      message="We're working on allowing you to list your friends!"
-    />
-  );
+  return <FriendsView />;
 }

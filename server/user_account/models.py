@@ -43,3 +43,50 @@ class OTP(models.Model):
 
     def __str__(self):
         return f"OTP for {self.user.email} - {self.code}"
+
+
+class Friendship(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+    ]
+
+    sender = models.ForeignKey(Profile, related_name='sent_friendships', on_delete=models.CASCADE)
+    receiver = models.ForeignKey(Profile, related_name='received_friendships', on_delete=models.CASCADE)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('sender', 'receiver')
+
+    def __str__(self):
+        return f"{self.sender.username} -> {self.receiver.username} ({self.status})"
+
+
+class Notification(models.Model):
+    TYPE_CHOICES = [
+        ('friend_request', 'Friend Request'),
+        ('friend_accept', 'Friend Request Accepted'),
+        ('trip_invite', 'Trip Invitation'),
+        ('trip_update', 'Trip Update'),
+        ('expense_update', 'Expense Update'),
+    ]
+
+    recipient = models.ForeignKey(Profile, related_name='notifications', on_delete=models.CASCADE)
+    sender = models.ForeignKey(Profile, related_name='sent_notifications', on_delete=models.CASCADE, null=True,
+                               blank=True)
+    notification_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    title = models.CharField(max_length=100)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    related_object_id = models.IntegerField(null=True,
+                                            blank=True)  # For storing IDs of related objects (friendship, trip, etc.)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.notification_type} for {self.recipient.username} from {self.sender.username if self.sender else 'System'}"

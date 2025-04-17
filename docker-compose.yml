@@ -13,5 +13,17 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --requirepass 1234
+    environment:
+      - REDIS_PASSWORD=your_password
+
 volumes:
   postgres_data:
+  redis_data:
