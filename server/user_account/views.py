@@ -28,6 +28,7 @@ from .serializers import (
     FriendshipSerializer, FriendListSerializer, NotificationSerializer
 )
 from .utils import generate_otp, send_otp_email
+from .redis_utils import check_friend_request_rate_limit
 
 User = get_user_model()
 
@@ -351,6 +352,18 @@ class SendFriendRequestView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        # Check rate limit before processing the request
+        user_id = request.user.id
+        allowed, current_count, reset_time = check_friend_request_rate_limit(user_id)
+
+        if not allowed:
+            return Response({
+                "error": "Rate limit exceeded",
+                "message": "You've sent too many friend requests. Please try again later.",
+                "reset_time": reset_time,
+                "current_count": current_count
+            }, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
         serializer = FriendshipSerializer(
             data=request.data,
             context={'request': request}
@@ -452,7 +465,7 @@ class FriendDeleteView(APIView):
         friendship = Friendship.objects.filter(
             (models.Q(sender=user, receiver=friend) |
              models.Q(sender=friend, receiver=user)) &
-            models.Q(status='accepted')
+            models.Q(status__in=['accepted', 'pending'])
         ).first()
 
         if not friendship:

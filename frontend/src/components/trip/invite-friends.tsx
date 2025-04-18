@@ -245,12 +245,14 @@ export default function InviteFriends({ tripType }: InviteFriendsProps) {
                             variant="secondary"
                             className="pl-1 pr-1 py-1 gap-1"
                           >
-                            <Avatar className="h-5 w-5">
+                            <Avatar className="h-5 w-5 rounded-lg">
                               <AvatarImage
                                 src={friend.avatar || '/placeholder.svg'}
                                 alt={friend.name}
                               />
-                              <AvatarFallback>{friend.name[0]}</AvatarFallback>
+                              <AvatarFallback className="rounded-lg">
+                                {friend.name[0]}
+                              </AvatarFallback>
                             </Avatar>
                             <span className="text-xs">{friend.name}</span>
                             <Button
@@ -306,12 +308,14 @@ export default function InviteFriends({ tripType }: InviteFriendsProps) {
                           )}
                         >
                           <div className="flex items-center gap-3">
-                            <Avatar className="h-10 w-10 relative">
+                            <Avatar className="h-10 w-10 relative rounded-lg">
                               <AvatarImage
                                 src={friend.avatar || '/placeholder.svg'}
                                 alt={friend.name}
                               />
-                              <AvatarFallback>{friend.name[0]}</AvatarFallback>
+                              <AvatarFallback className="rounded-lg">
+                                {friend.name[0]}
+                              </AvatarFallback>
                               <div
                                 className={cn(
                                   'absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background',
