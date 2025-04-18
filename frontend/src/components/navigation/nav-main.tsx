@@ -1,5 +1,3 @@
-'use client';
-
 import { ChevronRight, type LucideIcon } from 'lucide-react';
 
 import {
@@ -21,7 +19,7 @@ import { cn } from '@/lib/utils';
 
 export function NavMain({
   items,
-  hasTrips = true,
+  hasTrips,
 }: {
   items: {
     title: string;
@@ -33,7 +31,7 @@ export function NavMain({
       url: string;
     }[];
   }[];
-  hasTrips?: boolean;
+  hasTrips: boolean;
 }) {
   return (
     <SidebarGroup>
