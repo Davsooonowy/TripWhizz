@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/sidebar.tsx';
 import { useTripContext } from '@/components/util/trip-context';
 
-
 const iconMap: Record<string, React.FC> = {
   plane: () => (
     <svg
@@ -34,8 +33,7 @@ const iconMap: Record<string, React.FC> = {
       strokeLinejoin="round"
       className="size-4"
     >
-      <path
-        d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
+      <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
     </svg>
   ),
   beach: () => (
@@ -169,8 +167,7 @@ const iconMap: Record<string, React.FC> = {
       strokeLinejoin="round"
       className="size-4"
     >
-      <path
-        d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.6-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C2.1 10.9 2 11 2 11.3V15c0 .6.4 1 1 1h2" />
+      <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.6-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C2.1 10.9 2 11 2 11.3V15c0 .6.4 1 1 1h2" />
       <circle cx="7" cy="17" r="2" />
       <path d="M9 17h6" />
       <circle cx="17" cy="17" r="2" />
@@ -205,30 +202,28 @@ export function TripSwitcher() {
             >
               {hasTrips && selectedTrip ? (
                 <>
-                  <div
-                    className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                     {getIconComponent(selectedTrip.icon)}
                   </div>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">
-                        {selectedTrip.name}
-                      </span>
+                    <span className="truncate font-semibold">
+                      {selectedTrip.name}
+                    </span>
                     <span className="truncate text-xs">
-                        {selectedTrip.destination}
-                      </span>
+                      {selectedTrip.destination}
+                    </span>
                   </div>
                 </>
               ) : (
                 <>
-                  <div
-                    className="flex aspect-square size-8 items-center justify-center rounded-lg bg-amber-500/20 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-amber-500/20 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
                     <MapPin className="size-4" />
                   </div>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">No Trips Yet</span>
                     <span className="truncate text-xs text-muted-foreground">
-                        Create your first adventure
-                      </span>
+                      Create your first adventure
+                    </span>
                   </div>
                 </>
               )}
@@ -258,8 +253,8 @@ export function TripSwitcher() {
                     <div className="flex flex-col">
                       <span>{trip.name}</span>
                       <span className="text-xs text-muted-foreground">
-                          {trip.destination}
-                        </span>
+                        {trip.destination}
+                      </span>
                     </div>
                     <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
                   </DropdownMenuItem>

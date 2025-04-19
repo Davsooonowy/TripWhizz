@@ -1,12 +1,12 @@
-@import url("https://fonts.googleapis.com/css2?family=Pacifico&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 .fancy-font {
-  font-family: "Pacifico", cursive;
+  font-family: 'Pacifico', cursive;
   font-size: 1.5rem;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
@@ -73,13 +73,16 @@
 
     /* Elevation system */
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.06);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --shadow-md:
+      0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg:
+      0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl:
+      0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 
     /* Typography */
-    --font-heading: "Montserrat", sans-serif;
-    --font-body: "Poppins", sans-serif;
+    --font-heading: 'Montserrat', sans-serif;
+    --font-body: 'Poppins', sans-serif;
   }
 
   .dark {
@@ -143,9 +146,12 @@
 
     /* Elevation system */
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25), 0 1px 1px rgba(0, 0, 0, 0.2);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+    --shadow-md:
+      0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    --shadow-lg:
+      0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+    --shadow-xl:
+      0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
   }
 }
 
@@ -200,22 +206,30 @@
 @layer components {
   .card-shadow-sm {
     box-shadow: var(--shadow-sm);
-    transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+    transition:
+      box-shadow 0.2s ease-in-out,
+      transform 0.2s ease-in-out;
   }
 
   .card-shadow-md {
     box-shadow: var(--shadow-md);
-    transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+    transition:
+      box-shadow 0.2s ease-in-out,
+      transform 0.2s ease-in-out;
   }
 
   .card-shadow-lg {
     box-shadow: var(--shadow-lg);
-    transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+    transition:
+      box-shadow 0.2s ease-in-out,
+      transform 0.2s ease-in-out;
   }
 
   .card-shadow-xl {
     box-shadow: var(--shadow-xl);
-    transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+    transition:
+      box-shadow 0.2s ease-in-out,
+      transform 0.2s ease-in-out;
   }
 
   /*.card-hover:hover {*/
@@ -229,17 +243,29 @@
 
   /* Trip type specific styles */
   .trip-beach {
-    background: linear-gradient(to right, hsl(var(--beach) / 0.2), hsl(var(--beach) / 0.05));
+    background: linear-gradient(
+      to right,
+      hsl(var(--beach) / 0.2),
+      hsl(var(--beach) / 0.05)
+    );
     border-left: 3px solid hsl(var(--beach));
   }
 
   .trip-mountain {
-    background: linear-gradient(to right, hsl(var(--mountain) / 0.2), hsl(var(--mountain) / 0.05));
+    background: linear-gradient(
+      to right,
+      hsl(var(--mountain) / 0.2),
+      hsl(var(--mountain) / 0.05)
+    );
     border-left: 3px solid hsl(var(--mountain));
   }
 
   .trip-city {
-    background: linear-gradient(to right, hsl(var(--city) / 0.2), hsl(var(--city) / 0.05));
+    background: linear-gradient(
+      to right,
+      hsl(var(--city) / 0.2),
+      hsl(var(--city) / 0.05)
+    );
     border-left: 3px solid hsl(var(--city));
   }
 

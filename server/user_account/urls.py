@@ -28,7 +28,6 @@ urlpatterns = [
     path("friends/search/", views.FriendSearchView.as_view(), name="friend_search"),
     path("friends/<int:pk>/", views.FriendDeleteView.as_view(), name="friend_delete"),
 
-    # Notification endpoints
     path("notifications/", views.NotificationListView.as_view(), name="notification_list"),
     path("notifications/count/", views.NotificationCountView.as_view(), name="notification_count"),
     path("notifications/read/", views.NotificationMarkReadView.as_view(), name="mark_all_notifications_read"),

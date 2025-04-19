@@ -35,10 +35,10 @@ interface AuthFormProps extends React.ComponentPropsWithoutRef<'form'> {
 }
 
 export function AuthForm({
-                           className,
-                           isRegister = false,
-                           ...props
-                         }: AuthFormProps) {
+  className,
+  isRegister = false,
+  ...props
+}: AuthFormProps) {
   const [isRegisterMode, setIsRegisterMode] = useState(isRegister);
   const [isResetPasswordMode, setIsResetPasswordMode] = useState(false);
   const [password, setPassword] = useState('');
@@ -84,13 +84,19 @@ export function AuthForm({
   };
 
   const sendPasswordResetEmail = async (email: string) => {
-    const usersApiClient = new UsersApiClient(authenticationProviderInstance);
-    await usersApiClient.sendPasswordResetEmail(email);
-    toast({
-      title: 'Reset Link Sent',
-      description: 'If the email is registered, a password reset link has been sent to your inbox.',
-      action: <Check className="h-4 w-4 text-green-500" />,
-    });
+    try {
+      const usersApiClient = new UsersApiClient(authenticationProviderInstance);
+      await usersApiClient.sendPasswordResetEmail(email);
+    } catch {
+      setFormError('Error sending password reset email. Please try again.');
+    } finally {
+      toast({
+        title: 'Reset Link Sent',
+        description:
+          'If the email is registered, a password reset link has been sent to your inbox.',
+        action: <Check className="h-4 w-4 text-green-500" />,
+      });
+    }
   };
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
@@ -349,8 +355,7 @@ export function AuthForm({
               <Button type="submit" className="w-full">
                 {isRegisterMode ? 'Register' : 'Login'}
               </Button>
-              <div
-                className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
+              <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
                 <span className="relative z-10 bg-background px-2 text-muted-foreground">
                   Or continue with
                 </span>
@@ -363,10 +368,9 @@ export function AuthForm({
             </>
           )}
         </div>
-        <div
-          className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary">
-          By logging in, you agree to our{' '}
-          <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+        <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary">
+          By logging in, you agree to our <a href="#">Terms of Service</a> and{' '}
+          <a href="#">Privacy Policy</a>.
         </div>
       </form>
       <OtpDialog
