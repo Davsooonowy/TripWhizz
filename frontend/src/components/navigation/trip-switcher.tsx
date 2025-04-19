@@ -1,6 +1,8 @@
-import type * as React from 'react';
-import { ChevronsUpDown, Plus, MapPin, AlertCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+"use client"
+
+import type * as React from "react"
+import { ChevronsUpDown, Plus, MapPin, AlertCircle } from "lucide-react"
+import { Link } from "react-router-dom"
 
 import {
   DropdownMenu,
@@ -10,14 +12,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu.tsx';
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from '@/components/ui/sidebar.tsx';
-import { useTripContext } from '@/components/util/trip-context';
+} from "@/components/ui/dropdown-menu.tsx"
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar.tsx"
+import { useTripContext } from "@/components/util/trip-context"
 
 const iconMap: Record<string, React.FC> = {
   plane: () => (
@@ -154,7 +151,7 @@ const iconMap: Record<string, React.FC> = {
       <path d="M16 15h0" />
     </svg>
   ),
-  'road trip': () => (
+  "road trip": () => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width="24"
@@ -173,23 +170,29 @@ const iconMap: Record<string, React.FC> = {
       <circle cx="17" cy="17" r="2" />
     </svg>
   ),
-};
+}
 
-// Fix the trip switcher to show the correct icon for the selected trip
+// Update the getIconComponent function to properly handle icon rendering
 const getIconComponent = (iconName?: string) => {
   if (!iconName || !iconMap[iconName.toLowerCase()]) {
-    return <MapPin className="size-4" />;
+    return <MapPin className="size-4" />
   }
 
-  const IconComponent = iconMap[iconName.toLowerCase()];
-  return <IconComponent />;
-};
+  const IconComponent = iconMap[iconName.toLowerCase()]
+  return <IconComponent />
+}
 
-// Update the TripSwitcher component to show the correct icon
+// Update the TripSwitcher component to properly display icons with their colors
 export function TripSwitcher() {
-  const { isMobile } = useSidebar();
-  const { trips, selectedTrip, setSelectedTrip } = useTripContext();
-  const hasTrips = trips.length > 0;
+  const { isMobile } = useSidebar()
+  const { trips, selectedTrip, setSelectedTrip, refreshContent } = useTripContext()
+  const hasTrips = trips.length > 0
+
+  const handleTripSelection = (trip: any) => {
+    setSelectedTrip(trip)
+    // Trigger content refresh after trip selection
+    setTimeout(() => refreshContent(), 100)
+  }
 
   return (
     <SidebarMenu>
@@ -202,16 +205,14 @@ export function TripSwitcher() {
             >
               {hasTrips && selectedTrip ? (
                 <>
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                  <div
+                    className={`flex aspect-square size-8 items-center justify-center rounded-lg ${selectedTrip.icon_color || "bg-sidebar-primary"} text-sidebar-primary-foreground`}
+                  >
                     {getIconComponent(selectedTrip.icon)}
                   </div>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">
-                      {selectedTrip.name}
-                    </span>
-                    <span className="truncate text-xs">
-                      {selectedTrip.destination}
-                    </span>
+                    <span className="truncate font-semibold">{selectedTrip.name}</span>
+                    <span className="truncate text-xs">{selectedTrip.destination}</span>
                   </div>
                 </>
               ) : (
@@ -221,9 +222,7 @@ export function TripSwitcher() {
                   </div>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">No Trips Yet</span>
-                    <span className="truncate text-xs text-muted-foreground">
-                      Create your first adventure
-                    </span>
+                    <span className="truncate text-xs text-muted-foreground">Create your first adventure</span>
                   </div>
                 </>
               )}
@@ -233,28 +232,26 @@ export function TripSwitcher() {
           <DropdownMenuContent
             className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
             align="start"
-            side={isMobile ? 'bottom' : 'right'}
+            side={isMobile ? "bottom" : "right"}
             sideOffset={4}
           >
             {hasTrips ? (
               <>
-                <DropdownMenuLabel className="text-xs text-muted-foreground">
-                  Your Trips
-                </DropdownMenuLabel>
+                <DropdownMenuLabel className="text-xs text-muted-foreground">Your Trips</DropdownMenuLabel>
                 {trips.map((trip, index) => (
                   <DropdownMenuItem
                     key={trip.id}
-                    onClick={() => setSelectedTrip(trip)}
-                    className={`gap-2 p-2 ${selectedTrip?.id === trip.id ? 'bg-muted' : ''}`}
+                    onClick={() => handleTripSelection(trip)}
+                    className={`gap-2 p-2 ${selectedTrip?.id === trip.id ? "bg-muted" : ""}`}
                   >
-                    <div className="flex size-6 items-center justify-center rounded-sm border">
+                    <div
+                      className={`flex size-6 items-center justify-center rounded-sm border ${trip.icon_color || "bg-primary/10"}`}
+                    >
                       {getIconComponent(trip.icon)}
                     </div>
                     <div className="flex flex-col">
                       <span>{trip.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {trip.destination}
-                      </span>
+                      <span className="text-xs text-muted-foreground">{trip.destination}</span>
                     </div>
                     <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
                   </DropdownMenuItem>
@@ -267,8 +264,7 @@ export function TripSwitcher() {
                   <p className="text-sm font-medium">No trips available</p>
                 </div>
                 <p className="text-xs text-muted-foreground mb-2">
-                  Start by creating your first trip to begin planning your
-                  adventure
+                  Start by creating your first trip to begin planning your adventure
                 </p>
               </div>
             )}
@@ -278,14 +274,12 @@ export function TripSwitcher() {
                 <div className="flex size-6 items-center justify-center rounded-md border bg-primary/10 text-primary">
                   <Plus className="size-4" />
                 </div>
-                <div className="font-medium">
-                  {hasTrips ? 'Plan New Trip' : 'Create First Trip'}
-                </div>
+                <div className="font-medium">{hasTrips ? "Plan New Trip" : "Create First Trip"}</div>
               </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  );
+  )
 }

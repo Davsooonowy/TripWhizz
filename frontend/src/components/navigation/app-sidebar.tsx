@@ -1,4 +1,6 @@
-import type * as React from 'react';
+"use client"
+
+import type * as React from "react"
 import {
   Calendar,
   CheckSquare,
@@ -6,11 +8,20 @@ import {
   Map,
   MoonIcon as IconMoon,
   SunIcon as IconSun,
-} from 'lucide-react';
+  MapPin,
+  Plane,
+  Palmtree,
+  Mountain,
+  Building2,
+  Tent,
+  Ship,
+  Train,
+  Car,
+} from "lucide-react"
 
-import { NavMain } from '@/components/navigation/nav-main.tsx';
-import { NavUser } from '@/components/navigation/nav-user.tsx';
-import { TripSwitcher } from '@/components/navigation/trip-switcher.tsx';
+import { NavMain } from "@/components/navigation/nav-main.tsx"
+import { NavUser } from "@/components/navigation/nav-user.tsx"
+import { TripSwitcher } from "@/components/navigation/trip-switcher.tsx"
 import {
   Sidebar,
   SidebarContent,
@@ -23,127 +34,149 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarGroupContent,
-} from '@/components/ui/sidebar.tsx';
-import { useDarkMode } from '@/components/util/dark-mode-provider.tsx';
-import { TripCompanions } from '@/components/navigation/trip-companions';
-import { useTripContext } from '@/components/util/trip-context';
+} from "@/components/ui/sidebar.tsx"
+import { useDarkMode } from "@/components/util/dark-mode-provider.tsx"
+import { TripCompanions } from "@/components/navigation/trip-companions"
+import { useTripContext } from "@/components/util/trip-context"
+
+// Update the iconMap to ensure all icons are properly defined
+const iconMap: Record<string, React.ElementType> = {
+  plane: Plane,
+  beach: Palmtree,
+  mountain: Mountain,
+  city: Building2,
+  camping: Tent,
+  cruise: Ship,
+  train: Train,
+  "road trip": Car,
+}
 
 const data = {
   navMain: [
     {
-      title: 'Itinerary',
-      url: '/itinerary',
+      title: "Itinerary",
+      url: "/itinerary",
       icon: Calendar,
       items: [
         {
-          title: 'Day Plans',
-          url: '/itinerary/days',
+          title: "Day Plans",
+          url: "/itinerary/days",
         },
         {
-          title: 'Activities',
-          url: '/itinerary/activities',
+          title: "Activities",
+          url: "/itinerary/activities",
         },
         {
-          title: 'Bookings',
-          url: '/itinerary/bookings',
+          title: "Bookings",
+          url: "/itinerary/bookings",
         },
       ],
     },
     {
-      title: 'Expenses',
-      url: '/expenses',
+      title: "Expenses",
+      url: "/expenses",
       icon: DollarSign,
       items: [
         {
-          title: 'Overview',
-          url: '/expenses/overview',
+          title: "Overview",
+          url: "/expenses/overview",
         },
         {
-          title: 'Split Bills',
-          url: '/expenses/split',
+          title: "Split Bills",
+          url: "/expenses/split",
         },
         {
-          title: 'Add Expense',
-          url: '/expenses/add',
+          title: "Add Expense",
+          url: "/expenses/add",
         },
       ],
     },
     {
-      title: 'Maps',
-      url: '/maps',
+      title: "Maps",
+      url: "/maps",
       icon: Map,
       items: [
         {
-          title: 'Destinations',
-          url: '/maps/destinations',
+          title: "Destinations",
+          url: "/maps/destinations",
         },
         {
-          title: 'Navigation',
-          url: '/maps/navigation',
+          title: "Navigation",
+          url: "/maps/navigation",
         },
         {
-          title: 'Points of Interest',
-          url: '/maps/poi',
+          title: "Points of Interest",
+          url: "/maps/poi",
         },
       ],
     },
     {
-      title: 'Packing List',
-      url: '/packing',
+      title: "Packing List",
+      url: "/packing",
       icon: CheckSquare,
       items: [
         {
-          title: 'My Items',
-          url: '/packing/items',
+          title: "My Items",
+          url: "/packing/items",
         },
         {
-          title: 'Shared Items',
-          url: '/packing/shared',
+          title: "Shared Items",
+          url: "/packing/shared",
         },
         {
-          title: 'Templates',
-          url: '/packing/templates',
+          title: "Templates",
+          url: "/packing/templates",
         },
       ],
     },
   ],
   companions: [
     {
-      name: 'Alex Johnson',
-      avatar: '/placeholder.svg?height=40&width=40',
-      color: 'bg-blue-500',
+      name: "Alex Johnson",
+      avatar: "/placeholder.svg?height=40&width=40",
+      color: "bg-blue-500",
     },
     {
-      name: 'Sarah Miller',
-      avatar: '/placeholder.svg?height=40&width=40',
-      color: 'bg-pink-500',
+      name: "Sarah Miller",
+      avatar: "/placeholder.svg?height=40&width=40",
+      color: "bg-pink-500",
     },
     {
-      name: 'James Wilson',
-      avatar: '/placeholder.svg?height=40&width=40',
-      color: 'bg-green-500',
+      name: "James Wilson",
+      avatar: "/placeholder.svg?height=40&width=40",
+      color: "bg-green-500",
     },
     {
-      name: 'Emily Davis',
-      avatar: '/placeholder.svg?height=40&width=40',
-      color: 'bg-purple-500',
+      name: "Emily Davis",
+      avatar: "/placeholder.svg?height=40&width=40",
+      color: "bg-purple-500",
     },
     {
-      name: 'David Brown',
-      avatar: '/placeholder.svg?height=40&width=40',
-      color: 'bg-amber-500',
+      name: "David Brown",
+      avatar: "/placeholder.svg?height=40&width=40",
+      color: "bg-amber-500",
     },
   ],
   user: {
-    name: 'John Doe',
-    avatar: '/placeholder.svg?height=40&width=40',
+    name: "John Doe",
+    avatar: "/placeholder.svg?height=40&width=40",
   },
-};
+}
+
+// Fix the trip switcher to show the correct icon for the selected trip
+const getIconComponent = (iconName?: string) => {
+  if (!iconName || !iconMap[iconName.toLowerCase()]) {
+    return <MapPin className="size-4" />
+  }
+
+  const IconComponent = iconMap[iconName.toLowerCase()]
+  return <IconComponent />
+}
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { isDarkMode, toggleDarkMode } = useDarkMode();
-  const { trips } = useTripContext();
-  const hasTrips = trips.length > 0;
+  const { isDarkMode, toggleDarkMode } = useDarkMode()
+  const { trips } = useTripContext()
+  const hasTrips = trips.length > 0
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -170,9 +203,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               ) : (
                 <IconMoon className="h-5 w-5 flex-shrink-0" />
               )}
-              <span className="text-sm w-24 truncate">
-                {isDarkMode ? 'Light Mode' : 'Dark Mode'}
-              </span>
+              <span className="text-sm w-24 truncate">{isDarkMode ? "Light Mode" : "Dark Mode"}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <NavUser />
@@ -180,5 +211,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  );
+  )
 }
