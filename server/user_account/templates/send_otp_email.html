@@ -1,0 +1,46 @@
+<div style="font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 0;">
+  <div
+    style="max-width: 600px; margin: 20px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); padding: 20px;">
+    <div style="text-align: center; padding: 20px 0; border-bottom: 1px solid #ddd;">
+      <a href="https://ibb.co/SwRQqVwf"><img src="https://i.ibb.co/fd48mrdD/logo-no-background.png" alt="TripWhizz Logo"
+                                             style="border: 0; height: 40px; margin-bottom: 15px;" /></a>
+      <h1 style="color: #5dd8a1; margin: 10px 0;">OTP Verification</h1>
+    </div>
+    <div style="padding: 20px; line-height: 1.6;">
+      <p>Hi {{ user.email }},</p>
+      <p>Your OTP code is:</p>
+      <div
+        style="font-size: 32px; font-weight: bold; color: #ff5c40; text-align: center; margin: 30px 0; padding: 15px; background-color: #f8f9fa; border-radius: 8px; letter-spacing: 5px; position: relative;">
+        <span id="otp-code">{{ otp_code }}</span>
+        <button onclick="copyToClipboard()"
+                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background-color: #5dd8a1; color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 14px;">
+          Copy
+        </button>
+      </div>
+      <p>Please use this code to complete your verification. The code is valid for 10 minutes.</p>
+      <p style="color: #666; font-size: 14px; margin-top: 20px;">For security reasons, please do not share this code
+        with anyone.</p>
+    </div>
+    <div
+      style="text-align: center; font-size: 12px; color: #888; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">
+      <p>&copy; 2025 TripWhizz. All rights reserved.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  function copyToClipboard() {
+    const otpCode = document.getElementById('otp-code').textContent;
+    const button = document.querySelector('button[onclick="copyToClipboard()"]');
+
+    navigator.clipboard.writeText(otpCode).then(() => {
+      button.textContent = 'Copied!';
+      button.style.backgroundColor = '#4caf50';
+
+      setTimeout(() => {
+        button.textContent = 'Copy';
+        button.style.backgroundColor = '#5dd8a1';
+      }, 500);
+    }).catch();
+  }
+</script>

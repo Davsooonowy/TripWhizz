@@ -1,5 +1,3 @@
-'use client';
-
 import { AuthForm } from '@/components/auth/auth-form.tsx';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';

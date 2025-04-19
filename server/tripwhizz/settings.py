@@ -75,7 +75,7 @@ ROOT_URLCONF = "tripwhizz.urls"
 TEMPLATES = [
    {
        "BACKEND": "django.template.backends.django.DjangoTemplates",
-       "DIRS": [],
+       'DIRS': [os.path.join(BASE_DIR, 'server/user_account/templates')],
        "APP_DIRS": True,
        "OPTIONS": {
            "context_processors": [

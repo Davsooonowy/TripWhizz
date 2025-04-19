@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { FormField } from '@/components/auth/form-field.tsx';
-import { AlertCircle, Check, GalleryVerticalEnd } from 'lucide-react';
+import { AlertCircle, Check } from 'lucide-react';
 import {
   EmailSchema,
   loginSchema,
@@ -22,6 +22,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import GoogleLoginButton from '@/components/auth/GoogleLoginButton.tsx';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import OtpDialog from '@/components/util/otp-dialog';
+import { toast } from '@/components/ui/use-toast';
 
 interface FormData {
   email: string;
@@ -86,9 +87,12 @@ export function AuthForm({
     try {
       const usersApiClient = new UsersApiClient(authenticationProviderInstance);
       await usersApiClient.sendPasswordResetEmail(email);
-      alert('Password reset link sent successfully');
-    } catch (error) {
-      console.error('Error sending password reset email:', error);
+      toast({
+        title: 'Success',
+        description: 'Password reset link sent successfully.',
+        action: <Check className="h-4 w-4 text-green-500" />,
+      });
+    } catch {
       setFormError('Error sending password reset email. Please try again.');
     }
   };
@@ -184,11 +188,11 @@ export function AuthForm({
         onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)}
       >
         <div className="flex flex-col items-center gap-2">
-          <a href="#" className="flex flex-col items-center gap-2 font-medium">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md">
-              <GalleryVerticalEnd className="size-6" />
-            </div>
-            <span className="sr-only">Acme Inc.</span>
+          <a href="https://ibb.co/SwRQqVwf">
+            <img
+              src="https://i.ibb.co/fd48mrdD/logo-no-background.png"
+              alt="TripWhizz Logo"
+            />
           </a>
           <h1 className="text-xl font-bold">Welcome to TripWhizz</h1>
           {!isResetPasswordMode && (
