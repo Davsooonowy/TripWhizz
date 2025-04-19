@@ -85,7 +85,6 @@ export default function FriendsView() {
         setFriends(friendsData);
         setFriendRequests(requestsData);
       } catch (error) {
-        console.error('Error fetching friends data:', error);
         toast({
           title: 'Error',
           description: 'Failed to load friends data. Please try again.',
@@ -110,7 +109,6 @@ export default function FriendsView() {
       const results = await friendsApiClient.searchUsers(searchQuery);
       setSearchResults(results);
     } catch (error) {
-      console.error('Error searching users:', error);
       toast({
         title: 'Search Failed',
         description: 'Could not complete the search. Please try again.',
@@ -142,7 +140,6 @@ export default function FriendsView() {
         description: 'Your friend request has been sent successfully.',
       });
     } catch (error) {
-      console.error('Error sending friend request:', error);
       toast({
         title: 'Request Failed',
         description: 'Could not send friend request. Please try again.',
@@ -186,7 +183,6 @@ export default function FriendsView() {
             : 'The friend request has been rejected.',
       });
     } catch (error) {
-      console.error(`Error ${action}ing friend request:`, error);
       toast({
         title: 'Action Failed',
         description: `Could not ${action} the friend request. Please try again.`,
@@ -210,7 +206,6 @@ export default function FriendsView() {
         description: 'The friend has been removed from your friends list.',
       });
     } catch (error) {
-      console.error('Error removing friend:', error);
       toast({
         title: 'Action Failed',
         description: 'Could not remove friend. Please try again.',
@@ -237,7 +232,6 @@ export default function FriendsView() {
         description: 'Your friend request has been cancelled.',
       });
     } catch (error) {
-      console.error('Error cancelling request:', error);
       toast({
         title: 'Action Failed',
         description: 'Could not cancel the friend request. Please try again.',
@@ -310,12 +304,12 @@ export default function FriendsView() {
                         className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
                       >
                         <div className="flex items-center gap-3">
-                          <Avatar className="h-10 w-10">
+                          <Avatar className="h-10 w-10 rounded-lg">
                             <AvatarImage
                               src={friend.avatar_url || undefined}
                               alt={friend.username}
                             />
-                            <AvatarFallback>
+                            <AvatarFallback className="rounded-lg">
                               {getInitials(
                                 friend.first_name && friend.last_name
                                   ? `${friend.first_name} ${friend.last_name}`
@@ -384,12 +378,12 @@ export default function FriendsView() {
                             className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
                           >
                             <div className="flex items-center gap-3">
-                              <Avatar className="h-10 w-10">
+                              <Avatar className="h-10 w-10 rounded-lg">
                                 <AvatarImage
                                   src={request.sender.avatar_url || undefined}
                                   alt={request.sender.username}
                                 />
-                                <AvatarFallback>
+                                <AvatarFallback className="rounded-lg">
                                   {getInitials(
                                     request.sender.first_name &&
                                       request.sender.last_name
@@ -459,12 +453,12 @@ export default function FriendsView() {
                             className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
                           >
                             <div className="flex items-center gap-3">
-                              <Avatar className="h-10 w-10">
+                              <Avatar className="h-10 w-10 rounded-lg">
                                 <AvatarImage
                                   src={request.receiver.avatar_url || undefined}
                                   alt={request.receiver.username}
                                 />
-                                <AvatarFallback>
+                                <AvatarFallback className="rounded-lg">
                                   {getInitials(
                                     request.receiver.first_name &&
                                       request.receiver.last_name
@@ -557,12 +551,12 @@ export default function FriendsView() {
                           className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
                         >
                           <div className="flex items-center gap-3">
-                            <Avatar className="h-10 w-10">
+                            <Avatar className="h-10 w-10 rounded-lg">
                               <AvatarImage
                                 src={user.avatar_url || undefined}
                                 alt={user.username}
                               />
-                              <AvatarFallback>
+                              <AvatarFallback className="rounded-lg">
                                 {getInitials(
                                   user.first_name && user.last_name
                                     ? `${user.first_name} ${user.last_name}`

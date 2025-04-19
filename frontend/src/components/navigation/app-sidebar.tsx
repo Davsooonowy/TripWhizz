@@ -5,9 +5,6 @@ import {
   DollarSign,
   Map,
   MoonIcon as IconMoon,
-  Mountain,
-  Palmtree,
-  Plane,
   SunIcon as IconSun,
 } from 'lucide-react';
 
@@ -29,26 +26,9 @@ import {
 } from '@/components/ui/sidebar.tsx';
 import { useDarkMode } from '@/components/util/dark-mode-provider.tsx';
 import { TripCompanions } from '@/components/navigation/trip-companions';
+import { useTripContext } from '@/components/util/trip-context';
 
-// dummy data and dummy companions before we will implement real ones :)
 const data = {
-  trips: [
-    {
-      name: 'Paris Adventure',
-      logo: Plane,
-      dates: 'May 15-22, 2024',
-    },
-    {
-      name: 'Beach Getaway',
-      logo: Palmtree,
-      dates: 'July 10-17, 2024',
-    },
-    {
-      name: 'Mountain Hiking',
-      logo: Mountain,
-      dates: 'Aug 5-12, 2024',
-    },
-  ],
   navMain: [
     {
       title: 'Itinerary',
@@ -162,12 +142,13 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
-  const hasTrips = data.trips.length > 0;
+  const { trips } = useTripContext();
+  const hasTrips = trips.length > 0;
 
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TripSwitcher trips={data.trips} hasTrips={hasTrips} />
+        <TripSwitcher />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} hasTrips={hasTrips} />

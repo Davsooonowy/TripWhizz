@@ -82,7 +82,7 @@ class Notification(models.Model):
     message = models.TextField()
     is_read = models.BooleanField(default=False)
     related_object_id = models.IntegerField(null=True,
-                                            blank=True)  # For storing IDs of related objects (friendship, trip, etc.)
+                                            blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

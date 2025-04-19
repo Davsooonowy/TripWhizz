@@ -11,7 +11,7 @@ export function AppLoader() {
         className="flex flex-col items-center"
       >
         <div className="w-24 h-24 mb-6">
-          <img src="/logo.webp" alt="TripWhizz Logo" className="w-full h-auto" />
+          <img src="/logo.svg" alt="TripWhizz Logo" className="w-full h-auto" />
         </div>
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2, duration: 0.3 }}>

@@ -11,11 +11,13 @@ import { authenticationProviderInstance } from '@/lib/authentication-provider.ts
 import { UsersApiClient } from '@/lib/api/users.ts';
 import { Toaster } from '@/components/ui/toaster';
 import { AppLoader } from '@/components/ui/app-loader';
+import { TripProvider } from '@/components/util/trip-context';
 
 const LoginPage = React.lazy(() => import('@/pages/login'));
 const NotFound = React.lazy(() => import('./pages/not-found'));
 const App = React.lazy(() => import('@/App.tsx'));
 const Layout = React.lazy(() => import('@/components/layout/layout.tsx'));
+const HomePage = React.lazy(() => import('@/pages/index'));
 const StartTripPage = React.lazy(() => import('@/pages/trip/index.tsx'));
 const OnboardingPage = React.lazy(() => import('@/pages/onboarding/index.tsx'));
 const ResetPassword = React.lazy(
@@ -67,6 +69,10 @@ const router = createBrowserRouter([
     ),
     loader: protectedLoginLoader,
     children: [
+      {
+        path: '/',
+        element: <HomePage />,
+      },
       {
         path: '/trip',
         element: <StartTripPage />,
@@ -138,10 +144,12 @@ const router = createBrowserRouter([
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <DarkModeProvider>
-      <Suspense fallback={<AppLoader />}>
-        <RouterProvider router={router} />
-      </Suspense>
-      <Toaster />
+      <TripProvider>
+        <Suspense fallback={<AppLoader />}>
+          <RouterProvider router={router} />
+        </Suspense>
+        <Toaster />
+      </TripProvider>
     </DarkModeProvider>
   </StrictMode>,
 );

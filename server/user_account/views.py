@@ -6,10 +6,8 @@ from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
 from django.db import transaction, models
 from django.http import JsonResponse
-from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
 from django.utils.encoding import force_str, force_bytes
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -27,7 +25,8 @@ from .serializers import (
     UserSerializer, LoginSerializer, GoogleAuthResponseSerializer,
     FriendshipSerializer, FriendListSerializer, NotificationSerializer
 )
-from .utils import generate_otp, send_otp_email
+from .utils import generate_otp, send_otp_email, send_password_reset_email
+from .redis_utils import check_friend_request_rate_limit
 
 User = get_user_model()
 
@@ -140,20 +139,9 @@ class PasswordResetView(APIView):
                 token = default_token_generator.make_token(user)
                 uid = urlsafe_base64_encode(force_bytes(user.pk))
                 reset_link = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}/"
-                message = render_to_string(
-                    "password_reset_email.html",
-                    {
-                        "user": user,
-                        "reset_link": reset_link,
-                    },
-                )
-                send_mail(
-                    "Password Reset Request",
-                    message,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [user.email],
-                    fail_silently=False,
-                )
+
+                send_password_reset_email(user, reset_link)
+
                 return Response(
                     {"message": "Password reset link sent successfully"},
                     status=status.HTTP_200_OK,
@@ -294,7 +282,6 @@ class ResendOtpView(APIView):
         return Response({"message": "OTP resent successfully"}, status=status.HTTP_200_OK)
 
 
-# Friend views
 class FriendListView(ListAPIView):
     """View to list all accepted friends"""
     permission_classes = [IsAuthenticated]
@@ -351,6 +338,18 @@ class SendFriendRequestView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        # Check rate limit before processing the request
+        user_id = request.user.id
+        allowed, current_count, reset_time = check_friend_request_rate_limit(user_id)
+
+        if not allowed:
+            return Response({
+                "error": "Rate limit exceeded",
+                "message": "You've sent too many friend requests. Please try again later.",
+                "reset_time": reset_time,
+                "current_count": current_count
+            }, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
         serializer = FriendshipSerializer(
             data=request.data,
             context={'request': request}
@@ -413,15 +412,12 @@ class FriendSearchView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        # Exclude current user and existing friends
 
-        # Get all friendship IDs where the user is involved
         friendships = Friendship.objects.filter(
             (models.Q(sender=user) | models.Q(receiver=user)) &
             models.Q(status='accepted')
         )
 
-        # Extract the friend IDs
         friend_ids = []
         for friendship in friendships:
             if friendship.sender == user:
@@ -429,7 +425,6 @@ class FriendSearchView(ListAPIView):
             else:
                 friend_ids.append(friendship.sender.id)
 
-        # Exclude the user and their friends
         exclude_ids = [user.id] + friend_ids
         return User.objects.exclude(id__in=exclude_ids)
 
@@ -448,11 +443,10 @@ class FriendDeleteView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # Find the friendship
         friendship = Friendship.objects.filter(
             (models.Q(sender=user, receiver=friend) |
              models.Q(sender=friend, receiver=user)) &
-            models.Q(status='accepted')
+            models.Q(status__in=['accepted', 'pending'])
         ).first()
 
         if not friendship:
@@ -465,7 +459,6 @@ class FriendDeleteView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# Notification views
 class NotificationListView(ListAPIView):
     """View to list all notifications for the current user"""
     permission_classes = [IsAuthenticated]
@@ -490,7 +483,6 @@ class NotificationMarkReadView(APIView):
 
     def put(self, request, pk=None):
         if pk:
-            # Mark a specific notification as read
             try:
                 notification = Notification.objects.get(pk=pk, recipient=request.user)
                 notification.is_read = True
@@ -502,6 +494,5 @@ class NotificationMarkReadView(APIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
         else:
-            # Mark all notifications as read
             Notification.objects.filter(recipient=request.user).update(is_read=True)
             return Response({"message": "All notifications marked as read"})

@@ -75,7 +75,7 @@ ROOT_URLCONF = "tripwhizz.urls"
 TEMPLATES = [
    {
        "BACKEND": "django.template.backends.django.DjangoTemplates",
-       "DIRS": [],
+       'DIRS': [os.path.join(BASE_DIR, 'server/user_account/templates')],
        "APP_DIRS": True,
        "OPTIONS": {
            "context_processors": [
@@ -178,6 +178,7 @@ CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_TRACK_STARTED = os.getenv("CELERY_TASK_TRACK_STARTED", "True") == "True"
 CELERY_TASK_TIME_LIMIT = int(os.getenv("CELERY_TASK_TIME_LIMIT"))
 CELERY_BEAT_SCHEDULER = os.getenv("CELERY_BEAT_SCHEDULER")
+
 FRIEND_REQUEST_RATE_LIMIT = {
     "max_requests": int(os.getenv("FRIEND_REQUEST_RATE_LIMIT_MAX_REQUESTS", 10)),
     "time_window": int(os.getenv("FRIEND_REQUEST_RATE_LIMIT_TIME_WINDOW", 3600)),
