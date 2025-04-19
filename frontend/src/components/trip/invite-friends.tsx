@@ -123,7 +123,6 @@ export default function InviteFriends({ tripType }: InviteFriendsProps) {
   const [inviteLink, setInviteLink] = useState('');
 
   useEffect(() => {
-    // Generate a mock invite link
     setInviteLink(
       `https://tripwhizz.com/join/${tripId}/${Math.random().toString(36).substring(2, 10)}`,
     );
@@ -155,7 +154,6 @@ export default function InviteFriends({ tripType }: InviteFriendsProps) {
   const handleSubmit = () => {
     setIsSubmitting(true);
 
-    // Simulate API call to send invitations
     setTimeout(() => {
       setIsSubmitting(false);
       setShowSuccessDialog(true);
@@ -446,7 +444,6 @@ export default function InviteFriends({ tripType }: InviteFriendsProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Share Link Dialog */}
       <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

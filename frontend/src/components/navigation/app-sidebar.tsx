@@ -1,5 +1,3 @@
-"use client"
-
 import type * as React from "react"
 import {
   Calendar,
@@ -8,7 +6,6 @@ import {
   Map,
   MoonIcon as IconMoon,
   SunIcon as IconSun,
-  MapPin,
   Plane,
   Palmtree,
   Mountain,
@@ -39,7 +36,6 @@ import { useDarkMode } from "@/components/util/dark-mode-provider.tsx"
 import { TripCompanions } from "@/components/navigation/trip-companions"
 import { useTripContext } from "@/components/util/trip-context"
 
-// Update the iconMap to ensure all icons are properly defined
 const iconMap: Record<string, React.ElementType> = {
   plane: Plane,
   beach: Palmtree,
@@ -161,16 +157,6 @@ const data = {
     name: "John Doe",
     avatar: "/placeholder.svg?height=40&width=40",
   },
-}
-
-// Fix the trip switcher to show the correct icon for the selected trip
-const getIconComponent = (iconName?: string) => {
-  if (!iconName || !iconMap[iconName.toLowerCase()]) {
-    return <MapPin className="size-4" />
-  }
-
-  const IconComponent = iconMap[iconName.toLowerCase()]
-  return <IconComponent />
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

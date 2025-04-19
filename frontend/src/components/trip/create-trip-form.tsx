@@ -200,7 +200,6 @@ export default function CreateTripForm({ tripType }: CreateTripFormProps) {
 
       const tripsApiClient = new TripsApiClient(authenticationProviderInstance);
 
-      // Format the data for the API
       const tripData = {
         name: formData.name,
         destination: formData.destination,
@@ -307,7 +306,6 @@ export default function CreateTripForm({ tripType }: CreateTripFormProps) {
                     </div>
                   </div>
 
-                  {/* Date range is only shown for public trips */}
                   {tripType === 'public' && (
                     <div className="space-y-2">
                       <Label className="text-base">Trip Dates</Label>

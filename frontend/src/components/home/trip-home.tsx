@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 
 import { useState, useEffect } from "react"
@@ -18,13 +16,12 @@ import {
   Ship,
   Train,
   Car,
-  ArrowRight,
   Plus,
   AlertCircle,
   RefreshCw,
 } from "lucide-react"
 
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
@@ -77,7 +74,7 @@ export default function TripHome() {
     }
 
     fetchTripDetails()
-  }, [selectedTrip]) // This dependency ensures content refreshes when selectedTrip changes
+  }, [selectedTrip])
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
@@ -96,7 +93,6 @@ export default function TripHome() {
     const startDate = new Date(tripDetails.start_date)
     const today = new Date()
 
-    // Reset time to compare just the dates
     today.setHours(0, 0, 0, 0)
     startDate.setHours(0, 0, 0, 0)
 
@@ -113,13 +109,10 @@ export default function TripHome() {
     const endDate = new Date(tripDetails.end_date)
     const today = new Date()
 
-    // If trip hasn't started yet
     if (today < startDate) return 0
 
-    // If trip has ended
     if (today > endDate) return 100
 
-    // Calculate progress
     const totalDuration = endDate.getTime() - startDate.getTime()
     const elapsed = today.getTime() - startDate.getTime()
 
@@ -392,42 +385,16 @@ interface QuickAccessCardProps {
   linkUrl: string
 }
 
-function QuickAccessCard({ title, icon, description, linkText, linkUrl }: QuickAccessCardProps) {
-  return (
-    <Card className="overflow-hidden transition-all duration-300 hover:shadow-md">
-      <CardHeader className="pb-2">
-        <div className="flex items-center gap-2">
-          <div className="bg-primary/10 p-2 rounded-lg">{icon}</div>
-          <CardTitle className="text-lg">{title}</CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent className="pb-2">
-        <p className="text-sm text-muted-foreground">{description}</p>
-      </CardContent>
-      <CardFooter>
-        <Button variant="ghost" size="sm" className="w-full justify-between" asChild>
-          <Link to={linkUrl}>
-            {linkText}
-            <ArrowRight className="h-4 w-4 ml-1" />
-          </Link>
-        </Button>
-      </CardFooter>
-    </Card>
-  )
-}
-
 interface StageItemProps {
   stage: TripStage
 }
 
 function StageItem({ stage }: StageItemProps) {
-  // Get category color based on category name or custom color
   const getCategoryColor = () => {
     if (stage.is_custom_category && stage.custom_category_color) {
       return stage.custom_category_color
     }
 
-    // Default colors based on category
     const categoryColors: Record<string, string> = {
       accommodation: "bg-blue-500",
       transport: "bg-green-500",
