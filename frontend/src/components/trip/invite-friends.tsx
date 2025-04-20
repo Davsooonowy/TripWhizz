@@ -170,7 +170,7 @@ export default function InviteFriends({ tripType }: InviteFriendsProps) {
   };
 
   const finishAndGoHome = () => {
-    navigate('/trip');
+    navigate('/');
   };
 
   return (
