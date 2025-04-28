@@ -44,6 +44,7 @@ const PrivateTripInvitePage = React.lazy(
 const PublicTripInvitePage = React.lazy(
   () => import('@/pages/trip/new/public/invite'),
 );
+const StageDetailsPage = React.lazy(() => import('@/pages/trip/new/private/stages/stage-details'));
 
 const protectedLoginLoader = async () => {
   if (!authenticationProviderInstance.isAuthenticated()) {
@@ -76,6 +77,10 @@ const router = createBrowserRouter([
       {
         path: '/trip',
         element: <StartTripPage />,
+      },
+      {
+        path: '/trip/:tripId/stages/:stageId',
+        element: <StageDetailsPage />,
       },
       {
         path: '/trip/new',
