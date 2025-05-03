@@ -4,13 +4,13 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+} from '@/components/ui/dialog.tsx';
+import { Button } from '@/components/ui/button.tsx';
+import { Input } from '@/components/ui/input.tsx';
+import { Textarea } from '@/components/ui/textarea.tsx';
 import { Upload } from 'lucide-react';
-import { Label } from '@/components/ui/label';
-import { ImageCropper } from '@/components/util/image-cropper';
+import { Label } from '@/components/ui/label.tsx';
+import { ImageCropper } from '@/components/util/image-cropper.tsx';
 
 interface AddStageElementProps {
   isOpen: boolean;

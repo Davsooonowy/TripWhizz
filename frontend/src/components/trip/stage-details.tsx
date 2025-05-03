@@ -6,22 +6,22 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { TripsApiClient } from '@/lib/api/trips';
-import { authenticationProviderInstance } from '@/lib/authentication-provider';
+} from '@/components/ui/card.tsx';
+import { Button } from '@/components/ui/button.tsx';
+import { Badge } from '@/components/ui/badge.tsx';
+import { TripsApiClient } from '@/lib/api/trips.ts';
+import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
 import { ItemDetailsModal } from './item-details-modal.tsx';
-import { AddStageElement } from '@/pages/trip/new/private/stages/add-stage-element.tsx';
-import { StageElement, StagesApiClient } from '@/lib/api/stages';
-import { EditStageElementModal } from './edit-stage-element-modal';
+import { AddStageElement } from '@/components/trip/add-stage-element.tsx';
+import { StageElement, StagesApiClient } from '@/lib/api/stages.ts';
+import { EditStageElementModal } from './edit-stage-element-modal.tsx';
 import { Edit, ThumbsDown, ThumbsUp } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from '@/components/ui/tooltip.tsx';
 
 export default function StageDetails() {
   const { tripId, stageId } = useParams();
@@ -244,7 +244,8 @@ export default function StageDetails() {
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>
-                          {element.likesUsers.length > 0
+                          {Array.isArray(element.likesUsers) &&
+                          element.likesUsers.length > 0
                             ? element.likesUsers.join(', ')
                             : 'No likes yet'}
                         </p>
@@ -261,7 +262,8 @@ export default function StageDetails() {
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>
-                          {element.dislikesUsers.length > 0
+                          {Array.isArray(element.disLikesUsers) &&
+                          element.dislikesUsers.length > 0
                             ? element.dislikesUsers.join(', ')
                             : 'No dislikes yet'}
                         </p>
