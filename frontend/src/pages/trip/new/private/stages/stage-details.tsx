@@ -13,57 +13,61 @@ import { TripsApiClient } from '@/lib/api/trips';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
 import { ItemDetailsModal } from './item-details-modal.tsx';
 import { AddStageElement } from '@/pages/trip/new/private/stages/add-stage-element.tsx';
-
-interface Proposal {
-  id: string;
-  name: string;
-  description: string;
-  url: string;
-  image: string;
-  likes: number;
-  dislikes: number;
-  userReaction: 'like' | 'dislike' | null;
-}
+import { StageElement, StagesApiClient } from '@/lib/api/stages';
+import { EditStageElementModal } from './edit-stage-element-modal';
+import { Edit, ThumbsDown, ThumbsUp } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export default function StageDetails() {
   const { tripId, stageId } = useParams();
   const [stageName, setStageName] = useState<string>('Stage');
-  const [proposals, setProposals] = useState<Proposal[]>([
-    {
-      id: '1',
-      name: 'Hotel Europejski',
-      description: 'A luxurious hotel in the heart of the city.',
-      url: 'https://www.europejski.pl/pl/',
-      image:
-        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAlgAAAGQCAYAAAByNR6YAAAAAXNSR0IArs4c6QAAIABJREFUeF7t3WmP5NTZBuAiCSHAEIZAAsMWYAgB8f//BV+zsAxhGbYA2YEsLK/ueuWOc3CXXd13EUJfltBIdNVT9uVH8q1z7OM7Xnrppa92NgIECBAgQIAAgZrAHQJWzVIhAgQIECBAgMBeQMDSCAQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9AABAgQIECBAoCwgYJVBlSNAgAABAgQICFh6gAABAgQIECBQFhCwyqDKESBAgAABAgQELD1AgAABAgQIECgLCFhlUOUIECBAgAABAgKWHiBAgAABAgQIlAUErDKocgQIECBAgAABAUsPECBAgAABAgTKAgJWGVQ5AgQIECBAgICApQcIECBAgAABAmUBAasMqhwBAgQIECBAQMDSAwQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9AABAgQIECBAoCwgYJVBlSNAgAABAgQICFh6gAABAgQIECBQFhCwyqDKESBAgAABAgQELD1AgAABAgQIECgLCFhlUOUIECBAgAABAgKWHiBAgAABAgQIlAUErDKocgQIECBAgAABAUsPECBAgAABAgTKAgJWGVQ5AgQIECBAgICApQcIECBAgAABAmUBAasMqhwBAgQIECBAQMDSAwQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9AABAgQIECBAoCwgYJVBlSNAgAABAgQICFh6gAABAgQIECBQFhCwyqDKESBAgAABAgQELD1AgAABAgQIECgLCFhlUOUIECBAgAABAgKWHiBAgAABAgQIlAUErDKocgQIECBAgAABAUsPECBAgAABAgTKAgJWGVQ5AgQIECBAgICApQcIECBAgAABAmUBAasMqhwBAgQIECBAQMDSAwQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9AABAgQIECBAoCwgYJVBlSNAgAABAgQICFh6gAABAgQIECBQFhCwyqDKESBAgAABAgQELD1AgAABAgQIECgLCFhlUOUIECBAgAABAgKWHiBAgAABAgQIlAUErDKocgQIECBAgAABAUsPECBAgAABAgTKAgJWGVQ5AgQIECBAgICApQcIECBAgAABAmUBAasMqhwBAgQIECBAQMDSAwQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9AABAgQIECBAoCwgYJVBlSNAgAABAgQICFh6gAABAgQIECBQFhCwyqDKESBAgAABAgQELD1AgAABAgQIECgLCFhlUOUIECBAgAABAgKWHiBAgAABAgQIlAUErDKocgQIECBAgAABAUsPECBAgAABAgTKAgJWGVQ5AgQIECBAgICApQcIECBAgAABAmUBAasMqhwBAgQIECBAQMDSAwQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9AABAgQIECBAoCwgYJVBlSNAgAABAgQICFh6gAABAgQIECBQFhCwyqDKESBAgAABAgQELD1AgAABAgQIECgLCFhlUOUIECBAgAABAgKWHiBAgAABAgQIlAUErDKocgQIECBAgAABAUsPECBAgAABAgTKAgJWGVQ5AgQIECBAgICApQcIECBAgAABAmUBAasMqhwBAgQIECBAQMDSAwQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9AABAgQIECBAoCwgYJVBlSNAgAABAgQICFh6gAABAgQIECBQFhCwyqDKESBAgAABAgQELD1AgAABAgQIECgLCFhlUOUIECBAgAABAgKWHiBAgAABAgQIlAUErDKocgQIECBAgAABAUsPECBAgAABAgTKAgJWGVQ5AgQIECBAgICApQcIECBAgAABAmUBAasMqhwBAgQIECBAQMDSAwQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9AABAgQIECBAoCwgYJVBlSNAgAABAgQICFh6gAABAgQIECBQFhCwyqDKESBAgAABAgQELD1AgAABAgQIECgLCFhlUOUIECBAgAABAgKWHiBAgAABAgQIlAUErDKocgQIECBAgAABAUsPECBAgAABAgTKAgJWGVQ5AgQIECBAgICApQcIECBAgAABAmUBAasMqhwBAgQIECBAQMDSAwQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9AABAgQIECBAoCwgYJVBlSNAgAABAgQICFh6gAABAgQIECBQFhCwyqDKESBAgAABAgQELD1AgAABAgQIECgLCFhlUOUIECBAgAABAgKWHiBAgAABAgQIlAUErDKocgQIECBAgAABAUsPECBAgAABAgTKAgJWGVQ5AgQIECBAgICApQcIECBAgAABAmUBAasMqhwBAgQIECBAQMDSAwQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9AABAgQIECBAoCwgYJVBlSNAgAABAgQICFh6gAABAgQIECBQFhCwyqDKESBAgAABAgQELD1AgAABAgQIECgLCFhlUOUIECBAgAABAgKWHiBAgAABAgQIlAUErDKocgQIECBAgAABAUsPECBAgAABAgTKAgJWGVQ5AgQIECBAgICApQcIECBAgAABAmUBAasMqhwBAgQIECBAQMDSAwQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9AABAgQIECBAoCwgYJVBlSNAgAABAgQICFh6gAABAgQIECBQFhCwyqDKESBAgAABAgQELD1AgAABAgQIECgLCFhlUOUIECBAgAABAgKWHiBAgAABAgQIlAUErDKocgQIECBAgAABAUsPECBAgAABAgTKAgJWGVQ5AgQIECBAgICApQcIECBAgAABAmUBAasMqhwBAgQIECBAQMDSAwQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9ACBb0jgRz/60e7hhx/e/fjHP97deeeduzvuuGP/y1999dXu888/3/3tb3/bffjhh7u//vWvR+3Rgw8+uHvooYd2d9999+773//+2Xe/+OKL3SeffLKv+ac//emomvnwvffeu/vZz362u++++3Y/+MEPzvb3yy+/3P3jH//Y/eEPf9jXzu9cpS0uTz/99O6uu+7aH3bO1yuvvHIUQfog5y01vve97531QSxT7yJ9kCKn6oWjDs6HCRDYCwhYGoHANyDwxBNP7C9+8wC09LMJLwkut2/fXg0uP/zhD3dPPvnkPrBNYW2pZgLcX/7yl91bb721++c//7npaB999NF9uFrb3wSt7OtFAtymHfkWfugXv/jF3nzajglYCWfphfx7aDumD1LnlL3wLTwFdonA/4SAgPU/cZrs5P+qQALKz3/+893169cPhqD58SUQJWS98cYb5x52RsNS99q1a5tpMkL25ptv7v7+978f/E5CW8LgNLKy9gP/+te/9iEr+/xd3xI8M/o0t9kasDISGNucuy1b+iDBNefs0CjhKXthy376DAECywICls4gcEKBhKCElfkI02effbafAkogSQD7yU9+sp/im6acsjsZwfjggw9277777uLePfXUU/vvTXXz+T//+c9nU0v333//vmb+nU9FrgW3n/70p7vHHnvsP0auPv30093vf//7/cU+U5upm2PKtOG05Zhef/311fB2QuqTl45lAlJGi+bbloCV8/zMM8/8x8hXQlPOx8cff7yfys35jH9Gt+bnNfbvvPPOucd3ql44OagfIPAdFxCwvuMn2OH99wRywcx00BREEoJyMc1U3bgtXYATbHJvzzh6kYDz+OOPn4Wg/D0X4IS2cXvkkUd2+W+a6su9Xm+//fbiaFNGQhICci9XtkMjaeNoTD770UcfLR7bf+8M9H556fxM1bcErIx85TxMwSlTtemDhOJxG0cQMw37u9/9bh/Cxu1UvdCTU4nA1RUQsK7uuXfkJxZ49tln9yNIa2Fl2o2MXCTgTCMkCU4JQwll822suxZscsHOhXi6uOei/tprry2GsRs3bpxNf50X8KYvjgHyUBA4MfXJy2dUL1ODS/e6rQWshLPnnntud8899+z3M0H7vffe273//vvn7vfWc7z1c9MPbe2Fk4P6AQJXQEDAugIn2SF+8wIJVpkezJRatoSPhJq1+58SsB544IH9RXiaJpxfiDNylCfYprq5/ymjG4eePByDW0ZPMp03jogkBKT+FAjzu+dNUU6i8wv8luDwzZ+Jy/9i7p/LuZxGIhM8M507jQquBaxMp2Ykc/p8plNffvnlg/dVJbwmDE3fWQq7p+yFy6upQICAgKUHCJxAIFN4eQpvGvHI9N3S1OCxP51ppvko09rFfap/8+bN/Y32542gjCFsS3BLrXF/cp/WrVu3jj2sb+3nE3ASIqeHCRKUc09Upvy2BqwEpdxbNW0ZccyN62vbCy+8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',
-      likes: 10,
-      dislikes: 2,
-      userReaction: null,
-    },
-    {
-      id: '2',
-      name: 'Burj Al Arab',
-      description: 'Affordable hotel near the beach.',
-      url: 'https://www.jumeirah.com/en/stay/dubai/burj-al-arab-jumeirah',
-      image:
-        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAlgAAAGQCAYAAAByNR6YAAAAAXNSR0IArs4c6QAAIABJREFUeF7t3WmP5NTZBuAiCSHAEIZAAsMWYAgB8f//BV+zsAxhGbYA2YEsLK/ueuWOc3CXXd13EUJfltBIdNVT9uVH8q1z7OM7Xnrppa92NgIECBAgQIAAgZrAHQJWzVIhAgQIECBAgMBeQMDSCAQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9AABAgQIECBAoCwgYJVBlSNAgAABAgQICFh6gAABAgQIECBQFhCwyqDKESBAgAABAgQELD1AgAABAgQIECgLCFhlUOUIECBAgAABAgKWHiBAgAABAgQIlAUErDKocgQIECBAgAABAUsPECBAgAABAgTKAgJWGVQ5AgQIECBAgICApQcIECBAgAABAmUBAasMqhwBAgQIECBAQMDSAwQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9AABAgQIECBAoCwgYJVBlSNAgAABAgQICFh6gAABAgQIECBQFhCwyqDKESBAgAABAgQELD1AgAABAgQIECgLCFhlUOUIECBAgAABAgKWHiBAgAABAgQIlAUErDKocgQIECBAgAABAUsPECBAgAABAgTKAgJWGVQ5AgQIECBAgICApQcIECBAgAABAmUBAasMqhwBAgQIECBAQMDSAwQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9AABAgQIECBAoCwgYJVBlSNAgAABAgQICFh6gAABAgQIECBQFhCwyqDKESBAgAABAgQELD1AgAABAgQIECgLCFhlUOUIECBAgAABAgKWHiBAgAABAgQIlAUErDKocgQIECBAgAABAUsPECBAgAABAgTKAgJWGVQ5AgQIECBAgICApQcIECBAgAABAmUBAasMqhwBAgQIECBAQMDSAwQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9AABAgQIECBAoCwgYJVBlSNAgAABAgQICFh6gAABAgQIECBQFhCwyqDKESBAgAABAgQELD1AgAABAgQIECgLCFhlUOUIECBAgAABAgKWHiBAgAABAgQIlAUErDKocgQIECBAgAABAUsPECBAgAABAgTKAgJWGVQ5AgQIECBAgICApQcIECBAgAABAmUBAasMqhwBAgQIECBAQMDSAwQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9AABAgQIECBAoCwgYJVBlSNAgAABAgQICFh6gAABAgQIECBQFhCwyqDKESBAgAABAgQELD1AgAABAgQIECgLCFhlUOUIECBAgAABAgKWHiBAgAABAgQIlAUErDKocgQIECBAgAABAUsPECBAgAABAgTKAgJWGVQ5AgQIECBAgICApQcIECBAgAABAmUBAasMqhwBAgQIECBAQMDSAwQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9AABAgQIECBAoCwgYJVBlSNAgAABAgQICFh6gAABAgQIECBQFhCwyqDKESBAgAABAgQELD1AgAABAgQIECgLCFhlUOUIECBAgAABAgKWHiBAgAABAgQIlAUErDKocgQIECBAgAABAUsPECBAgAABAgTKAgJWGVQ5AgQIECBAgICApQcIECBAgAABAmUBAasMqhwBAgQIECBAQMDSAwQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9AABAgQIECBAoCwgYJVBlSNAgAABAgQICFh6gAABAgQIECBQFhCwyqDKESBAgAABAgQELD1AgAABAgQIECgLCFhlUOUIECBAgAABAgKWHiBAgAABAgQIlAUErDKocgQIECBAgAABAUsPECBAgAABAgTKAgJWGVQ5AgQIECBAgICApQcIECBAgAABAmUBAasMqhwBAgQIECBAQMDSAwQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9AABAgQIECBAoCwgYJVBlSNAgAABAgQICFh6gAABAgQIECBQFhCwyqDKESBAgAABAgQELD1AgAABAgQIECgLCFhlUOUIECBAgAABAgKWHiBAgAABAgQIlAUErDKocgQIECBAgAABAUsPECBAgAABAgTKAgJWGVQ5AgQIECBAgICApQcIECBAgAABAmUBAasMqhwBAgQIECBAQMDSAwQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9AABAgQIECBAoCwgYJVBlSNAgAABAgQICFh6gAABAgQIECBQFhCwyqDKESBAgAABAgQELD1AgAABAgQIECgLCFhlUOUIECBAgAABAgKWHiBAgAABAgQIlAUErDKocgQIECBAgAABAUsPECBAgAABAgTKAgJWGVQ5AgQIECBAgICApQcIECBAgAABAmUBAasMqhwBAgQIECBAQMDSAwQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9AABAgQIECBAoCwgYJVBlSNAgAABAgQICFh6gAABAgQIECBQFhCwyqDKESBAgAABAgQELD1AgAABAgQIECgLCFhlUOUIECBAgAABAgKWHiBAgAABAgQIlAUErDKocgQIECBAgAABAUsPECBAgAABAgTKAgJWGVQ5AgQIECBAgICApQcIECBAgAABAmUBAasMqhwBAgQIECBAQMDSAwQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9AABAgQIECBAoCwgYJVBlSNAgAABAgQICFh6gAABAgQIECBQFhCwyqDKESBAgAABAgQELD1AgAABAgQIECgLCFhlUOUIECBAgAABAgKWHiBAgAABAgQIlAUErDKocgQIECBAgAABAUsPECBAgAABAgTKAgJWGVQ5AgQIECBAgICApQcIECBAgAABAmUBAasMqhwBAgQIECBAQMDSAwQIECBAgACBsoCAVQZVjgABAgQIECAgYOkBAgQIECBAgEBZQMAqgypHgAABAgQIEBCw9ACBb0jgRz/60e7hhx/e/fjHP97deeeduzvuuGP/y1999dXu888/3/3tb3/bffjhh7u//vWvR+3Rgw8+uHvooYd2d9999+773//+2Xe/+OKL3SeffLKv+ac//emomvnwvffeu/vZz362u++++3Y/+MEPzvb3yy+/3P3jH//Y/eEPf9jXzu9cpS0uTz/99O6uu+7aH3bO1yuvvHIUQfog5y01vve97531QSxT7yJ9kCKn6oWjDs6HCRDYCwhYGoHANyDwxBNP7C9+8wC09LMJLwkut2/fXg0uP/zhD3dPPvnkPrBNYW2pZgLcX/7yl91bb721++c//7npaB999NF9uFrb3wSt7OtFAtymHfkWfugXv/jF3nzajglYCWfphfx7aDumD1LnlL3wLTwFdonA/4SAgPU/cZrs5P+qQALKz3/+893169cPhqD58SUQJWS98cYb5x52RsNS99q1a5tpMkL25ptv7v7+978f/E5CW8LgNLKy9gP/+te/9iEr+/xd3xI8M/o0t9kasDISGNucuy1b+iDBNefs0CjhKXthy376DAECywICls4gcEKBhKCElfkI02effbafAkogSQD7yU9+sp/im6acsjsZwfjggw9277777uLePfXUU/vvTXXz+T//+c9nU0v333//vmb+nU9FrgW3n/70p7vHHnvsP0auPv30093vf//7/cU+U5upm2PKtOG05Zhef/311fB2QuqTl45lAlJGi+bbloCV8/zMM8/8x8hXQlPOx8cff7yfys35jH9Gt+bnNfbvvPPOucd3ql44OagfIPAdFxCwvuMn2OH99wRywcx00BREEoJyMc1U3bgtXYATbHJvzzh6kYDz+OOPn4Wg/D0X4IS2cXvkkUd2+W+a6su9Xm+//fbiaFNGQhICci9XtkMjaeNoTD770UcfLR7bf+8M9H556fxM1bcErIx85TxMwSlTtemDhOJxG0cQMw37u9/9bh/Cxu1UvdCTU4nA1RUQsK7uuXfkJxZ49tln9yNIa2Fl2o2MXCTgTCMkCU4JQwll822suxZscsHOhXi6uOei/tprry2GsRs3bpxNf50X8KYvjgHyUBA4MfXJy2dUL1ODS/e6rQWshLPnnntud8899+z3M0H7vffe273//vvn7vfWc7z1c9MPbe2Fk4P6AQJXQEDAugIn2SF+8wIJVpkezJRatoSPhJq1+58SsB544IH9RXiaJpxfiDNylCfYprq5/ymjG4eePByDW0ZPMp03jogkBKT+FAjzu+dNUU6i8wv8luDwzZ+Jy/9i7p/LuZxGIhM8M507jQquBaxMp2Ykc/p8plNffvnlg/dVJbwmDE3fWQq7p+yFy6upQICAgKUHCJxAIFN4eQpvGvHI9N3S1OCxP51ppvko09rFfap/8+bN/Y32542gjCFsS3BLrXF/cp/WrVu3jj2sb+3nE3ASIqeHCRKUc09Upvy2BqwEpdxbNW0ZccyN62vbCy+8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',
-      likes: 5,
-      dislikes: 1,
-      userReaction: null,
-    },
-  ]);
-  const [selectedItem, setSelectedItem] = useState<Proposal | null>(null);
+  const [selectedItem, setSelectedItem] = useState<StageElement | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [elements, setElements] = useState<StageElement[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  const openModal = (item: Proposal) => {
+  useEffect(() => {
+    const fetchStageElements = async () => {
+      try {
+        const apiClient = new StagesApiClient(authenticationProviderInstance);
+        const fetchedElements = await apiClient.getStageElements(
+          Number(stageId),
+        );
+
+        setElements(fetchedElements);
+      } catch (error) {
+        setError('Error loading stage elements. Please try again.');
+      }
+    };
+
+    fetchStageElements();
+  }, [stageId]);
+
+  const openAddModal = (item: StageElement) => {
     setSelectedItem(item);
     setIsModalOpen(true);
   };
 
-  const closeModal = () => {
+  const closeAddModal = () => {
     setSelectedItem(null);
     setIsModalOpen(false);
+  };
+
+  const openEditModal = (item: StageElement) => {
+    setSelectedItem(item);
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setSelectedItem(null);
+    setIsEditModalOpen(false);
   };
 
   useEffect(() => {
@@ -84,8 +88,9 @@ export default function StageDetails() {
         } else {
           setStageName('Stage not found');
         }
+        setError(null);
       } catch (err) {
-        console.error('Error fetching stage details:', err);
+        setError('Error fetching stage details. Please try again.');
         setStageName('Error loading stage');
       }
     };
@@ -93,173 +98,244 @@ export default function StageDetails() {
     fetchStageDetails();
   }, [tripId, stageId]);
 
-  const handleLike = (id: string) => {
-    setProposals((prev) =>
-      prev.map((proposal) => {
-        if (proposal.id === id) {
-          if (proposal.userReaction === 'like') {
-            return {
-              ...proposal,
-              likes: proposal.likes - 1,
-              userReaction: null,
-            };
-          } else if (proposal.userReaction === 'dislike') {
-            return {
-              ...proposal,
-              likes: proposal.likes + 1,
-              dislikes: proposal.dislikes - 1,
-              userReaction: 'like',
-            };
-          } else {
-            return {
-              ...proposal,
-              likes: proposal.likes + 1,
-              userReaction: 'like',
-            };
-          }
-        }
-        return proposal;
-      }),
-    );
+  const handleReaction = async (id: number, reaction: 'like' | 'dislike') => {
+    try {
+      const currentElement = elements.find((element) => element.id === id);
+      const newReaction =
+        currentElement?.userReaction === reaction ? null : reaction;
+      const apiClient = new StagesApiClient(authenticationProviderInstance);
+      const response = await apiClient.reactToStageElement(id, reaction);
+
+      setElements((prevElements) =>
+        prevElements.map((element) =>
+          element.id === id
+            ? {
+                ...element,
+                likes: response.likes,
+                dislikes: response.dislikes,
+                userReaction: newReaction,
+              }
+            : element,
+        ),
+      );
+      setError(null);
+    } catch (error) {
+      setError('Failed to add reaction. Please try again.');
+    }
   };
 
-  const handleDislike = (id: string) => {
-    setProposals((prev) =>
-      prev.map((proposal) => {
-        if (proposal.id === id) {
-          if (proposal.userReaction === 'dislike') {
-            return {
-              ...proposal,
-              dislikes: proposal.dislikes - 1,
-              userReaction: null,
-            };
-          } else if (proposal.userReaction === 'like') {
-            return {
-              ...proposal,
-              dislikes: proposal.dislikes + 1,
-              likes: proposal.likes - 1,
-              userReaction: 'dislike',
-            };
-          } else {
-            return {
-              ...proposal,
-              dislikes: proposal.dislikes + 1,
-              userReaction: 'dislike',
-            };
-          }
-        }
-        return proposal;
-      }),
-    );
-  };
-
-  const handleAddHotel = (newStageElement: {
+  const handleAddStageElement = async (newStageElement: {
     name: string;
     description: string;
     url: string;
-    image: string;
+    // image: string;
   }) => {
-    setProposals((prev) => [
-      ...prev,
-      {
-        id: (prev.length + 1).toString(),
-        name: newStageElement.name,
-        description: newStageElement.description,
-        url: newStageElement.url,
-        image: newStageElement.image,
-        likes: 0,
-        dislikes: 0,
-        userReaction: null,
-      },
-    ]);
+    try {
+      const apiClient = new StagesApiClient(authenticationProviderInstance);
+      const createdElement = await apiClient.addStageElement({
+        ...newStageElement,
+        stage: Number(stageId),
+      });
+
+      setElements((prevElements) => [
+        ...prevElements,
+        {
+          ...createdElement,
+          likes: 0,
+          dislikes: 0,
+          userReaction: null,
+        },
+      ]);
+      setIsAddModalOpen(false);
+      setError(null);
+    } catch (error) {
+      setError('Failed to add stage element. Please try again.');
+    }
   };
+
+  const handleEditStageElement = async (
+    updatedElement: Partial<StageElement>,
+  ) => {
+    try {
+      const apiClient = new StagesApiClient(authenticationProviderInstance);
+      const response = await apiClient.updateStageElement(
+        selectedItem!.id!,
+        updatedElement,
+      );
+
+      setElements((prevElements) =>
+        prevElements.map((element) =>
+          element.id === selectedItem!.id
+            ? { ...element, ...response }
+            : element,
+        ),
+      );
+      closeEditModal();
+      setError(null);
+    } catch (error) {
+      setError('Failed to edit stage element. Please try again.');
+    }
+  };
+
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError(null);
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   return (
     <div className="container max-w-4xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">{stageName} Details</h1>
 
       <Button className="mb-4" onClick={() => setIsAddModalOpen(true)}>
-        Add {stageName}
+        Add New Element
       </Button>
 
       <div className="space-y-4">
-        {proposals.map((proposal) => (
-          <Card
-            key={proposal.id}
-            className="hover:shadow-md transition-all duration-300 cursor-pointer"
-            onClick={() => openModal(proposal)}
-          >
-            <CardHeader>
-              <CardTitle>
-                <h2 className="text-lg font-bold">{proposal.name}</h2>
-                {proposal.url && (
-                  <a
-                    href={proposal.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-blue-400 break-words"
-                    onClick={(e) => e.stopPropagation()}
+        {elements.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground text-lg">
+              No elements added yet.
+            </p>
+          </div>
+        ) : (
+          elements.map((element: StageElement) => (
+            <Card
+              key={element.id}
+              className="hover:shadow-md transition-all duration-300 cursor-pointer relative"
+              onClick={() => openAddModal(element)}
+            >
+              <CardHeader>
+                <CardTitle>
+                  <h2 className="text-lg font-bold">{element.name}</h2>
+                  {element.url && (
+                    <a
+                      href={element.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-400 break-words"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      ({element.url})
+                    </a>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  {element.description}
+                </p>
+              </CardContent>
+              <CardFooter className="flex flex-col sm:flex-row justify-between gap-2">
+                <div className="flex gap-2 justify-center sm:justify-start">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Badge
+                          variant="secondary"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Likes: {element.likes}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          {element.likesUsers.length > 0
+                            ? element.likesUsers.join(', ')
+                            : 'No likes yet'}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Badge
+                          variant="secondary"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Dislikes: {element.dislikes}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          {element.dislikesUsers.length > 0
+                            ? element.dislikesUsers.join(', ')
+                            : 'No dislikes yet'}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <div className="flex gap-2 justify-center sm:justify-end mt-2">
+                  <Button
+                    variant={
+                      element.userReaction === 'like' ? 'default' : 'outline'
+                    }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleReaction(element.id, 'like');
+                    }}
                   >
-                    ({proposal.url})
-                  </a>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                {proposal.description}
-              </p>
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <div className="flex gap-2">
-                <Badge variant="secondary">Likes: {proposal.likes}</Badge>
-                <Badge variant="secondary">Dislikes: {proposal.dislikes}</Badge>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant={
-                    proposal.userReaction === 'like' ? 'default' : 'outline'
-                  }
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleLike(proposal.id);
-                  }}
-                >
-                  Like
-                </Button>
-                <Button
-                  size="sm"
-                  variant={
-                    proposal.userReaction === 'dislike'
-                      ? 'destructive'
-                      : 'outline'
-                  }
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDislike(proposal.id);
-                  }}
-                >
-                  Dislike
-                </Button>
-              </div>
-            </CardFooter>
-          </Card>
-        ))}
+                    <ThumbsUp className="w-4 h-4" /> Like
+                  </Button>
+                  <Button
+                    variant={
+                      element.userReaction === 'dislike'
+                        ? 'destructive'
+                        : 'outline'
+                    }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleReaction(element.id, 'dislike');
+                    }}
+                  >
+                    <ThumbsDown className="w-4 h-4" /> Dislike
+                  </Button>
+                </div>
+              </CardFooter>
+              <Button
+                variant="outline"
+                className="absolute top-6 right-6"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openEditModal(element);
+                }}
+              >
+                <Edit className="w-4 h-4" /> Edit
+              </Button>
+            </Card>
+          ))
+        )}
       </div>
 
       <ItemDetailsModal
         isOpen={isModalOpen}
-        onClose={closeModal}
+        onClose={closeAddModal}
         item={selectedItem}
       />
 
       <AddStageElement
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onAdd={handleAddHotel}
+        onAdd={handleAddStageElement}
         stageName={stageName}
       />
+
+      {isEditModalOpen && (
+        <EditStageElementModal
+          isOpen={isEditModalOpen}
+          onClose={closeEditModal}
+          onEdit={handleEditStageElement}
+          element={selectedItem}
+        />
+      )}
+
+      {error && (
+        <div className="p-4 bg-red-100 text-red-500 rounded-md">{error}</div>
+      )}
     </div>
   );
 }

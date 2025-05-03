@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Upload } from 'lucide-react';
 import { Label } from '@/components/ui/label';
-import { ImageCropper } from "@/components/util/image-cropper";
+import { ImageCropper } from '@/components/util/image-cropper';
 
 interface AddStageElementProps {
   isOpen: boolean;

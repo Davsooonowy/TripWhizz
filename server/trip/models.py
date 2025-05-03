@@ -1,5 +1,14 @@
 from django.db import models
 from django.conf import settings
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+
+def image_upload_path(instance, filename):
+    ext = filename.split('.')[-1]
+    name = instance.name.replace(' ', '_').append(str(instance.pk))
+    return os.path.join('media', f"{name}.{ext}")
 
 
 class Trip(models.Model):
@@ -70,3 +79,40 @@ class Stage(models.Model):
 
     class Meta:
         ordering = ['trip', 'order']
+
+
+class StageElement(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    url = models.URLField(blank=True, null=True)
+    # image = models.ImageField(upload_to=image_upload_path, blank=True, null=True)
+    likes = models.PositiveIntegerField(default=0)
+    dislikes = models.PositiveIntegerField(default=0)
+
+    stage = models.ForeignKey(
+        Stage,
+        on_delete=models.CASCADE,
+        related_name='elements'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    user_reactions = models.ManyToManyField(
+        User,
+        through="StageElementReaction",
+        related_name="stage_element_reactions",
+        blank=True,
+    )
+
+    def __str__(self):
+        return f"{self.name} - {self.stage.name}"
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+class StageElementReaction(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    stage_element = models.ForeignKey(StageElement, on_delete=models.CASCADE)
+    reaction = models.CharField(max_length=10, choices=[('like', 'Like'), ('dislike', 'Dislike')])
+    created_at = models.DateTimeField(auto_now_add=True)

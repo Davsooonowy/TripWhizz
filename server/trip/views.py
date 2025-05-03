@@ -1,10 +1,12 @@
-from rest_framework.views import APIView
+from django.db import transaction
+from rest_framework import status, permissions
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
-from rest_framework import status, permissions
-from django.db import transaction
-from .models import Trip, Stage
-from .serializers import TripSerializer, TripListSerializer, StageSerializer, StageListSerializer
+from rest_framework.views import APIView
+
+from .models import Trip, Stage, StageElement, StageElementReaction
+from .serializers import TripSerializer, TripListSerializer, StageSerializer, StageListSerializer, \
+    StageElementSerializer
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
@@ -190,3 +192,116 @@ class BatchCreateStagesView(APIView):
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(created_stages, status=status.HTTP_201_CREATED)
+
+
+class StageElementView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, stage_id=None):
+        try:
+            elements = StageElement.objects.filter(stage_id=stage_id)
+        except Stage.DoesNotExist:
+            return Response({"detail": "Stage not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        user = request.user
+        serialized_elements = []
+        for element in elements:
+            user_reaction = StageElementReaction.objects.filter(
+                user=user, stage_element=element
+            ).first()
+
+            likes_users = StageElementReaction.objects.filter(
+                stage_element=element, reaction="like"
+            ).values_list("user__username", flat=True)
+
+            dislikes_users = StageElementReaction.objects.filter(
+                stage_element=element, reaction="dislike"
+            ).values_list("user__username", flat=True)
+
+            serialized_elements.append(
+                {
+                    "id": element.id,
+                    "name": element.name,
+                    "description": element.description,
+                    "url": element.url,
+                    # "image": element.image.url if element.image else None,
+                    "likes": element.likes,
+                    "dislikes": element.dislikes,
+                    "userReaction": user_reaction.reaction if user_reaction else None,
+                    "likesUsers": list(likes_users),
+                    "dislikesUsers": list(dislikes_users),
+                }
+            )
+
+        return Response(serialized_elements, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = StageElementSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, pk=None):
+        try:
+            element = StageElement.objects.get(pk=pk)
+        except StageElement.DoesNotExist:
+            return Response(
+                {"error": "StageElement not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if any(field in request.data for field in ['name', 'description', 'url']):
+            serializer = StageElementSerializer(element, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        reaction = request.data.get("reaction")
+        if reaction not in ["like", "dislike"]:
+            return Response(
+                {"error": "Invalid reaction"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user = request.user
+        existing_reaction = StageElementReaction.objects.filter(
+            user=user, stage_element=element
+        ).first()
+
+        if existing_reaction:
+            if existing_reaction.reaction == reaction:
+                existing_reaction.delete()
+            else:
+                existing_reaction.reaction = reaction
+                existing_reaction.save()
+        else:
+            StageElementReaction.objects.create(
+                user=user, stage_element=element, reaction=reaction
+            )
+
+        element.likes = StageElementReaction.objects.filter(
+            stage_element=element, reaction="like"
+        ).count()
+        element.dislikes = StageElementReaction.objects.filter(
+            stage_element=element, reaction="dislike"
+        ).count()
+        element.save()
+
+        return Response(
+            {"likes": element.likes, "dislikes": element.dislikes},
+            status=status.HTTP_200_OK,
+        )
+
+    def delete(self, request, pk=None):
+        try:
+            element = StageElement.objects.get(pk=pk)
+            element.delete()
+            return Response(
+                {"message": "StageElement deleted successfully"},
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        except StageElement.DoesNotExist:
+            return Response(
+                {"error": "StageElement not found"}, status=status.HTTP_404_NOT_FOUND
+            )
