@@ -98,9 +98,7 @@ class UserView(APIView):
     def put(self, request, user_id=None):
         user = request.user if user_id is None else User.objects.get(id=user_id)
 
-        data = request.data.copy()
-
-        serializer = UserSerializer(user, data=data, partial=True, context={'request': request})
+        serializer = UserSerializer(user, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)

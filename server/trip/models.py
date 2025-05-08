@@ -1,15 +1,9 @@
 from django.db import models
 from django.conf import settings
 from django.contrib.auth import get_user_model
-import os
+from utils import upload_paths
 
 User = get_user_model()
-
-
-def image_upload_path(instance, filename):
-    ext = filename.split('.')[-1]
-    name = instance.name.replace(' ', '_').append(str(instance.pk))
-    return os.path.join('media', f"{name}.{ext}")
 
 
 class Trip(models.Model):
@@ -86,7 +80,7 @@ class StageElement(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     url = models.URLField(blank=True, null=True)
-    # image = models.ImageField(upload_to=image_upload_path, blank=True, null=True)
+    # image = models.ImageField(upload_to=upload_path, blank=True, null=True)
     likes = models.PositiveIntegerField(default=0)
     dislikes = models.PositiveIntegerField(default=0)
 
