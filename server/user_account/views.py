@@ -22,8 +22,12 @@ from rest_framework.views import APIView
 
 from .models import PendingUser, Profile, Friendship, Notification
 from .serializers import (
-    UserSerializer, LoginSerializer, GoogleAuthResponseSerializer,
-    FriendshipSerializer, FriendListSerializer, NotificationSerializer
+    UserSerializer,
+    LoginSerializer,
+    GoogleAuthResponseSerializer,
+    FriendshipSerializer,
+    FriendListSerializer,
+    NotificationSerializer,
 )
 from .utils import generate_otp, send_otp_email, send_password_reset_email
 from .redis_utils import check_friend_request_rate_limit
@@ -72,7 +76,9 @@ class AddUserView(APIView):
         password = data.get("password")
 
         if User.objects.filter(email=email).exists():
-            return Response({"error": "User already exists"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "User already exists"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         otp_code = generate_otp()
         pending_user, created = PendingUser.objects.get_or_create(email=email)
@@ -82,10 +88,9 @@ class AddUserView(APIView):
 
         send_otp_email(pending_user, otp_code)
 
-        return Response({
-            "message": "OTP sent. Please verify.",
-            "email": str(pending_user.email)
-        })
+        return Response(
+            {"message": "OTP sent. Please verify.", "email": str(pending_user.email)}
+        )
 
 
 class UserView(APIView):
@@ -98,7 +103,9 @@ class UserView(APIView):
     def put(self, request, user_id=None):
         user = request.user if user_id is None else User.objects.get(id=user_id)
 
-        serializer = UserSerializer(user, data=request.data, partial=True, context={'request': request})
+        serializer = UserSerializer(
+            user, data=request.data, partial=True, context={"request": request}
+        )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -114,7 +121,7 @@ class UserView(APIView):
 
     def get(self, request):
         user = request.user
-        serializer = UserSerializer(user, context={'request': request})
+        serializer = UserSerializer(user, context={"request": request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -177,43 +184,52 @@ class PasswordResetView(APIView):
 class GoogleAuthView(GenericAPIView):
     def post(self, request):
         try:
-            access_token = request.data.get('token')
+            access_token = request.data.get("token")
             if not access_token:
                 return Response(
                     {"status": "error", "message": "Token is required", "payload": {}},
-                    status=status.HTTP_400_BAD_REQUEST
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
             response = requests.get(
-                os.getenv('GOOGLE_RESPONSE_URL'),
-                headers={'Authorization': f'Bearer {access_token}'}
+                os.getenv("GOOGLE_RESPONSE_URL"),
+                headers={"Authorization": f"Bearer {access_token}"},
             )
             response_data = response.json()
 
-            if 'error' in response_data:
-                return Response({
-                    "status": "error",
-                    "message": "Wrong google token / this google token is already expired.",
-                    "payload": {}
-                }, status=status.HTTP_400_BAD_REQUEST)
+            if "error" in response_data:
+                return Response(
+                    {
+                        "status": "error",
+                        "message": "Wrong google token / this google token is already expired.",
+                        "payload": {},
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         except Exception:
-            return Response({
-                "status": "error",
-                "message": "Unexpected error occurred, contact support for more info",
-                "payload": {}
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {
+                    "status": "error",
+                    "message": "Unexpected error occurred, contact support for more info",
+                    "payload": {},
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
         google_response_serializer = GoogleAuthResponseSerializer(data=response_data)
         if google_response_serializer.is_valid() is False:
-            return Response({
-                "status": "error",
-                "message": "Unexpected error occurred, contact support for more info",
-                "payload": {}
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {
+                    "status": "error",
+                    "message": "Unexpected error occurred, contact support for more info",
+                    "payload": {},
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
         validated_data = google_response_serializer.validated_data
-        email = validated_data['email'].lower()
+        email = validated_data["email"].lower()
         given_name = validated_data["given_name"]
         family_name = validated_data.get("family_name", "")
 
@@ -223,7 +239,11 @@ class GoogleAuthView(GenericAPIView):
                 username = email
                 password = get_random_string(12)
                 user = User.objects.create_user(
-                    username=username, password=password, email=email, first_name=given_name, last_name=family_name
+                    username=username,
+                    password=password,
+                    email=email,
+                    first_name=given_name,
+                    last_name=family_name,
                 )
 
         token, created = Token.objects.get_or_create(user=user)
@@ -246,18 +266,19 @@ class OTPVerifyView(APIView):
         user = Profile.objects.create_user(
             username=pending_user.email,
             email=pending_user.email,
-            password=pending_user.password
+            password=pending_user.password,
         )
 
         token, _ = Token.objects.get_or_create(user=user)
         pending_user.delete()
 
-        return Response({
-            "message": "User created successfully!",
-            "token": token.key,
-            "user_id": user.id,
-            "onboarding_complete": user.onboarding_complete,
-        },
+        return Response(
+            {
+                "message": "User created successfully!",
+                "token": token.key,
+                "user_id": user.id,
+                "onboarding_complete": user.onboarding_complete,
+            },
             status=status.HTTP_201_CREATED,
         )
 
@@ -269,7 +290,9 @@ class ResendOtpView(APIView):
         try:
             pending_user = PendingUser.objects.get(email=email)
         except PendingUser.DoesNotExist:
-            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "User not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         otp_code = generate_otp()
         pending_user.otp = otp_code
@@ -277,11 +300,14 @@ class ResendOtpView(APIView):
 
         send_otp_email(pending_user, otp_code)
 
-        return Response({"message": "OTP resent successfully"}, status=status.HTTP_200_OK)
+        return Response(
+            {"message": "OTP resent successfully"}, status=status.HTTP_200_OK
+        )
 
 
 class FriendListView(ListAPIView):
     """View to list all accepted friends"""
+
     permission_classes = [IsAuthenticated]
     serializer_class = FriendListSerializer
 
@@ -289,8 +315,8 @@ class FriendListView(ListAPIView):
         user = self.request.user
         # Get all accepted friendships where the user is either sender or receiver
         friendships = Friendship.objects.filter(
-            (models.Q(sender=user) | models.Q(receiver=user)) &
-            models.Q(status='accepted')
+            (models.Q(sender=user) | models.Q(receiver=user))
+            & models.Q(status="accepted")
         )
 
         # Extract the friend from each friendship
@@ -306,33 +332,32 @@ class FriendListView(ListAPIView):
 
 class FriendRequestListView(APIView):
     """View to list all pending friend requests"""
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
 
         # Get sent requests
-        sent_requests = Friendship.objects.filter(
-            sender=user,
-            status='pending'
+        sent_requests = Friendship.objects.filter(sender=user, status="pending")
+        sent_serializer = FriendshipSerializer(
+            sent_requests, many=True, context={"request": request}
         )
-        sent_serializer = FriendshipSerializer(sent_requests, many=True, context={'request': request})
 
         # Get received requests
-        received_requests = Friendship.objects.filter(
-            receiver=user,
-            status='pending'
+        received_requests = Friendship.objects.filter(receiver=user, status="pending")
+        received_serializer = FriendshipSerializer(
+            received_requests, many=True, context={"request": request}
         )
-        received_serializer = FriendshipSerializer(received_requests, many=True, context={'request': request})
 
-        return Response({
-            'sent': sent_serializer.data,
-            'received': received_serializer.data
-        })
+        return Response(
+            {"sent": sent_serializer.data, "received": received_serializer.data}
+        )
 
 
 class SendFriendRequestView(APIView):
     """View to send a friend request"""
+
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -341,79 +366,84 @@ class SendFriendRequestView(APIView):
         allowed, current_count, reset_time = check_friend_request_rate_limit(user_id)
 
         if not allowed:
-            return Response({
-                "error": "Rate limit exceeded",
-                "message": "You've sent too many friend requests. Please try again later.",
-                "reset_time": reset_time,
-                "current_count": current_count
-            }, status=status.HTTP_429_TOO_MANY_REQUESTS)
+            return Response(
+                {
+                    "error": "Rate limit exceeded",
+                    "message": "You've sent too many friend requests. Please try again later.",
+                    "reset_time": reset_time,
+                    "current_count": current_count,
+                },
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
 
         serializer = FriendshipSerializer(
-            data=request.data,
-            context={'request': request}
+            data=request.data, context={"request": request}
         )
 
         if serializer.is_valid():
             friendship = serializer.save()
             return Response(
-                FriendshipSerializer(friendship, context={'request': request}).data,
-                status=status.HTTP_201_CREATED
+                FriendshipSerializer(friendship, context={"request": request}).data,
+                status=status.HTTP_201_CREATED,
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class FriendRequestActionView(APIView):
     """View to accept or reject a friend request"""
+
     permission_classes = [IsAuthenticated]
 
     def put(self, request, pk):
         try:
-            friendship = Friendship.objects.get(pk=pk, receiver=request.user, status='pending')
+            friendship = Friendship.objects.get(
+                pk=pk, receiver=request.user, status="pending"
+            )
         except Friendship.DoesNotExist:
             return Response(
-                {"error": "Friend request not found"},
-                status=status.HTTP_404_NOT_FOUND
+                {"error": "Friend request not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
-        action = request.data.get('action')
-        if action not in ['accept', 'reject']:
+        action = request.data.get("action")
+        if action not in ["accept", "reject"]:
             return Response(
                 {"error": "Invalid action. Use 'accept' or 'reject'"},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-        friendship.status = 'accepted' if action == 'accept' else 'rejected'
+        friendship.status = "accepted" if action == "accept" else "rejected"
         friendship.save()
 
         # Create notification if request is accepted
-        if action == 'accept':
+        if action == "accept":
             Notification.objects.create(
                 recipient=friendship.sender,
                 sender=request.user,
-                notification_type='friend_accept',
-                title='Friend Request Accepted',
-                message=f'{request.user.username} accepted your friend request',
-                related_object_id=friendship.id
+                notification_type="friend_accept",
+                title="Friend Request Accepted",
+                message=f"{request.user.username} accepted your friend request",
+                related_object_id=friendship.id,
             )
 
         return Response(
-            FriendshipSerializer(friendship, context={'request': request}).data
+            FriendshipSerializer(friendship, context={"request": request}).data
         )
 
 
 class FriendSearchView(ListAPIView):
     """View to search for users to add as friends"""
+
     permission_classes = [IsAuthenticated]
     serializer_class = FriendListSerializer
     filter_backends = [filters.SearchFilter]
-    search_fields = ['username', 'email', 'first_name', 'last_name']
+    search_fields = ["username", "email", "first_name", "last_name"]
 
     def get_queryset(self):
         user = self.request.user
 
         friendships = Friendship.objects.filter(
-            (models.Q(sender=user) | models.Q(receiver=user)) &
-            models.Q(status='accepted')
+            (models.Q(sender=user) | models.Q(receiver=user))
+            & models.Q(status="accepted")
         )
 
         friend_ids = []
@@ -429,6 +459,7 @@ class FriendSearchView(ListAPIView):
 
 class FriendDeleteView(APIView):
     """View to remove a friend"""
+
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, pk):
@@ -437,20 +468,20 @@ class FriendDeleteView(APIView):
             friend = User.objects.get(pk=pk)
         except User.DoesNotExist:
             return Response(
-                {"error": "User not found"},
-                status=status.HTTP_404_NOT_FOUND
+                {"error": "User not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
         friendship = Friendship.objects.filter(
-            (models.Q(sender=user, receiver=friend) |
-             models.Q(sender=friend, receiver=user)) &
-            models.Q(status__in=['accepted', 'pending'])
+            (
+                models.Q(sender=user, receiver=friend)
+                | models.Q(sender=friend, receiver=user)
+            )
+            & models.Q(status__in=["accepted", "pending"])
         ).first()
 
         if not friendship:
             return Response(
-                {"error": "Friendship not found"},
-                status=status.HTTP_404_NOT_FOUND
+                {"error": "Friendship not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
         friendship.delete()
@@ -459,6 +490,7 @@ class FriendDeleteView(APIView):
 
 class NotificationListView(ListAPIView):
     """View to list all notifications for the current user"""
+
     permission_classes = [IsAuthenticated]
     serializer_class = NotificationSerializer
 
@@ -468,15 +500,19 @@ class NotificationListView(ListAPIView):
 
 class NotificationCountView(APIView):
     """View to get the count of unread notifications"""
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        count = Notification.objects.filter(recipient=request.user, is_read=False).count()
-        return Response({'count': count})
+        count = Notification.objects.filter(
+            recipient=request.user, is_read=False
+        ).count()
+        return Response({"count": count})
 
 
 class NotificationMarkReadView(APIView):
     """View to mark notifications as read"""
+
     permission_classes = [IsAuthenticated]
 
     def put(self, request, pk=None):
@@ -489,7 +525,7 @@ class NotificationMarkReadView(APIView):
             except Notification.DoesNotExist:
                 return Response(
                     {"error": "Notification not found"},
-                    status=status.HTTP_404_NOT_FOUND
+                    status=status.HTTP_404_NOT_FOUND,
                 )
         else:
             Notification.objects.filter(recipient=request.user).update(is_read=True)
