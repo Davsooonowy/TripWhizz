@@ -2,6 +2,8 @@ import { BaseApiClient } from '@/lib/api/base.ts';
 import { API_URL } from '@/lib/config.ts';
 import type { User } from '@/lib/api/users.ts';
 
+const FRIENDS_API_URL = `${API_URL}/auth/friends`;
+
 export interface FriendRequest {
   id: number;
   sender: User;
@@ -18,7 +20,7 @@ export interface FriendRequestsResponse {
 
 export class FriendsApiClient extends BaseApiClient {
   async getFriends() {
-    const response = await fetch(`${API_URL}/friends/`, {
+    const response = await fetch(`${FRIENDS_API_URL}/`, {
       ...this._requestConfiguration(true),
       method: 'GET',
     });
@@ -31,7 +33,7 @@ export class FriendsApiClient extends BaseApiClient {
   }
 
   async getFriendRequests() {
-    const response = await fetch(`${API_URL}/friends/requests/`, {
+    const response = await fetch(`${FRIENDS_API_URL}/requests/`, {
       ...this._requestConfiguration(true),
       method: 'GET',
     });
@@ -44,7 +46,7 @@ export class FriendsApiClient extends BaseApiClient {
   }
 
   async sendFriendRequest(receiverId: number) {
-    const response = await fetch(`${API_URL}/friends/request/`, {
+    const response = await fetch(`${FRIENDS_API_URL}/request/`, {
       ...this._requestConfiguration(true),
       method: 'POST',
       body: JSON.stringify({ receiver_id: receiverId }),
@@ -58,7 +60,7 @@ export class FriendsApiClient extends BaseApiClient {
   }
 
   async respondToFriendRequest(requestId: number, action: 'accept' | 'reject') {
-    const response = await fetch(`${API_URL}/friends/request/${requestId}/`, {
+    const response = await fetch(`${FRIENDS_API_URL}/request/${requestId}/`, {
       ...this._requestConfiguration(true),
       method: 'PUT',
       body: JSON.stringify({ action }),
@@ -73,7 +75,7 @@ export class FriendsApiClient extends BaseApiClient {
 
   async searchUsers(query: string) {
     const response = await fetch(
-      `${API_URL}/friends/search/?search=${encodeURIComponent(query)}`,
+      `${FRIENDS_API_URL}/search/?search=${encodeURIComponent(query)}`,
       {
         ...this._requestConfiguration(true),
         method: 'GET',
@@ -88,7 +90,7 @@ export class FriendsApiClient extends BaseApiClient {
   }
 
   async removeFriend(friendId: number) {
-    const response = await fetch(`${API_URL}/friends/${friendId}/`, {
+    const response = await fetch(`${FRIENDS_API_URL}/${friendId}/`, {
       ...this._requestConfiguration(true),
       method: 'DELETE',
     });

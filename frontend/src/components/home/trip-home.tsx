@@ -470,6 +470,8 @@ interface StageItemProps {
 }
 
 function StageItem({ stage }: StageItemProps) {
+  const { selectedTrip } = useTripContext();
+
   // Get category color based on category name or custom color
   const getCategoryColor = () => {
     if (stage.is_custom_category && stage.custom_category_color) {
@@ -494,27 +496,29 @@ function StageItem({ stage }: StageItemProps) {
   };
 
   return (
-    <motion.div
-      className="flex items-center p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-      whileHover={{ x: 5, backgroundColor: 'hsl(var(--muted)/50)' }}
-      transition={{ duration: 0.2 }}
-    >
-      <div
-        className={cn('w-2 h-10 rounded-full mr-3', getCategoryColor())}
-      ></div>
-      <div className="flex-1 min-w-0">
-        <p className="font-medium truncate">{stage.name}</p>
-        <div className="flex items-center text-xs text-muted-foreground">
-          <span className="truncate capitalize">{stage.category}</span>
-          {stage.start_date && stage.end_date && (
-            <span className="ml-2">
-              {new Date(stage.start_date).toLocaleDateString()} -{' '}
-              {new Date(stage.end_date).toLocaleDateString()}
-            </span>
-          )}
+    <Link to={`/trip/${selectedTrip?.id}/stages/${stage.id}`}>
+      <motion.div
+        className="flex items-center p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+        whileHover={{ x: 5, backgroundColor: 'hsl(var(--muted)/50)' }}
+        transition={{ duration: 0.2 }}
+      >
+        <div
+          className={cn('w-2 h-10 rounded-full mr-3', getCategoryColor())}
+        ></div>
+        <div className="flex-1 min-w-0">
+          <p className="font-medium truncate">{stage.name}</p>
+          <div className="flex items-center text-xs text-muted-foreground">
+            <span className="truncate capitalize">{stage.category}</span>
+            {stage.start_date && stage.end_date && (
+              <span className="ml-2">
+                {new Date(stage.start_date).toLocaleDateString()} -{' '}
+                {new Date(stage.end_date).toLocaleDateString()}
+              </span>
+            )}
+          </div>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </Link>
   );
 }
 

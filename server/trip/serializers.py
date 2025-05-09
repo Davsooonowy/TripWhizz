@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Trip, Stage
+from .models import Trip, Stage, StageElement
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -65,3 +65,10 @@ class TripListSerializer(serializers.ModelSerializer):
 
     def get_participants_count(self, obj):
         return obj.participants.count()
+
+
+class StageElementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StageElement
+        fields = ['id', 'name', 'description', 'url', 'stage', 'likes', 'dislikes']
+        read_only_fields = ['created_at', 'updated_at']

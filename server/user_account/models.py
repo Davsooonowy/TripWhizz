@@ -1,25 +1,14 @@
 import uuid
 from datetime import timedelta
-import os
+from utils.upload_paths import upload_path
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
 
 
-def avatar_upload_path(instance, filename):
-    """
-    Custom function to determine the upload path for avatar images.
-    Uses the user's email as the filename.
-    """
-    # Get file extension
-    ext = filename.split('.')[-1]
-    sanitized_email = instance.email.replace('@', '_at_').replace('.', '_dot_')
-    return os.path.join('media', f"{sanitized_email}.{ext}")
-
-
 class Profile(AbstractUser):
-    avatar = models.ImageField(upload_to=avatar_upload_path, blank=True, null=True)
+    avatar = models.ImageField(upload_to=upload_path, blank=True, null=True)
     onboarding_complete = models.BooleanField(default=False)
 
     def __str__(self):
