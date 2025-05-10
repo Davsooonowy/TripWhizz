@@ -45,7 +45,7 @@ export function NotificationDropdown() {
       ]);
       setNotifications(notificationsData);
       setUnreadCount(countData.count);
-    }  finally {
+    } finally {
       setIsLoading(false);
     }
   };

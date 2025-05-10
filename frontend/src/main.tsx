@@ -44,7 +44,9 @@ const PrivateTripInvitePage = React.lazy(
 const PublicTripInvitePage = React.lazy(
   () => import('@/pages/trip/new/public/invite'),
 );
-const StageDetailsPage = React.lazy(() => import('@/components/trip/stage-details.tsx'));
+const StageDetailsPage = React.lazy(
+  () => import('@/components/trip/stage-details.tsx'),
+);
 
 const protectedLoginLoader = async () => {
   if (!authenticationProviderInstance.isAuthenticated()) {
