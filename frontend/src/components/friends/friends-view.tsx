@@ -52,7 +52,6 @@ export default function FriendsView() {
   const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
 
-  // Update URL when tab changes
   useEffect(() => {
     const newParams = new URLSearchParams(location.search);
     if (activeTab !== 'friends') {
@@ -84,7 +83,7 @@ export default function FriendsView() {
 
         setFriends(friendsData);
         setFriendRequests(requestsData);
-      } catch (error) {
+      } catch {
         toast({
           title: 'Error',
           description: 'Failed to load friends data. Please try again.',
@@ -108,7 +107,7 @@ export default function FriendsView() {
       );
       const results = await friendsApiClient.searchUsers(searchQuery);
       setSearchResults(results);
-    } catch (error) {
+    } catch {
       toast({
         title: 'Search Failed',
         description: 'Could not complete the search. Please try again.',
@@ -126,20 +125,18 @@ export default function FriendsView() {
       );
       const request = await friendsApiClient.sendFriendRequest(userId);
 
-      // Update the sent requests list
       setFriendRequests((prev) => ({
         ...prev,
         sent: [...prev.sent, request],
       }));
 
-      // Remove from search results
       setSearchResults((prev) => prev.filter((user) => user.id !== userId));
 
       toast({
         title: 'Friend Request Sent',
         description: 'Your friend request has been sent successfully.',
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Request Failed',
         description: 'Could not send friend request. Please try again.',
@@ -161,13 +158,11 @@ export default function FriendsView() {
         action,
       );
 
-      // Update the received requests list
       setFriendRequests((prev) => ({
         ...prev,
         received: prev.received.filter((req) => req.id !== requestId),
       }));
 
-      // If accepted, add to friends list
       if (action === 'accept') {
         setFriends((prev) => [...prev, updatedRequest.sender]);
       }
@@ -182,7 +177,7 @@ export default function FriendsView() {
             ? 'You are now friends!'
             : 'The friend request has been rejected.',
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Action Failed',
         description: `Could not ${action} the friend request. Please try again.`,
@@ -198,14 +193,13 @@ export default function FriendsView() {
       );
       await friendsApiClient.removeFriend(friendId);
 
-      // Remove from friends list
       setFriends((prev) => prev.filter((friend) => friend.id !== friendId));
 
       toast({
         title: 'Friend Removed',
         description: 'The friend has been removed from your friends list.',
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Action Failed',
         description: 'Could not remove friend. Please try again.',
@@ -221,7 +215,6 @@ export default function FriendsView() {
       );
       await friendsApiClient.removeFriend(requestId);
 
-      // Remove from sent requests list
       setFriendRequests((prev) => ({
         ...prev,
         sent: prev.sent.filter((req) => req.id !== requestId),
@@ -231,7 +224,7 @@ export default function FriendsView() {
         title: 'Request Cancelled',
         description: 'Your friend request has been cancelled.',
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Action Failed',
         description: 'Could not cancel the friend request. Please try again.',

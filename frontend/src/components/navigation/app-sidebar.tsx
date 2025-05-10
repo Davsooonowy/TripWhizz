@@ -6,6 +6,14 @@ import {
   Map,
   MoonIcon as IconMoon,
   SunIcon as IconSun,
+  Plane,
+  Palmtree,
+  Mountain,
+  Building2,
+  Tent,
+  Ship,
+  Train,
+  Car,
 } from 'lucide-react';
 
 import { NavMain } from '@/components/navigation/nav-main.tsx';
@@ -27,6 +35,17 @@ import {
 import { useDarkMode } from '@/components/util/dark-mode-provider.tsx';
 import { TripCompanions } from '@/components/navigation/trip-companions';
 import { useTripContext } from '@/components/util/trip-context';
+
+const iconMap: Record<string, React.ElementType> = {
+  plane: Plane,
+  beach: Palmtree,
+  mountain: Mountain,
+  city: Building2,
+  camping: Tent,
+  cruise: Ship,
+  train: Train,
+  'road trip': Car,
+};
 
 const data = {
   navMain: [

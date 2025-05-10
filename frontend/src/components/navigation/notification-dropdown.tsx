@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect } from 'react';
 import { Bell, Check, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -47,8 +45,6 @@ export function NotificationDropdown() {
       ]);
       setNotifications(notificationsData);
       setUnreadCount(countData.count);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
     } finally {
       setIsLoading(false);
     }
@@ -60,7 +56,6 @@ export function NotificationDropdown() {
     }
   }, [isOpen]);
 
-  // Poll for new notifications every 30 seconds
   useEffect(() => {
     const fetchUnreadCount = async () => {
       try {
@@ -86,7 +81,6 @@ export function NotificationDropdown() {
       );
       await notificationsApiClient.markAsRead(notificationId);
 
-      // Update local state
       setNotifications((prev) =>
         prev.map((notification) =>
           notification.id === notificationId
@@ -107,7 +101,6 @@ export function NotificationDropdown() {
       );
       await notificationsApiClient.markAllAsRead();
 
-      // Update local state
       setNotifications((prev) =>
         prev.map((notification) => ({ ...notification, is_read: true })),
       );
@@ -117,8 +110,7 @@ export function NotificationDropdown() {
         title: 'All notifications marked as read',
         description: 'Your notifications have been cleared',
       });
-    } catch (error) {
-      console.error('Error marking all notifications as read:', error);
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to mark notifications as read',

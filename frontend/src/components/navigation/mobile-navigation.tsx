@@ -31,7 +31,6 @@ export function MobileNavigation() {
   const [notificationCount, setNotificationCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch notification count on component mount and periodically
   useEffect(() => {
     const fetchNotificationCount = async () => {
       try {
@@ -48,55 +47,11 @@ export function MobileNavigation() {
       }
     };
 
-    // Initial fetch
     fetchNotificationCount();
 
-    // Set up polling for real-time updates (every 30 seconds)
     const intervalId = setInterval(fetchNotificationCount, 30000);
 
-    // Clean up interval on component unmount
     return () => clearInterval(intervalId);
-  }, []);
-
-  // Set up WebSocket connection for real-time updates (if available)
-  useEffect(() => {
-    // Check if WebSockets are supported in the browser
-    if ('WebSocket' in window) {
-      const token = authenticationProviderInstance.token;
-      if (!token) return;
-
-      // Connect to notification WebSocket
-      const socket = new WebSocket(
-        `${import.meta.env.VITE_WS_URL}/ws/notifications/`,
-      );
-
-      // Handle incoming messages
-      socket.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.type === 'unread_count') {
-            setNotificationCount(data.count);
-          } else if (data.type === 'new_notification') {
-            // Increment the notification count
-            setNotificationCount((prev) => prev + 1);
-          }
-        } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
-        }
-      };
-
-      // Handle connection errors
-      socket.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
-
-      // Clean up WebSocket connection on component unmount
-      return () => {
-        if (socket.readyState === WebSocket.OPEN) {
-          socket.close();
-        }
-      };
-    }
   }, []);
 
   useEffect(() => {

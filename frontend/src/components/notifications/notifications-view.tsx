@@ -43,8 +43,7 @@ export default function NotificationsView() {
       );
       const notificationsData = await notificationsApiClient.getNotifications();
       setNotifications(notificationsData);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to load notifications. Please try again.',
@@ -62,7 +61,6 @@ export default function NotificationsView() {
       );
       await notificationsApiClient.markAsRead(notificationId);
 
-      // Update local state
       setNotifications((prev) =>
         prev.map((notification) =>
           notification.id === notificationId
@@ -70,8 +68,7 @@ export default function NotificationsView() {
             : notification,
         ),
       );
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to mark notification as read.',
@@ -87,7 +84,6 @@ export default function NotificationsView() {
       );
       await notificationsApiClient.markAllAsRead();
 
-      // Update local state
       setNotifications((prev) =>
         prev.map((notification) => ({ ...notification, is_read: true })),
       );
@@ -96,8 +92,7 @@ export default function NotificationsView() {
         title: 'Success',
         description: 'All notifications marked as read',
       });
-    } catch (error) {
-      console.error('Error marking all notifications as read:', error);
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to mark all notifications as read.',

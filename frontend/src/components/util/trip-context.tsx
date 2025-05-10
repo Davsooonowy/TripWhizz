@@ -1,5 +1,3 @@
-'use client';
-
 import type React from 'react';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { TripsApiClient, type TripData } from '@/lib/api/trips';
@@ -12,6 +10,7 @@ interface TripContextType {
   error: string | null;
   setSelectedTrip: (trip: TripData) => void;
   refreshTrips: () => Promise<void>;
+  refreshContent: () => void;
 }
 
 const TripContext = createContext<TripContextType | undefined>(undefined);
@@ -24,7 +23,6 @@ export const useTripContext = () => {
   return context;
 };
 
-// Modify the TripProvider to remove router dependencies:
 export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
@@ -32,14 +30,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
   const [selectedTrip, setSelectedTrip] = useState<TripData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Remove navigate, location, params variables
-
-  // Extract trip ID from URL if present - remove this function or simplify it
-  const getTripIdFromUrl = () => {
-    // This can be simplified to just return null since we're not using router hooks
-    return null;
-  };
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const fetchTrips = async () => {
     setIsLoading(true);
@@ -49,16 +40,13 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
       const fetchedTrips = await tripsApiClient.getTrips();
       setTrips(fetchedTrips);
 
-      // First check localStorage for stored trip ID
       const storedTripId = localStorage.getItem('selectedTripId');
 
       if (storedTripId) {
-        // Find the trip in the fetched trips
         const foundTrip = fetchedTrips.find(
           (trip) => trip.id?.toString() === storedTripId,
         );
         if (foundTrip) {
-          // Immediately fetch full trip details
           try {
             const details = await tripsApiClient.getTripDetails(foundTrip.id);
             setSelectedTrip({ ...foundTrip, ...details });
@@ -67,7 +55,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
             setSelectedTrip(foundTrip);
           }
         } else if (fetchedTrips.length > 0) {
-          // If stored trip not found but trips exist, select the first one
           try {
             const details = await tripsApiClient.getTripDetails(
               fetchedTrips[0].id,
@@ -83,7 +70,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
           }
         }
       } else if (fetchedTrips.length > 0) {
-        // If no stored trip but trips exist, select the first one
         try {
           const details = await tripsApiClient.getTripDetails(
             fetchedTrips[0].id,
@@ -98,15 +84,13 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
           setSelectedTrip(fetchedTrips[0]);
         }
       }
-    } catch (err) {
-      console.error('Error fetching trips:', err);
+    } catch {
       setError('Failed to load trips. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Initial fetch of trips
   useEffect(() => {
     fetchTrips();
   }, []);
@@ -121,7 +105,6 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
       const tripsApiClient = new TripsApiClient(authenticationProviderInstance);
       const details = await tripsApiClient.getTripDetails(trip.id);
 
-      // Update with full details
       setSelectedTrip((prevTrip) => {
         if (prevTrip?.id === trip.id) {
           return { ...prevTrip, ...details };
@@ -139,6 +122,10 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
     await fetchTrips();
   };
 
+  const refreshContent = () => {
+    setRefreshKey((prevKey) => prevKey + 1);
+  };
+
   return (
     <TripContext.Provider
       value={{
@@ -148,9 +135,10 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
         error,
         setSelectedTrip: (trip) => handleSetSelectedTrip(trip),
         refreshTrips,
+        refreshContent,
       }}
     >
-      {children}
+      <div key={refreshKey}>{children}</div>
     </TripContext.Provider>
   );
 };
