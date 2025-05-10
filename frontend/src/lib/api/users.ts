@@ -1,6 +1,8 @@
 import { BaseApiClient } from '@/lib/api/base.ts';
 import { API_URL } from '@/lib/config.ts';
 
+const AUTH_API_URL = `${API_URL}/auth/user`;
+
 export interface BasicUserData {
   email: string;
   password: string;
@@ -26,7 +28,7 @@ export interface User {
 
 export class UsersApiClient extends BaseApiClient {
   async createUser(user: BasicUserData): Promise<RegisterUserResponse> {
-    const response = await fetch(`${API_URL}/user/`, {
+    const response = await fetch(`${AUTH_API_URL}/`, {
       ...this._requestConfiguration(false),
       method: 'POST',
       body: JSON.stringify(user),
@@ -40,7 +42,7 @@ export class UsersApiClient extends BaseApiClient {
   }
 
   async loginUser(user: BasicUserData): Promise<RegisterUserResponse> {
-    const response = await fetch(`${API_URL}/user/login/`, {
+    const response = await fetch(`${AUTH_API_URL}/login/`, {
       ...this._requestConfiguration(false),
       method: 'POST',
       body: JSON.stringify(user),
@@ -54,7 +56,7 @@ export class UsersApiClient extends BaseApiClient {
   }
 
   async getActiveUser(): Promise<User> {
-    const response = await fetch(`${API_URL}/user/me/`, {
+    const response = await fetch(`${AUTH_API_URL}/me/`, {
       ...this._requestConfiguration(true),
       method: 'GET',
     });
@@ -67,7 +69,7 @@ export class UsersApiClient extends BaseApiClient {
   }
 
   async sendPasswordResetEmail(email: string): Promise<void> {
-    const response = await fetch(`${API_URL}/user/password-reset/`, {
+    const response = await fetch(`${AUTH_API_URL}/password-reset/`, {
       ...this._requestConfiguration(false),
       method: 'POST',
       body: JSON.stringify({ email }),
@@ -84,7 +86,7 @@ export class UsersApiClient extends BaseApiClient {
     newPassword: string,
   ): Promise<void> {
     const response = await fetch(
-      `${API_URL}/user/password-reset-confirm/${uid}/${token}/`,
+      `${AUTH_API_URL}/password-reset-confirm/${uid}/${token}/`,
       {
         ...this._requestConfiguration(false),
         method: 'POST',
@@ -121,7 +123,7 @@ export class UsersApiClient extends BaseApiClient {
     }
 
     // Send the request
-    const response = await fetch(`${API_URL}/user/me/`, {
+    const response = await fetch(`${AUTH_API_URL}/me/`, {
       headers: {
         Authorization: `Token ${this.authenticationProvider.token}`,
       },
@@ -140,7 +142,7 @@ export class UsersApiClient extends BaseApiClient {
     email: string | null,
     code: string,
   ): Promise<RegisterUserResponse> {
-    const response = await fetch(`${API_URL}/user/verify/`, {
+    const response = await fetch(`${AUTH_API_URL}/verify/`, {
       ...this._requestConfiguration(false),
       method: 'POST',
       body: JSON.stringify({ email, code }),
@@ -154,7 +156,7 @@ export class UsersApiClient extends BaseApiClient {
   }
 
   async resendOtp(email: string | null): Promise<void> {
-    const response = await fetch(`${API_URL}/user/resend-otp/`, {
+    const response = await fetch(`${AUTH_API_URL}/resend-otp/`, {
       ...this._requestConfiguration(false),
       method: 'POST',
       body: JSON.stringify({ email }),

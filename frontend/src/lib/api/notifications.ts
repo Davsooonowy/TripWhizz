@@ -2,6 +2,8 @@ import { BaseApiClient } from '@/lib/api/base.ts';
 import { API_URL } from '@/lib/config.ts';
 import type { User } from '@/lib/api/users.ts';
 
+const NOTIFICATION_API_URL = `${API_URL}/auth/notifications`;
+
 export interface Notification {
   id: number;
   sender: User | null;
@@ -20,7 +22,7 @@ export interface Notification {
 
 export class NotificationsApiClient extends BaseApiClient {
   async getNotifications() {
-    const response = await fetch(`${API_URL}/notifications/`, {
+    const response = await fetch(`${NOTIFICATION_API_URL}/`, {
       ...this._requestConfiguration(true),
       method: 'GET',
     });
@@ -33,7 +35,7 @@ export class NotificationsApiClient extends BaseApiClient {
   }
 
   async getUnreadCount() {
-    const response = await fetch(`${API_URL}/notifications/count/`, {
+    const response = await fetch(`${NOTIFICATION_API_URL}/count/`, {
       ...this._requestConfiguration(true),
       method: 'GET',
     });
@@ -47,7 +49,7 @@ export class NotificationsApiClient extends BaseApiClient {
 
   async markAsRead(notificationId: number) {
     const response = await fetch(
-      `${API_URL}/notifications/read/${notificationId}/`,
+      `${NOTIFICATION_API_URL}/read/${notificationId}/`,
       {
         ...this._requestConfiguration(true),
         method: 'PUT',
@@ -62,7 +64,7 @@ export class NotificationsApiClient extends BaseApiClient {
   }
 
   async markAllAsRead() {
-    const response = await fetch(`${API_URL}/notifications/read/`, {
+    const response = await fetch(`${NOTIFICATION_API_URL}/read/`, {
       ...this._requestConfiguration(true),
       method: 'PUT',
     });

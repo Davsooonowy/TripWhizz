@@ -1,6 +1,8 @@
 import { BaseApiClient } from '@/lib/api/base.ts';
 import { API_URL } from '@/lib/config.ts';
 
+const TRIP_API_URL = `${API_URL}/trips/trip`;
+
 export interface TripStage {
   id?: string;
   name: string;
@@ -29,7 +31,7 @@ export interface TripData {
 
 export class TripsApiClient extends BaseApiClient {
   async getTrips() {
-    const response = await fetch(`${API_URL}/trip/`, {
+    const response = await fetch(`${TRIP_API_URL}/`, {
       ...this._requestConfiguration(true),
       method: 'GET',
     });
@@ -53,7 +55,7 @@ export class TripsApiClient extends BaseApiClient {
         : undefined,
     };
 
-    const response = await fetch(`${API_URL}/trip/`, {
+    const response = await fetch(`${TRIP_API_URL}/`, {
       ...this._requestConfiguration(true),
       method: 'POST',
       body: JSON.stringify(formattedData),
@@ -67,7 +69,7 @@ export class TripsApiClient extends BaseApiClient {
   }
 
   async getTripDetails(tripId: number) {
-    const response = await fetch(`${API_URL}/trip/${tripId}/`, {
+    const response = await fetch(`${TRIP_API_URL}/${tripId}/`, {
       ...this._requestConfiguration(true),
       method: 'GET',
     });
@@ -91,7 +93,7 @@ export class TripsApiClient extends BaseApiClient {
         : undefined,
     };
 
-    const response = await fetch(`${API_URL}/trip/${tripId}/`, {
+    const response = await fetch(`${TRIP_API_URL}/${tripId}/`, {
       ...this._requestConfiguration(true),
       method: 'PUT',
       body: JSON.stringify(formattedData),
@@ -105,7 +107,7 @@ export class TripsApiClient extends BaseApiClient {
   }
 
   async deleteTrip(tripId: number) {
-    const response = await fetch(`${API_URL}/trip/${tripId}/`, {
+    const response = await fetch(`${TRIP_API_URL}/${tripId}/`, {
       ...this._requestConfiguration(true),
       method: 'DELETE',
     });
@@ -130,7 +132,7 @@ export class TripsApiClient extends BaseApiClient {
     }));
 
     const response = await fetch(
-      `${API_URL}/trip/${tripId}/batch-create-stages/`,
+      `${TRIP_API_URL}/${tripId}/batch-create-stages/`,
       {
         ...this._requestConfiguration(true),
         method: 'POST',
@@ -146,7 +148,7 @@ export class TripsApiClient extends BaseApiClient {
   }
 
   async reorderStages(tripId: number, stageIds: string[]) {
-    const response = await fetch(`${API_URL}/trip/${tripId}/reorder-stages/`, {
+    const response = await fetch(`${TRIP_API_URL}/${tripId}/reorder-stages/`, {
       ...this._requestConfiguration(true),
       method: 'POST',
       body: JSON.stringify({ stage_ids: stageIds }),
