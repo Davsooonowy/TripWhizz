@@ -1,5 +1,6 @@
-import { User, Users, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+import { CheckCircle, User, Users } from 'lucide-react';
 
 interface ProgressTrackerProps {
   currentStep: number;

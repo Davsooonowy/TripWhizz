@@ -1,5 +1,6 @@
-import type React from 'react';
 import { AppSidebar } from '@/components/navigation/app-sidebar';
+import { MobileNavigation } from '@/components/navigation/mobile-navigation';
+import { NotificationDropdown } from '@/components/navigation/notification-dropdown';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -8,16 +9,17 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { MobileNavigation } from '@/components/navigation/mobile-navigation';
-import { ChevronRight, HomeIcon } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { motion } from 'framer-motion';
-import { useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Separator } from '@/components/ui/separator';
-import { NotificationDropdown } from '@/components/navigation/notification-dropdown';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { useIsMobile } from '@/hooks/use-mobile';
+
+import type React from 'react';
+import { useEffect, useState } from 'react';
+
+import { motion } from 'framer-motion';
+import { ChevronRight, HomeIcon } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();

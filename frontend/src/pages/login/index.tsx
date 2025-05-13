@@ -1,7 +1,9 @@
 import { AuthForm } from '@/components/auth/auth-form.tsx';
-import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
 import { quotes } from '@/components/util/quotes.ts';
+
+import { useEffect, useState } from 'react';
+
+import { motion } from 'framer-motion';
 import { MapPin } from 'lucide-react';
 
 export default function LoginPage() {

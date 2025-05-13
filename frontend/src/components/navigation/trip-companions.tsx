@@ -1,17 +1,19 @@
-import * as React from 'react';
-import { UserPlus } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
 import { useSidebar } from '@/components/ui/sidebar';
+import { cn } from '@/lib/utils';
+
+import * as React from 'react';
+
+import { motion } from 'framer-motion';
+import { UserPlus } from 'lucide-react';
 
 interface Companion {
   name: string;

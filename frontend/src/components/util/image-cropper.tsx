@@ -1,5 +1,3 @@
-import { useState, useCallback } from 'react';
-import Cropper from 'react-easy-crop';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -8,8 +6,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
+
+import { useCallback, useState } from 'react';
+
+import Cropper from 'react-easy-crop';
 
 interface Point {
   x: number;

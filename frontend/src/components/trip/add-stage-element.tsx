@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
+import { Button } from '@/components/ui/button.tsx';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog.tsx';
-import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
-import { Textarea } from '@/components/ui/textarea.tsx';
-import { Upload } from 'lucide-react';
 import { Label } from '@/components/ui/label.tsx';
+import { Textarea } from '@/components/ui/textarea.tsx';
 import { ImageCropper } from '@/components/util/image-cropper.tsx';
+
+import React, { useState } from 'react';
+
+import { Upload } from 'lucide-react';
 
 interface AddStageElementProps {
   isOpen: boolean;

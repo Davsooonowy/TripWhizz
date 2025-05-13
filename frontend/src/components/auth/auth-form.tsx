@@ -1,28 +1,29 @@
-import type React from 'react';
-import { useEffect, useState } from 'react';
-import { type FieldValues, type SubmitHandler, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import GoogleLoginButton from '@/components/auth/GoogleLoginButton.tsx';
 import { FormField } from '@/components/auth/form-field.tsx';
-import { AlertCircle, Check } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { toast } from '@/components/ui/use-toast';
 import {
   EmailSchema,
   loginSchema,
   registerSchema,
 } from '@/components/util/form-schemas.ts';
+import OtpDialog from '@/components/util/otp-dialog';
 import { calculatePasswordStrength } from '@/components/util/password-utils.ts';
 import { UsersApiClient } from '@/lib/api/users.ts';
-
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
-import { useNavigate } from 'react-router-dom';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import GoogleLoginButton from '@/components/auth/GoogleLoginButton.tsx';
+import { cn } from '@/lib/utils';
+
+import type React from 'react';
+import { useEffect, useState } from 'react';
+
+import { zodResolver } from '@hookform/resolvers/zod';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import OtpDialog from '@/components/util/otp-dialog';
-import { toast } from '@/components/ui/use-toast';
+import { AlertCircle, Check } from 'lucide-react';
+import { type FieldValues, type SubmitHandler, useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 
 interface FormData {
   email: string;

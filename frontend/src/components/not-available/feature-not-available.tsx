@@ -1,7 +1,8 @@
-import { Plane } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+
 import { motion } from 'framer-motion';
+import { Plane } from 'lucide-react';
 
 interface FeatureNotAvailableProps {
   title?: string;

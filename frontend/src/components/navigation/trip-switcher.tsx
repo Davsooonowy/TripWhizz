@@ -1,18 +1,3 @@
-import type * as React from 'react';
-import { ChevronsUpDown, Plus, MapPin, AlertCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
-
-import {
-  Plane,
-  Palmtree,
-  Mountain,
-  Building2,
-  Tent,
-  Ship,
-  Train,
-  Car,
-} from 'lucide-react';
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +14,21 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar.tsx';
 import { useTripContext } from '@/components/util/trip-context';
+
+import type * as React from 'react';
+
+import { AlertCircle, ChevronsUpDown, MapPin, Plus } from 'lucide-react';
+import {
+  Building2,
+  Car,
+  Mountain,
+  Palmtree,
+  Plane,
+  Ship,
+  Tent,
+  Train,
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const iconMap: Record<string, React.FC> = {
   plane: Plane,

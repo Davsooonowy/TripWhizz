@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { AddStageElement } from '@/components/trip/add-stage-element.tsx';
+import { Badge } from '@/components/ui/badge.tsx';
+import { Button } from '@/components/ui/button.tsx';
 import {
   Card,
   CardContent,
@@ -7,21 +8,23 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card.tsx';
-import { Button } from '@/components/ui/button.tsx';
-import { Badge } from '@/components/ui/badge.tsx';
-import { TripsApiClient } from '@/lib/api/trips.ts';
-import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
-import { ItemDetailsModal } from './item-details-modal.tsx';
-import { AddStageElement } from '@/components/trip/add-stage-element.tsx';
-import { StageElement, StagesApiClient } from '@/lib/api/stages.ts';
-import { EditStageElementModal } from './edit-stage-element-modal.tsx';
-import { Edit, ThumbsDown, ThumbsUp } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip.tsx';
+import { StageElement, StagesApiClient } from '@/lib/api/stages.ts';
+import { TripsApiClient } from '@/lib/api/trips.ts';
+import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
+
+import React, { useEffect, useState } from 'react';
+
+import { Edit, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+
+import { EditStageElementModal } from './edit-stage-element-modal.tsx';
+import { ItemDetailsModal } from './item-details-modal.tsx';
 
 export default function StageDetails() {
   const { tripId, stageId } = useParams();
@@ -42,7 +45,7 @@ export default function StageDetails() {
         );
 
         setElements(fetchedElements);
-      } catch (error) {
+      } catch {
         setError('Error loading stage elements. Please try again.');
       }
     };
@@ -89,7 +92,7 @@ export default function StageDetails() {
           setStageName('Stage not found');
         }
         setError(null);
-      } catch (err) {
+      } catch {
         setError('Error fetching stage details. Please try again.');
         setStageName('Error loading stage');
       }
@@ -119,7 +122,7 @@ export default function StageDetails() {
         ),
       );
       setError(null);
-    } catch (error) {
+    } catch {
       setError('Failed to add reaction. Please try again.');
     }
   };
@@ -148,7 +151,7 @@ export default function StageDetails() {
       ]);
       setIsAddModalOpen(false);
       setError(null);
-    } catch (error) {
+    } catch {
       setError('Failed to add stage element. Please try again.');
     }
   };
@@ -172,7 +175,7 @@ export default function StageDetails() {
       );
       closeEditModal();
       setError(null);
-    } catch (error) {
+    } catch {
       setError('Failed to edit stage element. Please try again.');
     }
   };

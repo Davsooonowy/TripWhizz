@@ -1,6 +1,6 @@
 import { BaseApiClient } from '@/lib/api/base.ts';
-import { API_URL } from '@/lib/config.ts';
 import type { User } from '@/lib/api/users.ts';
+import { API_URL } from '@/lib/config.ts';
 
 const NOTIFICATION_API_URL = `${API_URL}/auth/notifications`;
 

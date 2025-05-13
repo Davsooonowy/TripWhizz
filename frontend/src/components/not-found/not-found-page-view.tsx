@@ -1,6 +1,7 @@
-import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { Link } from 'react-router-dom';
 
 export default function NotFoundView() {
   return (

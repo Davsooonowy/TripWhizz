@@ -1,44 +1,42 @@
-import type React from 'react';
-
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import {
-  Calendar,
-  Map,
-  Users,
-  Clock,
-  Plane,
-  Palmtree,
-  Mountain,
-  Building2,
-  Tent,
-  Ship,
-  Train,
-  Car,
-  ArrowRight,
-  Plus,
-  AlertCircle,
-  RefreshCw,
-} from 'lucide-react';
-
+import { EmptyContent } from '@/components/not-available/empty-content';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { useTripContext } from '@/components/util/trip-context';
-import { TripsApiClient, type TripData, type TripStage } from '@/lib/api/trips';
-import { authenticationProviderInstance } from '@/lib/authentication-provider';
-import { EmptyContent } from '@/components/not-available/empty-content';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Progress } from '@/components/ui/progress';
+import { useTripContext } from '@/components/util/trip-context';
+import { type TripData, type TripStage, TripsApiClient } from '@/lib/api/trips';
+import { authenticationProviderInstance } from '@/lib/authentication-provider';
 import { cn } from '@/lib/utils';
+
+import type React from 'react';
+import { useEffect, useState } from 'react';
+
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  AlertCircle,
+  Building2,
+  Calendar,
+  Car,
+  Clock,
+  Map,
+  Mountain,
+  Palmtree,
+  Plane,
+  Plus,
+  RefreshCw,
+  Ship,
+  Tent,
+  Train,
+  Users,
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 
 const iconMap: Record<string, React.ElementType> = {
@@ -419,49 +417,6 @@ function StatCard({ icon, label, value }: StatCardProps) {
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="font-medium">{value}</p>
     </motion.div>
-  );
-}
-
-interface QuickAccessCardProps {
-  title: string;
-  icon: React.ReactNode;
-  description: string;
-  linkText: string;
-  linkUrl: string;
-}
-
-function QuickAccessCard({
-  title,
-  icon,
-  description,
-  linkText,
-  linkUrl,
-}: QuickAccessCardProps) {
-  return (
-    <Card className="overflow-hidden transition-all duration-300 hover:shadow-md">
-      <CardHeader className="pb-2">
-        <div className="flex items-center gap-2">
-          <div className="bg-primary/10 p-2 rounded-lg">{icon}</div>
-          <CardTitle className="text-lg">{title}</CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent className="pb-2">
-        <p className="text-sm text-muted-foreground">{description}</p>
-      </CardContent>
-      <CardFooter>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-between"
-          asChild
-        >
-          <Link to={linkUrl}>
-            {linkText}
-            <ArrowRight className="h-4 w-4 ml-1" />
-          </Link>
-        </Button>
-      </CardFooter>
-    </Card>
   );
 }
 

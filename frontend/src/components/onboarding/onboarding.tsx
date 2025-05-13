@@ -1,12 +1,14 @@
+import { UsersApiClient } from '@/lib/api/users.ts';
+import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
+
 import { useState } from 'react';
+
 import { useNavigate } from 'react-router-dom';
 
 import { ProgressTracker } from './progress-tracker.tsx';
+import { CompletionStep } from './steps/completion-step';
 import { PersonalInfoStep } from './steps/personal-info-step';
 import { TechnicalPreferencesStep } from './steps/technical-preferences-step.tsx';
-import { CompletionStep } from './steps/completion-step';
-import { UsersApiClient } from '@/lib/api/users.ts';
-import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
 
 export default function Onboarding() {
   const navigate = useNavigate();

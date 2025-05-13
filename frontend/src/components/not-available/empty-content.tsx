@@ -1,7 +1,8 @@
-import { MapPin, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+
 import { motion } from 'framer-motion';
+import { MapPin, Plus } from 'lucide-react';
 
 interface EmptyContentProps {
   title?: string;

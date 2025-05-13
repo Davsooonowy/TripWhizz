@@ -1,13 +1,13 @@
-import type React from 'react';
-import { useState } from 'react';
-import { User, ArrowRight, Camera } from 'lucide-react';
-import { ImageCropper } from '@/components/util/image-cropper';
-
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ImageCropper } from '@/components/util/image-cropper';
 
+import type React from 'react';
+import { useState } from 'react';
+
+import { ArrowRight, Camera, User } from 'lucide-react';
 import { z } from 'zod';
 
 interface PersonalInfoStepProps {

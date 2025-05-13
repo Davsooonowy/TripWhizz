@@ -1,7 +1,9 @@
-import './App.css';
-import { Outlet } from 'react-router-dom';
 import { useDarkMode } from '@/components/util/dark-mode-provider.tsx';
 import { TripProvider } from '@/components/util/trip-context';
+
+import { Outlet } from 'react-router-dom';
+
+import './App.css';
 
 function App() {
   const { isDarkMode } = useDarkMode();

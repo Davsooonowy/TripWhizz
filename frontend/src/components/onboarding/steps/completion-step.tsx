@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
-import { CheckCircle, Plane } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+
+import { useEffect, useState } from 'react';
+
+import { CheckCircle, Plane } from 'lucide-react';
 import Confetti from 'react-confetti';
 import { useWindowSize } from 'react-use';
 

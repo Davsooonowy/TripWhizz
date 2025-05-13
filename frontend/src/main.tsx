@@ -1,17 +1,20 @@
+import { AppLoader } from '@/components/ui/app-loader';
+import { Toaster } from '@/components/ui/toaster';
+import { DarkModeProvider } from '@/components/util/dark-mode-provider.tsx';
+import { TripProvider } from '@/components/util/trip-context';
+import { UsersApiClient } from '@/lib/api/users.ts';
+import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
+
 import React, { StrictMode, Suspense } from 'react';
+
 import { createRoot } from 'react-dom/client';
-import './index.css';
 import {
-  createBrowserRouter,
   RouterProvider,
+  createBrowserRouter,
   redirect,
 } from 'react-router-dom';
-import { DarkModeProvider } from '@/components/util/dark-mode-provider.tsx';
-import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
-import { UsersApiClient } from '@/lib/api/users.ts';
-import { Toaster } from '@/components/ui/toaster';
-import { AppLoader } from '@/components/ui/app-loader';
-import { TripProvider } from '@/components/util/trip-context';
+
+import './index.css';
 
 const LoginPage = React.lazy(() => import('@/pages/login'));
 const NotFound = React.lazy(() => import('./pages/not-found'));

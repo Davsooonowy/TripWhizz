@@ -1,51 +1,33 @@
-import type * as React from 'react';
-import {
-  Calendar,
-  CheckSquare,
-  DollarSign,
-  Map,
-  MoonIcon as IconMoon,
-  SunIcon as IconSun,
-  Plane,
-  Palmtree,
-  Mountain,
-  Building2,
-  Tent,
-  Ship,
-  Train,
-  Car,
-} from 'lucide-react';
-
 import { NavMain } from '@/components/navigation/nav-main.tsx';
 import { NavUser } from '@/components/navigation/nav-user.tsx';
+import { TripCompanions } from '@/components/navigation/trip-companions';
 import { TripSwitcher } from '@/components/navigation/trip-switcher.tsx';
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarHeader,
-  SidebarRail,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
 } from '@/components/ui/sidebar.tsx';
 import { useDarkMode } from '@/components/util/dark-mode-provider.tsx';
-import { TripCompanions } from '@/components/navigation/trip-companions';
 import { useTripContext } from '@/components/util/trip-context';
 
-const iconMap: Record<string, React.ElementType> = {
-  plane: Plane,
-  beach: Palmtree,
-  mountain: Mountain,
-  city: Building2,
-  camping: Tent,
-  cruise: Ship,
-  train: Train,
-  'road trip': Car,
-};
+import type * as React from 'react';
+
+import {
+  Calendar,
+  CheckSquare,
+  DollarSign,
+  MoonIcon as IconMoon,
+  SunIcon as IconSun,
+  Map,
+} from 'lucide-react';
 
 const data = {
   navMain: [

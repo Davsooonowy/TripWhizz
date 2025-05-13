@@ -117,8 +117,7 @@ export class UsersApiClient extends BaseApiClient {
         String(userData.onboarding_complete),
       );
 
-    // @ts-ignore
-    if (userData.avatar instanceof File) {
+    if ((userData.avatar as any) instanceof File) {
       formData.append('avatar', userData.avatar);
     }
 
