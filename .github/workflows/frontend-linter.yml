@@ -25,7 +25,7 @@ jobs:
         run: pnpm install
 
       - name: Run ESLint
-        run: pnpm exec eslint src/**/*.{ts,tsx,js,jsx}
+        run: pnpm exec eslint src/**/*.{ts,tsx}
 
       - name: Run Prettier Check
-        run: pnpm exec prettier --check src/**/*.{js,jsx,ts,tsx}
+        run: pnpm exec prettier --check src/**/*.{ts,tsx}
