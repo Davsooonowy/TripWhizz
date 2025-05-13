@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Bell, Check, User } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,20 +10,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/use-toast';
 import { getInitials } from '@/components/util/avatar-utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
-  NotificationsApiClient,
   type Notification,
+  NotificationsApiClient,
 } from '@/lib/api/notifications';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
+
+import { useEffect, useState } from 'react';
+
 import { formatDistanceToNow } from 'date-fns';
+import { Bell, Check, User } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 export function NotificationDropdown() {
   const [notifications, setNotifications] = useState<Notification[]>([]);

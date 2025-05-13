@@ -1,36 +1,6 @@
 'use client';
 
-import type * as React from 'react';
-import { useState, useRef, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ArrowLeft,
-  ArrowRight,
-  Plus,
-  GripVertical,
-  Bed,
-  Car,
-  Plane,
-  Utensils,
-  MapPin,
-  Camera,
-  Ticket,
-  Ship,
-  Train,
-  Palmtree,
-  Trash2,
-  Edit,
-  Save,
-  Info,
-  CheckCircle,
-  Check,
-  AlertCircle,
-  X,
-  BookmarkIcon,
-} from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
-
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -39,25 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
-import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import {
   Dialog,
   DialogContent,
@@ -66,10 +18,58 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useToast } from '@/components/ui/use-toast';
-
 import { TripsApiClient } from '@/lib/api/trips';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
+import { cn } from '@/lib/utils';
+
+import type * as React from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  Bed,
+  BookmarkIcon,
+  Camera,
+  Car,
+  Check,
+  CheckCircle,
+  Edit,
+  GripVertical,
+  Info,
+  MapPin,
+  Palmtree,
+  Plane,
+  Plus,
+  Save,
+  Ship,
+  Ticket,
+  Train,
+  Trash2,
+  Utensils,
+  X,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const stageCategories = [
   {
@@ -186,7 +186,7 @@ export default function TripStagesBuilder({
         if (savedStages && savedStages.length > 0) {
           setHasSavedData(true);
         }
-      } catch (e) {
+      } catch {
         console.error('Error parsing saved trip data:', e);
       }
     }
@@ -264,7 +264,7 @@ export default function TripStagesBuilder({
       });
 
       setHasSavedData(true);
-    } catch (e) {
+    } catch {
       toast({
         title: 'Error saving progress',
         description: 'Please try again',
@@ -293,7 +293,7 @@ export default function TripStagesBuilder({
           duration: 3000,
         });
       }
-    } catch (e) {
+    } catch {
       toast({
         title: 'Error loading saved progress',
         description: 'Could not restore your previous work',
@@ -522,7 +522,7 @@ export default function TripStagesBuilder({
     }
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
+  const handleTouchEnd = () => {
     if (
       draggedStage === null ||
       dragItem.current === null ||

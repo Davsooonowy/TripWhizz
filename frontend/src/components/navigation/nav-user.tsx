@@ -1,4 +1,3 @@
-import { Bell, ChevronsUpDown, LogOut, Settings2, Users } from 'lucide-react';
 import {
   Avatar,
   AvatarFallback,
@@ -19,12 +18,15 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar.tsx';
-import { useEffect, useState } from 'react';
+import { getInitials } from '@/components/util/avatar-utils';
 import { type User, UsersApiClient } from '@/lib/api/users.ts';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
+
+import { useEffect, useState } from 'react';
+
+import { Bell, ChevronsUpDown, LogOut, Settings2, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import { getInitials } from '@/components/util/avatar-utils';
 
 export function NavUser() {
   const { isMobile } = useSidebar();

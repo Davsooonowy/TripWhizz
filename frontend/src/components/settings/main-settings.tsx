@@ -1,8 +1,16 @@
-import type React from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { useDarkMode } from '@/components/util/dark-mode-provider';
+import { UsersApiClient } from '@/lib/api/users';
+import type { User as UserType } from '@/lib/api/users';
+import { authenticationProviderInstance } from '@/lib/authentication-provider';
 
+import type React from 'react';
 import { useEffect, useState } from 'react';
+
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
 import {
   Bell,
   ChevronRight,
@@ -17,16 +25,8 @@ import {
   Shield,
   Sun,
 } from 'lucide-react';
-
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-import { useDarkMode } from '@/components/util/dark-mode-provider';
-import { authenticationProviderInstance } from '@/lib/authentication-provider';
+import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
-import { UsersApiClient } from '@/lib/api/users';
-import type { User as UserType } from '@/lib/api/users';
 
 export default function MainSettings() {
   const { isDarkMode, toggleDarkMode } = useDarkMode();

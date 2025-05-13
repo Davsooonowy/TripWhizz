@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import WelcomeDialog from '@/components/onboarding/welcome-dialog';
 import Onboarding from '@/components/onboarding/onboarding';
+import WelcomeDialog from '@/components/onboarding/welcome-dialog';
+
+import { useState } from 'react';
 
 export default function OnboardingPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(true);

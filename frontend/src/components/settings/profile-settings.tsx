@@ -1,15 +1,6 @@
-import type React from 'react';
-
-import { useEffect, useState, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { UsersApiClient, type User } from '@/lib/api/users';
-import { authenticationProviderInstance } from '@/lib/authentication-provider';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Card,
   CardContent,
@@ -19,18 +10,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
-  Camera,
-  Check,
-  Loader2,
-  Mail,
-  UserIcon,
-  X,
-  Lock,
-  AlertCircle,
-} from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
-import { ToastAction } from '@/components/ui/toast';
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -39,12 +18,34 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ImageCropper } from '@/components/util/image-cropper';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ToastAction } from '@/components/ui/toast';
+import { toast } from '@/components/ui/use-toast';
 import { getInitials } from '@/components/util/avatar-utils';
+import { ImageCropper } from '@/components/util/image-cropper';
+import { type User, UsersApiClient } from '@/lib/api/users';
+import { authenticationProviderInstance } from '@/lib/authentication-provider';
+
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import { motion } from 'framer-motion';
+import {
+  AlertCircle,
+  Camera,
+  Check,
+  Loader2,
+  Lock,
+  Mail,
+  UserIcon,
+  X,
+} from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
+import { z } from 'zod';
 
 const passwordResetSchema = z
   .object({

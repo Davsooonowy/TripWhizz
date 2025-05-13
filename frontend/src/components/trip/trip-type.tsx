@@ -1,39 +1,31 @@
-import type React from 'react';
-
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Lock,
-  Users,
-  ArrowRight,
-  Globe,
-  UserPlus,
-  MessageSquare,
-  Calendar,
-  Map,
-  CheckCircle2,
-  ArrowLeft,
-  Clock,
-  Compass,
-  Share2,
-  UserCheck,
-} from 'lucide-react';
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+
+import type React from 'react';
+import { useState } from 'react';
+
+import {
+  ArrowLeft,
+  ArrowRight,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Compass,
+  Globe,
+  Lock,
+  Map,
+  MessageSquare,
+  Share2,
+  UserCheck,
+  UserPlus,
+  Users,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function TripType() {
-  const navigate = useNavigate();
   const [selectedOption, setSelectedOption] = useState<
     'private' | 'public' | null
   >(null);
-
-  const handleContinue = () => {
-    if (selectedOption) {
-      navigate('/trip/new');
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/5 pb-20">

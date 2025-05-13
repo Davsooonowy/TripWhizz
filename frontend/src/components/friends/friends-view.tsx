@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -9,29 +9,31 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/components/ui/use-toast';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/components/ui/use-toast';
 import { getInitials } from '@/components/util/avatar-utils';
 import { FriendsApiClient } from '@/lib/api/friends';
+import type { FriendRequest } from '@/lib/api/friends';
+import type { User } from '@/lib/api/users';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
+
+import { useEffect, useState } from 'react';
+
+import { motion } from 'framer-motion';
 import {
-  Search,
-  UserPlus,
-  Users,
-  Clock,
-  Check,
-  X,
-  UserMinus,
   AlertCircle,
+  Check,
+  Clock,
+  Search,
   Send,
   UserCheck,
+  UserMinus,
+  UserPlus,
+  Users,
+  X,
 } from 'lucide-react';
-import type { User } from '@/lib/api/users';
-import type { FriendRequest } from '@/lib/api/friends';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function FriendsView() {

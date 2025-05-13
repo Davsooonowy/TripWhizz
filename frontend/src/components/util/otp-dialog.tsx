@@ -1,4 +1,3 @@
-import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -6,12 +5,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { OTPInput, SlotProps } from 'input-otp';
-import { useEffect, useRef, useState } from 'react';
-import { KeyRound } from 'lucide-react';
-import PropTypes from 'prop-types';
 import { UsersApiClient } from '@/lib/api/users.ts';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
+import { cn } from '@/lib/utils';
+
+import { useEffect, useRef, useState } from 'react';
+
+import { OTPInput, SlotProps } from 'input-otp';
+import { KeyRound } from 'lucide-react';
+import PropTypes from 'prop-types';
 
 interface OtpDialogProps {
   isOpen: boolean;

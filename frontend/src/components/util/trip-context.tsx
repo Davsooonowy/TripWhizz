@@ -1,7 +1,8 @@
+import { type TripData, TripsApiClient } from '@/lib/api/trips';
+import { authenticationProviderInstance } from '@/lib/authentication-provider';
+
 import type React from 'react';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { TripsApiClient, type TripData } from '@/lib/api/trips';
-import { authenticationProviderInstance } from '@/lib/authentication-provider';
 
 interface TripContextType {
   trips: TripData[];

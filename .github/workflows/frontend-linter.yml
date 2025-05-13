@@ -4,7 +4,7 @@ on:
       - main
 
 jobs:
-  prettier:
+  lint:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -19,10 +19,13 @@ jobs:
           node-version: 22
 
       - name: Setup pnpm
-        run: npm install -g pnpm
+F        run: npm install -g pnpm
 
       - name: Install Dependencies
         run: pnpm install
 
+      - name: Run ESLint
+        run: pnpm exec eslint src/**/*.{ts,tsx,js,jsx}
+
       - name: Run Prettier Check
-        run: pnpm exec prettier --check src
+        run: pnpm exec prettier --check src/**/*.{js,jsx,ts,tsx}

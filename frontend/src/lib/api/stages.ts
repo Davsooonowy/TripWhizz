@@ -1,5 +1,5 @@
-import { API_URL } from '@/lib/config.ts';
 import { BaseApiClient } from '@/lib/api/base.ts';
+import { API_URL } from '@/lib/config.ts';
 
 const STAGE_API_URL = `${API_URL}/trips/stage`;
 

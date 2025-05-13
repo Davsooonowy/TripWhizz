@@ -1,26 +1,4 @@
-import type * as React from 'react';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import {
-  ArrowLeft,
-  ArrowRight,
-  Plane,
-  Palmtree,
-  Mountain,
-  Building2,
-  Tent,
-  Ship,
-  Train,
-  Car,
-  MapPin,
-  UserPlus,
-  ShieldCheck,
-  Check,
-  X,
-  Info,
-} from 'lucide-react';
-
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -29,18 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { DatePickerWithRange } from '@/components/ui/date-range-picker';
-import { cn } from '@/lib/utils';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Badge } from '@/components/ui/badge';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import {
   Command,
   CommandEmpty,
@@ -49,6 +15,16 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
+import { DatePickerWithRange } from '@/components/ui/date-range-picker';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Tooltip,
   TooltipContent,
@@ -57,6 +33,31 @@ import {
 } from '@/components/ui/tooltip';
 import { TripsApiClient } from '@/lib/api/trips';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
+import { cn } from '@/lib/utils';
+
+import type * as React from 'react';
+import { useState } from 'react';
+
+import { motion } from 'framer-motion';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Building2,
+  Car,
+  Check,
+  Info,
+  MapPin,
+  Mountain,
+  Palmtree,
+  Plane,
+  ShieldCheck,
+  Ship,
+  Tent,
+  Train,
+  UserPlus,
+  X,
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const tripIcons = [
   { icon: Plane, name: 'Plane' },

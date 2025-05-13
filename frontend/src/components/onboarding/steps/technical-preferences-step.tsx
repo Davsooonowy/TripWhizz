@@ -1,17 +1,5 @@
-import type React from 'react';
-import {
-  Bell,
-  ArrowLeft,
-  ArrowRight,
-  Sun,
-  Moon,
-  Unlock,
-  Lock,
-} from 'lucide-react';
-
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
@@ -21,6 +9,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+
+import type React from 'react';
+
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bell,
+  Lock,
+  Moon,
+  Sun,
+  Unlock,
+} from 'lucide-react';
 
 interface TechnicalPreferencesStepProps {
   formData: {

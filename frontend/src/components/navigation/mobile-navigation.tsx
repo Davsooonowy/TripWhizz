@@ -1,29 +1,31 @@
-import type React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import {
-  Home,
-  Map,
-  Plus,
-  Settings,
-  Users,
-  FileText,
-  DollarSign,
-  Bell,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-  SheetClose,
 } from '@/components/ui/sheet';
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { NotificationsApiClient } from '@/lib/api/notifications';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
+import { cn } from '@/lib/utils';
+
+import type React from 'react';
+import { useEffect, useState } from 'react';
+
+import { motion } from 'framer-motion';
+import {
+  Bell,
+  DollarSign,
+  FileText,
+  Home,
+  Map,
+  Plus,
+  Settings,
+  Users,
+} from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 
 export function MobileNavigation() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);

@@ -1,9 +1,11 @@
 import { Button } from '@/components/ui/button';
-import { MapPin, PlaneTakeoff, Users, ArrowRight } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { useState } from 'react';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Card } from '@/components/ui/card';
+
+import { useState } from 'react';
+
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { motion } from 'framer-motion';
+import { ArrowRight, MapPin, PlaneTakeoff, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Start() {

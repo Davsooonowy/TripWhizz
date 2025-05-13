@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
-import { SubmitHandler, useForm } from 'react-hook-form';
-import { useNavigate, useParams } from 'react-router-dom';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { resetPasswordSchema } from '@/components/util/form-schemas.ts';
-import { UsersApiClient } from '@/lib/api/users.ts';
-import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
 import { FormField } from '@/components/auth/form-field.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { toast } from '@/components/ui/use-toast';
-import { Check } from 'lucide-react';
+import { resetPasswordSchema } from '@/components/util/form-schemas.ts';
 import { calculatePasswordStrength } from '@/components/util/password-utils.ts';
+import { UsersApiClient } from '@/lib/api/users.ts';
+import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
+
+import React, { useState } from 'react';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Check } from 'lucide-react';
+import { SubmitHandler, useForm } from 'react-hook-form';
+import { useNavigate, useParams } from 'react-router-dom';
 
 interface FormData {
   newPassword: string;

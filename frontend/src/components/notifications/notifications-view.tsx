@@ -1,15 +1,5 @@
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { formatDistanceToNow } from 'date-fns';
-import { Bell, Check, User, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { getInitials } from '@/components/util/avatar-utils';
-import { useToast } from '@/components/ui/use-toast';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -17,12 +7,22 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/components/ui/use-toast';
+import { getInitials } from '@/components/util/avatar-utils';
 import {
-  NotificationsApiClient,
   type Notification,
+  NotificationsApiClient,
 } from '@/lib/api/notifications';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
+
+import { useEffect, useState } from 'react';
+
+import { formatDistanceToNow } from 'date-fns';
+import { motion } from 'framer-motion';
+import { ArrowLeft, Bell, Check, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function NotificationsView() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
