@@ -1,19 +1,19 @@
-from django.db import models
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db import models
 
 User = get_user_model()
 
 
 class Trip(models.Model):
     TRIP_TYPE_CHOICES = [
-        ('private', 'Private'),
-        ('public', 'Public'),
+        ("private", "Private"),
+        ("public", "Public"),
     ]
 
     INVITE_PERMISSION_CHOICES = [
-        ('admin-only', 'Admin Only'),
-        ('members-can-invite', 'Members Can Invite'),
+        ("admin-only", "Admin Only"),
+        ("members-can-invite", "Members Can Invite"),
     ]
 
     name = models.CharField(max_length=255)
@@ -21,33 +21,27 @@ class Trip(models.Model):
     description = models.TextField(blank=True, null=True)
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
-    trip_type = models.CharField(choices=TRIP_TYPE_CHOICES, default='private')
+    trip_type = models.CharField(choices=TRIP_TYPE_CHOICES, default="private")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     icon = models.CharField(max_length=50, blank=True, null=True)
     icon_color = models.CharField(max_length=50, blank=True, null=True)
     owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='trips'
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="trips"
     )
     participants = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        related_name='participating_trips',
-        blank=True
+        settings.AUTH_USER_MODEL, related_name="participating_trips", blank=True
     )
     tags = models.JSONField(default=list, blank=True)
     invite_permission = models.CharField(
-        max_length=50,
-        choices=INVITE_PERMISSION_CHOICES,
-        default='admin-only'
+        max_length=50, choices=INVITE_PERMISSION_CHOICES, default="admin-only"
     )
 
     def __str__(self):
         return self.name
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
 
 
 class Stage(models.Model):
@@ -57,11 +51,7 @@ class Stage(models.Model):
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     order = models.PositiveIntegerField(default=0)
-    trip = models.ForeignKey(
-        Trip,
-        on_delete=models.CASCADE,
-        related_name='stages'
-    )
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="stages")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -72,7 +62,7 @@ class Stage(models.Model):
         return f"{self.name} - {self.trip.name}"
 
     class Meta:
-        ordering = ['trip', 'order']
+        ordering = ["trip", "order"]
 
 
 class StageElement(models.Model):
@@ -80,14 +70,9 @@ class StageElement(models.Model):
     description = models.TextField(blank=True, null=True)
     url = models.URLField(blank=True, null=True)
     # image = models.ImageField(upload_to=upload_path, blank=True, null=True)
-    likes = models.PositiveIntegerField(default=0)
-    dislikes = models.PositiveIntegerField(default=0)
+    averageReaction = models.FloatField(blank=True, null=True)
 
-    stage = models.ForeignKey(
-        Stage,
-        on_delete=models.CASCADE,
-        related_name='elements'
-    )
+    stage = models.ForeignKey(Stage, on_delete=models.CASCADE, related_name="elements")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -102,11 +87,11 @@ class StageElement(models.Model):
         return f"{self.name} - {self.stage.name}"
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
 
 
 class StageElementReaction(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     stage_element = models.ForeignKey(StageElement, on_delete=models.CASCADE)
-    reaction = models.CharField(max_length=10, choices=[('like', 'Like'), ('dislike', 'Dislike')])
+    reaction = models.IntegerField(choices=[(i, str(i)) for i in range(1, 6)])
     created_at = models.DateTimeField(auto_now_add=True)

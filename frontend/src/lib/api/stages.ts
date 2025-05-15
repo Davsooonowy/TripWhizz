@@ -10,6 +10,7 @@ export interface StageElement {
   url?: string;
   image?: string;
   stage: number;
+  averageReaction?: number;
 }
 
 export class StagesApiClient extends BaseApiClient {
@@ -57,7 +58,7 @@ export class StagesApiClient extends BaseApiClient {
     return await response.json();
   }
 
-  async reactToStageElement(elementId: number, reaction: 'like' | 'dislike') {
+  async reactToStageElement(elementId: number, reaction: number) {
     const response = await fetch(
       `${STAGE_API_URL}/element/${elementId}/react/`,
       {

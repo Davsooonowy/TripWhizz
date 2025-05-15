@@ -20,7 +20,7 @@ import { authenticationProviderInstance } from '@/lib/authentication-provider.ts
 
 import React, { useEffect, useState } from 'react';
 
-import { Edit, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { Edit } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 
 import { EditStageElementModal } from './edit-stage-element-modal.tsx';
@@ -34,6 +34,9 @@ export default function StageDetails() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [elements, setElements] = useState<StageElement[]>([]);
+  const [unreactionedElements, setUnreactionedElements] = useState<
+    StageElement[]
+  >([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -45,6 +48,9 @@ export default function StageDetails() {
         );
 
         setElements(fetchedElements);
+        setUnreactionedElements(
+          fetchedElements.filter((element) => !element.userReaction),
+        );
       } catch {
         setError('Error loading stage elements. Please try again.');
       }
@@ -103,9 +109,6 @@ export default function StageDetails() {
 
   const handleReaction = async (id: number, reaction: 'like' | 'dislike') => {
     try {
-      const currentElement = elements.find((element) => element.id === id);
-      const newReaction =
-        currentElement?.userReaction === reaction ? null : reaction;
       const apiClient = new StagesApiClient(authenticationProviderInstance);
       const response = await apiClient.reactToStageElement(id, reaction);
 
@@ -114,12 +117,16 @@ export default function StageDetails() {
           element.id === id
             ? {
                 ...element,
-                likes: response.likes,
-                dislikes: response.dislikes,
-                userReaction: newReaction,
+                averageReaction: response.averageReaction,
+                userReaction:
+                  element.userReaction === reaction ? null : reaction,
               }
             : element,
         ),
+      );
+
+      setUnreactionedElements((prev) =>
+        prev.filter((element) => element.id !== id),
       );
       setError(null);
     } catch {
@@ -190,6 +197,50 @@ export default function StageDetails() {
     }
   }, [error]);
 
+  if (unreactionedElements.length > 0) {
+    const currentElement = unreactionedElements[0];
+
+    return (
+      <div className="container max-w-4xl mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold mb-6">React to Stage Elements</h1>
+        <div className="p-4 border rounded-md shadow-md">
+          <h2 className="text-lg font-bold">{currentElement.name}</h2>
+          <p className="text-sm text-muted-foreground">
+            {currentElement.description}
+          </p>
+          {currentElement.url && (
+            <a
+              href={currentElement.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-400 break-words"
+            >
+              {currentElement.url}
+            </a>
+          )}
+          <div className="flex justify-center gap-2 mt-4">
+            {[1, 2, 3, 4, 5].map((value) => (
+              <Button
+                key={value}
+                variant={
+                  currentElement.userReaction === value ? 'default' : 'outline'
+                }
+                onClick={() => handleReaction(currentElement.id, value)}
+              >
+                {value}
+              </Button>
+            ))}
+          </div>
+        </div>
+        {error && (
+          <div className="p-4 bg-red-100 text-red-500 rounded-md mt-4">
+            {error}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="container max-w-4xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">{stageName} Details</h1>
@@ -242,63 +293,42 @@ export default function StageDetails() {
                           variant="secondary"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          Likes: {element.likes}
+                          Average Rating:{' '}
+                          {element.averageReaction
+                            ? element.averageReaction.toFixed(1)
+                            : 'N/A'}
                         </Badge>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>
-                          {Array.isArray(element.likesUsers) &&
-                          element.likesUsers.length > 0
-                            ? element.likesUsers.join(', ')
-                            : 'No likes yet'}
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Badge
-                          variant="secondary"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          Dislikes: {element.dislikes}
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>
-                          {Array.isArray(element.disLikesUsers) &&
-                          element.dislikesUsers.length > 0
-                            ? element.dislikesUsers.join(', ')
-                            : 'No dislikes yet'}
-                        </p>
+                        <ul className="text-sm">
+                          {element.reactions && element.reactions.length > 0 ? (
+                            element.reactions.map((reaction) => (
+                              <li key={reaction.userId}>
+                                {reaction.userName}: {reaction.reaction}
+                              </li>
+                            ))
+                          ) : (
+                            <li>No reactions yet.</li>
+                          )}
+                        </ul>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 </div>
-                <div className="flex gap-2 justify-center sm:justify-end mt-2">
-                  <Button
-                    variant={
-                      element.userReaction === 'like' ? 'default' : 'outline'
-                    }
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleReaction(element.id, 'like');
-                    }}
-                  >
-                    <ThumbsUp className="w-4 h-4" /> Like
-                  </Button>
-                  <Button
-                    variant={
-                      element.userReaction === 'dislike'
-                        ? 'destructive'
-                        : 'outline'
-                    }
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleReaction(element.id, 'dislike');
-                    }}
-                  >
-                    <ThumbsDown className="w-4 h-4" /> Dislike
-                  </Button>
+                <div className="flex justify-center gap-2 mt-4">
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <Button
+                      key={value}
+                      variant={
+                        element.userReaction === value ? 'default' : 'outline'
+                      }
+                      onClick={(e) => {
+                        e.stopPropagation(), handleReaction(element.id, value);
+                      }}
+                    >
+                      {value}
+                    </Button>
+                  ))}
                 </div>
               </CardFooter>
               <Button
