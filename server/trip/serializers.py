@@ -6,6 +6,22 @@ from .models import Trip, Stage, StageElement
 User = get_user_model()
 
 
+class UserBasicSerializer(serializers.ModelSerializer):
+    avatar_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'avatar_url']
+
+    def get_avatar_url(self, obj):
+        if obj.avatar and hasattr(obj.avatar, 'url'):
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.avatar.url)
+            return obj.avatar.url
+        return None
+
+
 class StageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stage
@@ -44,9 +60,11 @@ class StageListSerializer(serializers.ModelSerializer):
 
 class TripSerializer(serializers.ModelSerializer):
     stages = StageListSerializer(many=True, read_only=True)
-    participants = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=User.objects.all(), required=False
+    participants = UserBasicSerializer(many=True, read_only=True)
+    participants_ids = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=User.objects.all(), required=False, write_only=True, source='participants'
     )
+    owner = UserBasicSerializer(read_only=True)
     tags = serializers.JSONField(required=False)
 
     class Meta:
@@ -61,6 +79,7 @@ class TripSerializer(serializers.ModelSerializer):
             "trip_type",
             "owner",
             "participants",
+            "participants_ids",
             "stages",
             "created_at",
             "updated_at",
@@ -72,9 +91,26 @@ class TripSerializer(serializers.ModelSerializer):
         read_only_fields = ["created_at", "updated_at", "owner"]
 
     def create(self, validated_data):
-        # Set the owner to the current user
+        participants_data = validated_data.pop('participants', [])
         validated_data["owner"] = self.context["request"].user
-        return super().create(validated_data)
+        trip = super().create(validated_data)
+
+        if participants_data:
+            trip.participants.set(participants_data)
+
+        trip.participants.add(self.context["request"].user)
+
+        return trip
+
+    def update(self, instance, validated_data):
+        participants_data = validated_data.pop('participants', None)
+        trip = super().update(instance, validated_data)
+
+        if participants_data is not None:
+            trip.participants.set(participants_data)
+            trip.participants.add(trip.owner)
+
+        return trip
 
 
 class TripListSerializer(serializers.ModelSerializer):
