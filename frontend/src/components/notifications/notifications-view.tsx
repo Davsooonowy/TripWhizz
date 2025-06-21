@@ -1,289 +1,229 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useToast } from '@/components/ui/use-toast';
-import { getInitials } from '@/components/util/avatar-utils';
-import {
-  type Notification,
-  NotificationsApiClient,
-} from '@/lib/api/notifications';
-import { authenticationProviderInstance } from '@/lib/authentication-provider';
+import { Avatar, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { useToast } from "@/components/ui/use-toast"
+import { TripInvitationDialog } from "@/components/notifications/trip-invitation-dialog"
+import { NotificationsApiClient } from "@/lib/api/notifications"
+import { authenticationProviderInstance } from "@/lib/authentication-provider"
 
-import { useEffect, useState } from 'react';
+import * as React from "react"
 
-import { formatDistanceToNow } from 'date-fns';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Bell, Check, User } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { motion } from "framer-motion"
+import { Bell, Clock, MapPin, Users } from "lucide-react"
+
+interface Notification {
+  id: number
+  title: string
+  message: string
+  notification_type: string
+  is_read: boolean
+  created_at: string
+  sender?: {
+    id: number
+    username: string
+    first_name?: string
+    last_name?: string
+    avatar_url?: string
+  }
+  related_object_id?: number
+}
 
 export default function NotificationsView() {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [unreadOnly, setUnreadOnly] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  const [notifications, setNotifications] = React.useState<Notification[]>([])
+  const [isLoading, setIsLoading] = React.useState(true)
+  const [selectedInvitation, setSelectedInvitation] = React.useState<Notification | null>(null)
+  const [invitationDialogOpen, setInvitationDialogOpen] = React.useState(false)
+  const { toast } = useToast()
 
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
+  React.useEffect(() => {
+    fetchNotifications()
+  }, [])
 
   const fetchNotifications = async () => {
     try {
-      setIsLoading(true);
-      const notificationsApiClient = new NotificationsApiClient(
-        authenticationProviderInstance,
-      );
-      const notificationsData = await notificationsApiClient.getNotifications();
-      setNotifications(notificationsData);
-    } catch {
+      const notificationsApiClient = new NotificationsApiClient(authenticationProviderInstance)
+      const data = await notificationsApiClient.getNotifications()
+      setNotifications(data)
+    } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to load notifications. Please try again.',
-        variant: 'destructive',
-      });
+        title: "Error",
+        description: "Failed to load notifications.",
+        variant: "destructive",
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
-  const handleMarkAsRead = async (notificationId: number) => {
+  const markAsRead = async (notificationId: number) => {
     try {
-      const notificationsApiClient = new NotificationsApiClient(
-        authenticationProviderInstance,
-      );
-      await notificationsApiClient.markAsRead(notificationId);
+      const notificationsApiClient = new NotificationsApiClient(authenticationProviderInstance)
+      await notificationsApiClient.markAsRead(notificationId)
 
       setNotifications((prev) =>
         prev.map((notification) =>
-          notification.id === notificationId
-            ? { ...notification, is_read: true }
-            : notification,
+          notification.id === notificationId ? { ...notification, is_read: true } : notification,
         ),
-      );
-    } catch {
+      )
+    } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to mark notification as read.',
-        variant: 'destructive',
-      });
+        title: "Error",
+        description: "Failed to mark notification as read.",
+        variant: "destructive",
+      })
     }
-  };
+  }
 
-  const handleMarkAllAsRead = async () => {
-    try {
-      const notificationsApiClient = new NotificationsApiClient(
-        authenticationProviderInstance,
-      );
-      await notificationsApiClient.markAllAsRead();
-
-      setNotifications((prev) =>
-        prev.map((notification) => ({ ...notification, is_read: true })),
-      );
-
-      toast({
-        title: 'Success',
-        description: 'All notifications marked as read',
-      });
-    } catch {
-      toast({
-        title: 'Error',
-        description: 'Failed to mark all notifications as read.',
-        variant: 'destructive',
-      });
+  const handleNotificationClick = async (notification: Notification) => {
+    if (!notification.is_read) {
+      await markAsRead(notification.id)
     }
-  };
 
-  const getNotificationIcon = (type: Notification['notification_type']) => {
+    if (notification.notification_type === "trip_invite") {
+      setSelectedInvitation(notification)
+      setInvitationDialogOpen(true)
+    }
+  }
+
+  const handleInvitationResponse = () => {
+    fetchNotifications()
+  }
+
+  const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'friend_request':
-      case 'friend_accept':
-        return <User className="h-4 w-4 text-blue-500" />;
-      case 'trip_invite':
-      case 'trip_update':
-        return <Bell className="h-4 w-4 text-green-500" />;
-      case 'expense_update':
-        return <Bell className="h-4 w-4 text-amber-500" />;
+      case "trip_invite":
+        return <MapPin className="h-4 w-4 text-blue-500" />
+      case "trip_update":
+        return <Users className="h-4 w-4 text-green-500" />
+      case "friend_request":
+        return <Users className="h-4 w-4 text-purple-500" />
       default:
-        return <Bell className="h-4 w-4 text-primary" />;
+        return <Bell className="h-4 w-4 text-gray-500" />
     }
-  };
+  }
 
-  const getNotificationLink = (notification: Notification) => {
-    switch (notification.notification_type) {
-      case 'friend_request':
-        return '/friends?tab=requests';
-      case 'friend_accept':
-        return '/friends';
-      case 'trip_invite':
-      case 'trip_update':
-        return '/';
-      case 'expense_update':
-        return '/';
-      default:
-        return '/';
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+    if (diffInSeconds < 60) return "Just now"
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
+    return `${Math.floor(diffInSeconds / 86400)}d ago`
+  }
+
+  const getSenderName = (sender?: Notification["sender"]) => {
+    if (!sender) return "System"
+    if (sender.first_name && sender.last_name) {
+      return `${sender.first_name} ${sender.last_name}`
     }
-  };
-
-  const displayedNotifications = unreadOnly
-    ? notifications.filter((notification) => !notification.is_read)
-    : notifications;
-
-  const unreadCount = notifications.filter(
-    (notification) => !notification.is_read,
-  ).length;
+    if (sender.first_name) return sender.first_name
+    return sender.username
+  }
 
   if (isLoading) {
     return (
-      <div className="container mx-auto max-w-4xl px-4 py-8 flex items-center justify-center min-h-[50vh]">
+      <div className="flex items-center justify-center min-h-[400px]">
         <LoadingSpinner size="lg" />
       </div>
-    );
+    )
   }
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-8 pb-20 md:pb-10">
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => navigate(-1)}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-2xl font-bold">Notifications</h1>
-          </div>
-
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setUnreadOnly(!unreadOnly)}
-            >
-              {unreadOnly ? 'Show All' : 'Unread Only'}
-            </Button>
-            {unreadCount > 0 && (
-              <Button variant="ghost" size="sm" onClick={handleMarkAllAsRead}>
-                <Check className="mr-1 h-4 w-4" />
-                Mark all as read
-              </Button>
-            )}
+    <>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Notifications</h1>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Bell className="h-4 w-4" />
+            {notifications.filter((n) => !n.is_read).length} unread
           </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Your Notifications</span>
-              {unreadCount > 0 && (
-                <span className="text-sm font-normal text-muted-foreground">
-                  {unreadCount} unread
-                </span>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[calc(100vh-250px)] pr-4">
-              {displayedNotifications.length > 0 ? (
-                <div className="space-y-1">
-                  {displayedNotifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className={`p-4 rounded-lg transition-colors ${!notification.is_read ? 'bg-muted/50' : 'hover:bg-muted/20'}`}
-                      onClick={() => {
-                        if (!notification.is_read) {
-                          handleMarkAsRead(notification.id);
-                        }
-                        navigate(getNotificationLink(notification));
-                      }}
-                    >
-                      <div className="flex items-start gap-4">
-                        {notification.sender ? (
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage
-                              src={notification.sender.avatar_url || undefined}
-                            />
-                            <AvatarFallback>
-                              {getInitials(
-                                notification.sender.first_name &&
-                                  notification.sender.last_name
-                                  ? `${notification.sender.first_name} ${notification.sender.last_name}`
-                                  : notification.sender.username,
-                              )}
-                            </AvatarFallback>
-                          </Avatar>
-                        ) : (
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                            {getNotificationIcon(
-                              notification.notification_type,
-                            )}
+        {notifications.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Bell className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No notifications</h3>
+              <p className="text-muted-foreground text-center">
+                You're all caught up! New notifications will appear here.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <ScrollArea className="h-[600px]">
+            <div className="space-y-3">
+              {notifications.map((notification, index) => (
+                <motion.div
+                  key={notification.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Card
+                    className={`cursor-pointer transition-all hover:shadow-md ${
+                      !notification.is_read ? "border-primary/50 bg-primary/5" : ""
+                    }`}
+                    onClick={() => handleNotificationClick(notification)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0">
+                          {notification.sender ? (
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage
+                                src={notification.sender.avatar_url || "/placeholder.svg?height=40&width=40"}
+                                alt={getSenderName(notification.sender)}
+                              />
+                            </Avatar>
+                          ) : (
+                            <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                              {getNotificationIcon(notification.notification_type)}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            {getNotificationIcon(notification.notification_type)}
+                            <h4 className="font-semibold text-sm">{notification.title}</h4>
+                            {!notification.is_read && <div className="h-2 w-2 bg-primary rounded-full flex-shrink-0" />}
+                          </div>
+
+                          <p className="text-sm text-muted-foreground mb-2">{notification.message}</p>
+
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            {formatTimeAgo(notification.created_at)}
+                          </div>
+                        </div>
+
+                        {notification.notification_type === "trip_invite" && (
+                          <div className="flex-shrink-0">
+                            <Button size="sm" variant="outline">
+                              View
+                            </Button>
                           </div>
                         )}
-                        <div className="flex-1 space-y-1">
-                          <div className="flex items-center justify-between">
-                            <p className="font-medium leading-none">
-                              {notification.title}
-                            </p>
-                            {!notification.is_read && (
-                              <span className="h-2 w-2 rounded-full bg-primary"></span>
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {notification.message}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(
-                              new Date(notification.created_at),
-                              { addSuffix: true },
-                            )}
-                          </p>
-                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <Bell className="h-12 w-12 text-muted-foreground/30 mb-4" />
-                  <p className="text-muted-foreground text-lg">
-                    No notifications to display
-                  </p>
-                  {unreadOnly && notifications.length > 0 && (
-                    <Button
-                      variant="link"
-                      onClick={() => setUnreadOnly(false)}
-                      className="mt-2"
-                    >
-                      Show all notifications
-                    </Button>
-                  )}
-                </div>
-              )}
-            </ScrollArea>
-          </CardContent>
-          {notifications.length > 0 && (
-            <CardFooter className="flex justify-center border-t py-4">
-              <p className="text-sm text-muted-foreground">
-                You've reached the end of your notifications
-              </p>
-            </CardFooter>
-          )}
-        </Card>
-      </motion.div>
-    </div>
-  );
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </ScrollArea>
+        )}
+      </div>
+
+      <TripInvitationDialog
+        open={invitationDialogOpen}
+        onOpenChange={setInvitationDialogOpen}
+        notification={selectedInvitation}
+        onResponse={handleInvitationResponse}
+      />
+    </>
+  )
 }
