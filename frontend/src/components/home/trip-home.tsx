@@ -1,4 +1,5 @@
 import { EmptyContent } from '@/components/not-available/empty-content';
+import { ParticipantsList } from '@/components/trip/participants-list';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -57,6 +58,7 @@ export default function TripHome() {
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [companionsDialogOpen, setCompanionsDialogOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -73,8 +75,7 @@ export default function TripHome() {
         const details = await tripsApiClient.getTripDetails(selectedTrip.id);
         set_TripDetails(details);
         setStages(details.stages || []);
-      } catch (err) {
-        console.error('Error fetching trip details:', err);
+      } catch {
         setDetailsError('Failed to load trip details. Please try again.');
       } finally {
         setIsLoadingDetails(false);
@@ -82,7 +83,7 @@ export default function TripHome() {
     };
 
     fetchTripDetails();
-  }, [selectedTrip]); // Add selectedTrip as a dependency to re-fetch when it changes
+  }, [selectedTrip]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -172,6 +173,7 @@ export default function TripHome() {
 
   const daysUntilTrip = calculateDaysUntilTrip();
   const tripProgress = calculateTripProgress();
+  const participants = tripDetails?.participants || [];
 
   return (
     <div className="container max-w-4xl mx-auto px-4 py-8 pb-20 md:pb-10">
@@ -283,7 +285,9 @@ export default function TripHome() {
                   <StatCard
                     icon={<Users className="h-5 w-5 text-purple-500" />}
                     label="Companions"
-                    value={tripDetails?.participants_count?.toString() || '0'}
+                    value={participants.length.toString()}
+                    onClick={() => setCompanionsDialogOpen(true)}
+                    clickable
                   />
                   <StatCard
                     icon={<Map className="h-5 w-5 text-green-500" />}
@@ -396,6 +400,15 @@ export default function TripHome() {
           </motion.div>
         </motion.div>
       </AnimatePresence>
+
+      <ParticipantsList
+        open={companionsDialogOpen}
+        onOpenChange={setCompanionsDialogOpen}
+        participants={participants}
+        tripId={selectedTrip?.id}
+        onParticipantsUpdate={refreshTrips}
+        tripOwner={selectedTrip?.owner}
+      />
     </div>
   );
 }
@@ -404,14 +417,20 @@ interface StatCardProps {
   icon: React.ReactNode;
   label: string;
   value: string;
+  onClick?: () => void;
+  clickable?: boolean;
 }
 
-function StatCard({ icon, label, value }: StatCardProps) {
+function StatCard({ icon, label, value, onClick, clickable }: StatCardProps) {
   return (
     <motion.div
-      className="bg-muted/50 rounded-lg p-3 flex flex-col items-center text-center"
-      whileHover={{ scale: 1.05, backgroundColor: 'hsl(var(--muted))' }}
+      className={cn(
+        'bg-muted/50 rounded-lg p-3 flex flex-col items-center text-center',
+        clickable && 'cursor-pointer hover:bg-muted',
+      )}
+      whileHover={clickable ? { scale: 1.05 } : {}}
       transition={{ duration: 0.2 }}
+      onClick={onClick}
     >
       <div className="mb-1">{icon}</div>
       <p className="text-xs text-muted-foreground">{label}</p>

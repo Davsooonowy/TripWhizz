@@ -8,12 +8,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { getInitials } from '@/components/util/avatar-utils';
+import { UserSearchInput } from '@/components/util/user-search-input';
 import { FriendsApiClient } from '@/lib/api/friends';
 import type { FriendRequest } from '@/lib/api/friends';
 import type { User } from '@/lib/api/users';
@@ -23,12 +23,9 @@ import { useEffect, useState } from 'react';
 
 import { motion } from 'framer-motion';
 import {
-  AlertCircle,
   Check,
   Clock,
-  Search,
   Send,
-  UserCheck,
   UserMinus,
   UserPlus,
   Users,
@@ -44,14 +41,11 @@ export default function FriendsView() {
 
   const [activeTab, setActiveTab] = useState(tabFromQuery || 'friends');
   const [friends, setFriends] = useState<User[]>([]);
-  const [searchResults, setSearchResults] = useState<User[]>([]);
   const [friendRequests, setFriendRequests] = useState<{
     sent: FriendRequest[];
     received: FriendRequest[];
   }>({ sent: [], received: [] });
-  const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -99,27 +93,6 @@ export default function FriendsView() {
     fetchFriendsData();
   }, [toast]);
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
-
-    setIsSearching(true);
-    try {
-      const friendsApiClient = new FriendsApiClient(
-        authenticationProviderInstance,
-      );
-      const results = await friendsApiClient.searchUsers(searchQuery);
-      setSearchResults(results);
-    } catch {
-      toast({
-        title: 'Search Failed',
-        description: 'Could not complete the search. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
   const handleSendFriendRequest = async (userId: number) => {
     try {
       const friendsApiClient = new FriendsApiClient(
@@ -131,9 +104,6 @@ export default function FriendsView() {
         ...prev,
         sent: [...prev.sent, request],
       }));
-
-      setSearchResults((prev) => prev.filter((user) => user.id !== userId));
-
       toast({
         title: 'Friend Request Sent',
         description: 'Your friend request has been sent successfully.',
@@ -510,98 +480,11 @@ export default function FriendsView() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search by name or email..."
-                        className="pl-10"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                      />
-                    </div>
-                    <Button
-                      onClick={handleSearch}
-                      disabled={isSearching || !searchQuery.trim()}
-                    >
-                      {isSearching ? (
-                        <LoadingSpinner size="sm" className="mr-2" />
-                      ) : (
-                        <Search className="h-4 w-4 mr-2" />
-                      )}
-                      Search
-                    </Button>
-                  </div>
-
-                  {isSearching ? (
-                    <div className="flex justify-center py-8">
-                      <LoadingSpinner size="md" />
-                    </div>
-                  ) : searchResults.length > 0 ? (
-                    <div className="space-y-3">
-                      {searchResults.map((user) => (
-                        <div
-                          key={user.id}
-                          className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
-                        >
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-10 w-10 rounded-lg">
-                              <AvatarImage
-                                src={user.avatar_url || undefined}
-                                alt={user.username}
-                              />
-                              <AvatarFallback className="rounded-lg">
-                                {getInitials(
-                                  user.first_name && user.last_name
-                                    ? `${user.first_name} ${user.last_name}`
-                                    : user.username,
-                                )}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-medium">
-                                {user.first_name && user.last_name
-                                  ? `${user.first_name} ${user.last_name}`
-                                  : user.username}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                {user.email}
-                              </p>
-                            </div>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleSendFriendRequest(user.id)}
-                          >
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            Add Friend
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : searchQuery ? (
-                    <div className="flex flex-col items-center justify-center py-8">
-                      <AlertCircle className="h-12 w-12 text-muted-foreground/30 mb-4" />
-                      <p className="text-muted-foreground mb-2">
-                        No users found matching "{searchQuery}"
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Try a different search term
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-8">
-                      <UserCheck className="h-12 w-12 text-muted-foreground/30 mb-4" />
-                      <p className="text-muted-foreground mb-2">
-                        Search for users to add as friends
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        You can search by name or email
-                      </p>
-                    </div>
-                  )}
+                  <UserSearchInput
+                    placeholder="Search by name or email..."
+                    onUserSelect={(user) => handleSendFriendRequest(user.id)}
+                    excludeUserIds={friends.map((friend) => friend.id)}
+                  />
                 </div>
               </CardContent>
             </Card>

@@ -108,37 +108,6 @@ const data = {
       ],
     },
   ],
-  companions: [
-    {
-      name: 'Alex Johnson',
-      avatar: '/placeholder.svg?height=40&width=40',
-      color: 'bg-blue-500',
-    },
-    {
-      name: 'Sarah Miller',
-      avatar: '/placeholder.svg?height=40&width=40',
-      color: 'bg-pink-500',
-    },
-    {
-      name: 'James Wilson',
-      avatar: '/placeholder.svg?height=40&width=40',
-      color: 'bg-green-500',
-    },
-    {
-      name: 'Emily Davis',
-      avatar: '/placeholder.svg?height=40&width=40',
-      color: 'bg-purple-500',
-    },
-    {
-      name: 'David Brown',
-      avatar: '/placeholder.svg?height=40&width=40',
-      color: 'bg-amber-500',
-    },
-  ],
-  user: {
-    name: 'John Doe',
-    avatar: '/placeholder.svg?height=40&width=40',
-  },
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -157,7 +126,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroup>
             <SidebarGroupLabel>Trip Companions</SidebarGroupLabel>
             <SidebarGroupContent>
-              <TripCompanions companions={data.companions} />
+              <TripCompanions />
             </SidebarGroupContent>
           </SidebarGroup>
         )}

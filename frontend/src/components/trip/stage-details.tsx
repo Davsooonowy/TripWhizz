@@ -18,7 +18,7 @@ import { StageElement, StagesApiClient } from '@/lib/api/stages.ts';
 import { TripsApiClient } from '@/lib/api/trips.ts';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Edit } from 'lucide-react';
 import { useParams } from 'react-router-dom';
@@ -323,7 +323,8 @@ export default function StageDetails() {
                         element.userReaction === value ? 'default' : 'outline'
                       }
                       onClick={(e) => {
-                        e.stopPropagation(), handleReaction(element.id, value);
+                        e.stopPropagation();
+                        handleReaction(element.id, value);
                       }}
                     >
                       {value}

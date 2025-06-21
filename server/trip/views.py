@@ -1,18 +1,25 @@
 from django.db import transaction
-from django.db.models import Avg
+from django.db.models import Avg, Q
 from rest_framework import status, permissions
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.contrib.auth import get_user_model
+from django.utils import timezone
 
-from .models import Trip, Stage, StageElement, StageElementReaction
+from .models import Trip, Stage, StageElement, StageElementReaction, TripInvitation
 from .serializers import (
     TripSerializer,
     TripListSerializer,
     StageSerializer,
     StageListSerializer,
     StageElementSerializer,
+    TripInvitationSerializer,
 )
+from user_account.models import Notification
+from user_account.utils import send_trip_invitation_email
+
+User = get_user_model()
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
@@ -32,7 +39,9 @@ class TripListView(GenericAPIView):
 
     def get(self, request):
         user = request.user
-        trips = Trip.objects.filter(owner=user)
+        trips = Trip.objects.filter(
+            Q(owner=user) | Q(participants=user)
+        ).distinct()
         serializer = self.get_serializer(trips, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -50,10 +59,18 @@ class TripDetailView(GenericAPIView):
 
     def get_object(self, pk):
         try:
-            trip = Trip.objects.get(pk=pk, owner=self.request.user)
+            trip = Trip.objects.filter(
+                Q(pk=pk) & (Q(owner=self.request.user) | Q(participants=self.request.user))
+            ).distinct().get()
             self.check_object_permissions(self.request, trip)
             return trip
         except Trip.DoesNotExist:
+            return None
+        except Trip.MultipleObjectsReturned:
+            trip = Trip.objects.filter(pk=pk).first()
+            if trip and (trip.owner == self.request.user or trip.participants.filter(id=self.request.user.id).exists()):
+                self.check_object_permissions(self.request, trip)
+                return trip
             return None
 
     def get(self, request, pk):
@@ -67,6 +84,10 @@ class TripDetailView(GenericAPIView):
         trip = self.get_object(pk)
         if not trip:
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if trip.owner != request.user:
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+
         serializer = self.get_serializer(trip, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -77,18 +98,227 @@ class TripDetailView(GenericAPIView):
         trip = self.get_object(pk)
         if not trip:
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if trip.owner != request.user:
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+
         trip.delete()
         return Response(
             {"detail": "Deleted successfully."}, status=status.HTTP_204_NO_CONTENT
         )
 
 
+class TripInviteView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            trip = Trip.objects.filter(
+                Q(pk=pk) & (Q(owner=request.user) | Q(participants=request.user))
+            ).distinct().first()
+            if not trip:
+                return Response(
+                    {"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND
+                )
+        except Trip.DoesNotExist:
+            return Response(
+                {"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if trip.invite_permission == "admin-only" and trip.owner != request.user:
+            return Response(
+                {"detail": "Only trip admin can send invitations."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        invitee_id = request.data.get("invitee_id")
+        if not invitee_id:
+            return Response(
+                {"detail": "invitee_id is required."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            invitee = User.objects.get(id=invitee_id)
+        except User.DoesNotExist:
+            return Response(
+                {"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if trip.participants.filter(id=invitee_id).exists():
+            return Response(
+                {"detail": "User is already a participant."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        existing_invitation = TripInvitation.objects.filter(
+            trip=trip,
+            invitee=invitee,
+            status='pending'
+        ).first()
+
+        if existing_invitation and not existing_invitation.is_expired():
+            return Response(
+                {"detail": "Invitation already sent."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if existing_invitation and existing_invitation.is_expired():
+            existing_invitation.status = 'pending'
+            existing_invitation.inviter = request.user
+            existing_invitation.expires_at = timezone.now() + timezone.timedelta(days=7)
+            existing_invitation.save()
+            invitation = existing_invitation
+        else:
+            invitation = TripInvitation.objects.create(
+                trip=trip,
+                inviter=request.user,
+                invitee=invitee
+            )
+
+        Notification.objects.create(
+            recipient=invitee,
+            sender=request.user,
+            notification_type='trip_invite',
+            title='Trip Invitation',
+            message=f'{request.user.username} invited you to join "{trip.name}"',
+            related_object_id=invitation.id
+        )
+
+        try:
+            send_trip_invitation_email(invitation)
+        except Exception as e:
+            print(f"Failed to send invitation email: {e}")
+
+        serializer = TripInvitationSerializer(invitation, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class TripInvitationResponseView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def put(self, request, pk):
+        try:
+            invitation = TripInvitation.objects.get(pk=pk, invitee=request.user)
+        except TripInvitation.DoesNotExist:
+            return Response(
+                {"detail": "Invitation not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if invitation.is_expired() and invitation.status == 'pending':
+            invitation.status = 'expired'
+            invitation.save()
+
+        if invitation.status == 'expired':
+            return Response(
+                {"detail": "This invitation has expired. Please ask for a new invitation."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if invitation.status != 'pending':
+            return Response(
+                {"detail": "This invitation is no longer available."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        action = request.data.get("action")
+        if action not in ["accept", "reject"]:
+            return Response(
+                {"detail": "Action must be 'accept' or 'reject'."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if action == "accept":
+            invitation.status = "accepted"
+            invitation.trip.participants.add(invitation.invitee)
+
+            existing_participants = invitation.trip.participants.exclude(id=invitation.invitee.id)
+            for participant in existing_participants:
+                Notification.objects.create(
+                    recipient=participant,
+                    sender=invitation.invitee,
+                    notification_type='trip_update',
+                    title='New Trip Member',
+                    message=f'{invitation.invitee.username} joined "{invitation.trip.name}"',
+                    related_object_id=invitation.trip.id
+                )
+        else:
+            invitation.status = "rejected"
+
+        invitation.save()
+
+        serializer = TripInvitationSerializer(invitation, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class TripRemoveParticipantView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, pk, participant_id):
+        try:
+            trip = Trip.objects.filter(pk=pk, owner=request.user).first()
+            if not trip:
+                return Response(
+                    {"detail": "Trip not found or you don't have permission."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        except Trip.DoesNotExist:
+            return Response(
+                {"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        try:
+            participant = User.objects.get(id=participant_id)
+        except User.DoesNotExist:
+            return Response(
+                {"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if not trip.participants.filter(id=participant_id).exists():
+            return Response(
+                {"detail": "User is not a participant of this trip."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if trip.owner.id == participant_id:
+            return Response(
+                {"detail": "Cannot remove the trip owner."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        trip.participants.remove(participant)
+
+        Notification.objects.create(
+            recipient=participant,
+            sender=request.user,
+            notification_type='trip_update',
+            title='Removed from Trip',
+            message=f'You have been removed from "{trip.name}" by {request.user.username}',
+            related_object_id=trip.id
+        )
+
+        remaining_participants = trip.participants.exclude(id=request.user.id)
+        for other_participant in remaining_participants:
+            Notification.objects.create(
+                recipient=other_participant,
+                sender=request.user,
+                notification_type='trip_update',
+                title='Trip Member Removed',
+                message=f'{participant.username} was removed from "{trip.name}"',
+                related_object_id=trip.id
+            )
+
+        return Response(
+            {"detail": f"{participant.username} has been removed from the trip."},
+            status=status.HTTP_200_OK
+        )
+
 class ReorderStagesView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, pk):
         try:
-            trip = Trip.objects.get(pk=pk, owner=request.user)
+            trip = Trip.objects.filter(pk=pk, owner=request.user).first()
+            if not trip:
+                return Response(
+                    {"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND
+                )
         except Trip.DoesNotExist:
             return Response(
                 {"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND
@@ -124,16 +354,26 @@ class StageListView(GenericAPIView):
         user = request.user
         trip_id = request.query_params.get("trip_id")
         if trip_id:
-            stages = Stage.objects.filter(trip__owner=user, trip_id=trip_id)
+            stages = Stage.objects.filter(
+                Q(trip__owner=user) | Q(trip__participants=user),
+                trip_id=trip_id
+            ).distinct()
         else:
-            stages = Stage.objects.filter(trip__owner=user)
+            stages = Stage.objects.filter(
+                Q(trip__owner=user) | Q(trip__participants=user)
+            ).distinct()
         serializer = self.get_serializer(stages, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
         trip_id = request.data.get("trip")
         try:
-            trip = Trip.objects.get(id=trip_id, owner=request.user)
+            trip = Trip.objects.filter(id=trip_id, owner=request.user).first()
+            if not trip:
+                return Response(
+                    {"detail": "Trip not found or you do not have permission."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
         except Trip.DoesNotExist:
             return Response(
                 {"detail": "Trip not found or you do not have permission."},
@@ -155,9 +395,17 @@ class StageDetailView(GenericAPIView):
 
     def get_object(self, pk):
         try:
-            stage = Stage.objects.get(pk=pk, trip__owner=self.request.user)
+            stage = Stage.objects.filter(
+                Q(pk=pk) & (Q(trip__owner=self.request.user) | Q(trip__participants=self.request.user))
+            ).distinct().get()
             return stage
         except Stage.DoesNotExist:
+            return None
+        except Stage.MultipleObjectsReturned:
+            stage = Stage.objects.filter(pk=pk).first()
+            if stage and (stage.trip.owner == self.request.user or stage.trip.participants.filter(
+                    id=self.request.user.id).exists()):
+                return stage
             return None
 
     def get(self, request, pk):
@@ -171,6 +419,10 @@ class StageDetailView(GenericAPIView):
         stage = self.get_object(pk)
         if not stage:
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if stage.trip.owner != request.user:
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+
         serializer = self.get_serializer(stage, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -181,6 +433,10 @@ class StageDetailView(GenericAPIView):
         stage = self.get_object(pk)
         if not stage:
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if stage.trip.owner != request.user:
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+
         stage.delete()
         return Response(
             {"detail": "Deleted successfully."}, status=status.HTTP_204_NO_CONTENT
@@ -192,7 +448,11 @@ class BatchCreateStagesView(APIView):
 
     def post(self, request, pk):
         try:
-            trip = Trip.objects.get(pk=pk, owner=request.user)
+            trip = Trip.objects.filter(pk=pk, owner=request.user).first()
+            if not trip:
+                return Response(
+                    {"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND
+                )
         except Trip.DoesNotExist:
             return Response(
                 {"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND

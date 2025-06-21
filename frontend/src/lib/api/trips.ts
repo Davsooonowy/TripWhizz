@@ -15,6 +15,37 @@ export interface TripStage {
   custom_category_color?: string;
 }
 
+export interface TripParticipant {
+  id: number;
+  username: string;
+  first_name?: string;
+  last_name?: string;
+  email: string;
+  avatar_url?: string;
+  invitation_status?: 'accepted' | 'pending' | 'rejected';
+}
+
+export interface TripOwner {
+  id: number;
+  username: string;
+  first_name?: string;
+  last_name?: string;
+  email: string;
+  avatar_url?: string;
+}
+
+export interface TripInvitation {
+  id: number;
+  trip: number;
+  trip_name: string;
+  inviter: TripOwner;
+  invitee: TripParticipant;
+  status: 'pending' | 'accepted' | 'rejected' | 'expired';
+  created_at: string;
+  updated_at: string;
+  expires_at?: string;
+}
+
 export interface TripData {
   id?: number;
   name: string;
@@ -27,6 +58,11 @@ export interface TripData {
   icon_color?: string;
   tags?: string[];
   invite_permission?: 'admin-only' | 'members-can-invite';
+  owner?: TripOwner;
+  participants?: TripParticipant[];
+  stages?: TripStage[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 export class TripsApiClient extends BaseApiClient {
@@ -117,6 +153,54 @@ export class TripsApiClient extends BaseApiClient {
     }
 
     return true;
+  }
+
+  async inviteToTrip(tripId: number, inviteeId: number) {
+    const response = await fetch(`${TRIP_API_URL}/${tripId}/invite/`, {
+      ...this._requestConfiguration(true),
+      method: 'POST',
+      body: JSON.stringify({ invitee_id: inviteeId }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error HTTP: ${response.status}`);
+    }
+
+    return await response.json();
+  }
+
+  async removeParticipant(tripId: number, participantId: number) {
+    const response = await fetch(
+      `${TRIP_API_URL}/${tripId}/participants/${participantId}/`,
+      {
+        ...this._requestConfiguration(true),
+        method: 'DELETE',
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`Error HTTP: ${response.status}`);
+    }
+
+    return await response.json();
+  }
+
+  async respondToInvitation(invitationId: number, action: 'accept' | 'reject') {
+    const response = await fetch(
+      `${API_URL}/trips/invitation/${invitationId}/respond/`,
+      {
+        ...this._requestConfiguration(true),
+        method: 'PUT',
+        body: JSON.stringify({ action }),
+      },
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || `Error HTTP: ${response.status}`);
+    }
+
+    return await response.json();
   }
 
   async createStages(tripId: number, stages: TripStage[]) {
