@@ -2,25 +2,66 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useSidebar } from "@/components/ui/sidebar"
+import { useToast } from "@/components/ui/use-toast"
 import { cn } from "@/lib/utils"
 import { useTripContext } from "@/components/util/trip-context"
+import { UserSearchInput } from "@/components/util/user-search-input"
+import { TripsApiClient } from "@/lib/api/trips"
+import { authenticationProviderInstance } from "@/lib/authentication-provider"
 import type { TripParticipant } from "@/lib/api/trips"
+import type { User } from "@/lib/api/users"
 
 import * as React from "react"
 
 import { motion } from "framer-motion"
-import { UserPlus, Users } from "lucide-react"
+import { UserPlus, Users, Clock } from "lucide-react"
 
 export function TripCompanions() {
   const [open, setOpen] = React.useState(false)
+  const [addCompanionOpen, setAddCompanionOpen] = React.useState(false)
+  const [isInviting, setIsInviting] = React.useState(false)
+
   const { state } = useSidebar()
-  const { selectedTrip, isLoading } = useTripContext()
+  const { selectedTrip, isLoading, refreshTrips } = useTripContext()
+  const { toast } = useToast()
   const isCollapsed = state === "collapsed"
 
   const participants: TripParticipant[] = React.useMemo(() => {
     if (!selectedTrip?.participants) return []
     return selectedTrip.participants
   }, [selectedTrip])
+
+  const handleInviteUser = async (user: User) => {
+    if (!selectedTrip?.id) return
+
+    setIsInviting(true)
+    try {
+      const tripsApiClient = new TripsApiClient(authenticationProviderInstance)
+      await tripsApiClient.inviteToTrip(selectedTrip.id, user.id)
+
+      await refreshTrips()
+
+      toast({
+        title: "Invitation Sent",
+        description: `Invitation sent to ${getDisplayName(user)} successfully.`,
+      })
+
+      setAddCompanionOpen(false)
+    } catch (error) {
+      toast({
+        title: "Failed to Send Invitation",
+        description: "Could not send the invitation. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsInviting(false)
+    }
+  }
+
+  const handleAddCompanionClick = () => {
+    setOpen(false)
+    setAddCompanionOpen(true)
+  }
 
   if (isLoading) {
     return (
@@ -54,7 +95,12 @@ export function TripCompanions() {
       <div className={cn("flex items-center justify-between px-1", isCollapsed && "flex-col items-center gap-2")}>
         <AvatarStack participants={participants} onClick={() => setOpen(true)} isCollapsed={isCollapsed} />
         {!isCollapsed && (
-          <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full hover:bg-primary/10 hover:text-primary">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 rounded-full hover:bg-primary/10 hover:text-primary"
+            onClick={() => setAddCompanionOpen(true)}
+          >
             <UserPlus className="h-4 w-4" />
           </Button>
         )}
@@ -71,11 +117,32 @@ export function TripCompanions() {
             ))}
           </div>
           <DialogFooter className="flex justify-between items-center">
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2" onClick={handleAddCompanionClick}>
               <UserPlus className="h-4 w-4" />
               <span>Add Companion</span>
             </Button>
             <Button variant="outline" onClick={() => setOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={addCompanionOpen} onOpenChange={setAddCompanionOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Invite Companion</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <UserSearchInput
+              placeholder="Search users to invite..."
+              onUserSelect={handleInviteUser}
+              excludeUserIds={participants.map((p) => p.id)}
+              disabled={isInviting}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddCompanionOpen(false)} disabled={isInviting}>
               Close
             </Button>
           </DialogFooter>
@@ -116,6 +183,7 @@ function AvatarStack({
             className={cn(
               "h-8 w-8 border-2 border-background transition-transform rounded-lg",
               isCollapsed ? "mx-auto" : index === 0 && "hover:z-10",
+              participant.invitation_status === "pending" && "opacity-60",
             )}
           >
             <AvatarImage
@@ -127,6 +195,11 @@ function AvatarStack({
               {getInitials(getDisplayName(participant))}
             </AvatarFallback>
           </Avatar>
+          {participant.invitation_status === "pending" && (
+            <div className="absolute -top-1 -right-1 h-3 w-3 bg-yellow-500 rounded-full flex items-center justify-center">
+              <Clock className="h-2 w-2 text-white" />
+            </div>
+          )}
         </motion.div>
       ))}
 
@@ -158,16 +231,28 @@ function ParticipantItem({ participant }: { participant: TripParticipant }) {
       transition={{ duration: 0.2 }}
       className="flex items-center space-x-3 rounded-lg p-2 hover:bg-muted"
     >
-      <Avatar className="h-10 w-10 rounded-lg">
-        <AvatarImage
-          src={participant.avatar_url || "/placeholder.svg?height=40&width=40"}
-          alt={displayName}
-          className="rounded-lg"
-        />
-        <AvatarFallback className="rounded-lg bg-primary text-white">{getInitials(displayName)}</AvatarFallback>
-      </Avatar>
+      <div className="relative">
+        <Avatar className="h-10 w-10 rounded-lg">
+          <AvatarImage
+            src={participant.avatar_url || "/placeholder.svg?height=40&width=40"}
+            alt={displayName}
+            className="rounded-lg"
+          />
+          <AvatarFallback className="rounded-lg bg-primary text-white">{getInitials(displayName)}</AvatarFallback>
+        </Avatar>
+        {participant.invitation_status === "pending" && (
+          <div className="absolute -top-1 -right-1 h-4 w-4 bg-yellow-500 rounded-full flex items-center justify-center">
+            <Clock className="h-2.5 w-2.5 text-white" />
+          </div>
+        )}
+      </div>
       <div className="flex-1">
-        <p className="text-sm font-medium">{displayName}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium">{displayName}</p>
+          {participant.invitation_status === "pending" && (
+            <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">Pending</span>
+          )}
+        </div>
         <p className="text-xs text-muted-foreground">{participant.email}</p>
       </div>
     </motion.div>

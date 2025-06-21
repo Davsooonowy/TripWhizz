@@ -4,15 +4,19 @@ from rest_framework import status, permissions
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.contrib.auth import get_user_model
 
-from .models import Trip, Stage, StageElement, StageElementReaction
+from .models import Trip, Stage, StageElement, StageElementReaction, TripInvitation
 from .serializers import (
     TripSerializer,
     TripListSerializer,
     StageSerializer,
     StageListSerializer,
     StageElementSerializer,
+    TripInvitationSerializer,
 )
+
+User = get_user_model()
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
@@ -81,6 +85,88 @@ class TripDetailView(GenericAPIView):
         return Response(
             {"detail": "Deleted successfully."}, status=status.HTTP_204_NO_CONTENT
         )
+
+
+class TripInviteView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            trip = Trip.objects.get(pk=pk, owner=request.user)
+        except Trip.DoesNotExist:
+            return Response(
+                {"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        invitee_id = request.data.get("invitee_id")
+        if not invitee_id:
+            return Response(
+                {"detail": "invitee_id is required."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            invitee = User.objects.get(id=invitee_id)
+        except User.DoesNotExist:
+            return Response(
+                {"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if trip.participants.filter(id=invitee_id).exists():
+            return Response(
+                {"detail": "User is already a participant."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        existing_invitation = TripInvitation.objects.filter(trip=trip, invitee=invitee).first()
+        if existing_invitation:
+            if existing_invitation.status == 'pending':
+                return Response(
+                    {"detail": "Invitation already sent."}, status=status.HTTP_400_BAD_REQUEST
+                )
+            else:
+                # Update existing invitation to pending
+                existing_invitation.status = 'pending'
+                existing_invitation.inviter = request.user
+                existing_invitation.save()
+                serializer = TripInvitationSerializer(existing_invitation, context={'request': request})
+                return Response(serializer.data, status=status.HTTP_200_OK)
+
+        invitation = TripInvitation.objects.create(
+            trip=trip,
+            inviter=request.user,
+            invitee=invitee
+        )
+
+        serializer = TripInvitationSerializer(invitation, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class TripInvitationResponseView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def put(self, request, pk):
+        try:
+            invitation = TripInvitation.objects.get(pk=pk, invitee=request.user)
+        except TripInvitation.DoesNotExist:
+            return Response(
+                {"detail": "Invitation not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        action = request.data.get("action")
+        if action not in ["accept", "reject"]:
+            return Response(
+                {"detail": "Action must be 'accept' or 'reject'."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if action == "accept":
+            invitation.status = "accepted"
+            invitation.trip.participants.add(invitation.invitee)
+        else:
+            invitation.status = "rejected"
+
+        invitation.save()
+
+        serializer = TripInvitationSerializer(invitation, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class ReorderStagesView(APIView):

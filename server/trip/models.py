@@ -44,6 +44,32 @@ class Trip(models.Model):
         ordering = ["-created_at"]
 
 
+class TripInvitation(models.Model):
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("accepted", "Accepted"),
+        ("rejected", "Rejected"),
+    ]
+
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="invitations")
+    inviter = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="sent_trip_invitations"
+    )
+    invitee = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="received_trip_invitations"
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ["trip", "invitee"]
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.inviter.username} invited {self.invitee.username} to {self.trip.name}"
+
+
 class Stage(models.Model):
     name = models.CharField(max_length=255)
     category = models.CharField(max_length=50)

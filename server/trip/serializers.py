@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from .models import Trip, Stage, StageElement
+from .models import Trip, Stage, StageElement, TripInvitation
 
 User = get_user_model()
 
@@ -20,6 +20,48 @@ class UserBasicSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.avatar.url)
             return obj.avatar.url
         return None
+
+
+class TripInvitationSerializer(serializers.ModelSerializer):
+    inviter = UserBasicSerializer(read_only=True)
+    invitee = UserBasicSerializer(read_only=True)
+    trip_name = serializers.CharField(source='trip.name', read_only=True)
+
+    class Meta:
+        model = TripInvitation
+        fields = ['id', 'trip', 'trip_name', 'inviter', 'invitee', 'status', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'inviter', 'created_at', 'updated_at']
+
+
+class TripParticipantSerializer(serializers.ModelSerializer):
+    avatar_url = serializers.SerializerMethodField()
+    invitation_status = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'avatar_url', 'invitation_status']
+
+    def get_avatar_url(self, obj):
+        if obj.avatar and hasattr(obj.avatar, 'url'):
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.avatar.url)
+            return obj.avatar.url
+        return None
+
+    def get_invitation_status(self, obj):
+        trip = self.context.get('trip')
+        if not trip:
+            return 'accepted'
+
+        if trip.participants.filter(id=obj.id).exists():
+            return 'accepted'
+
+        invitation = TripInvitation.objects.filter(trip=trip, invitee=obj).first()
+        if invitation:
+            return invitation.status
+
+        return 'accepted'
 
 
 class StageSerializer(serializers.ModelSerializer):
@@ -60,10 +102,7 @@ class StageListSerializer(serializers.ModelSerializer):
 
 class TripSerializer(serializers.ModelSerializer):
     stages = StageListSerializer(many=True, read_only=True)
-    participants = UserBasicSerializer(many=True, read_only=True)
-    participants_ids = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=User.objects.all(), required=False, write_only=True, source='participants'
-    )
+    participants = serializers.SerializerMethodField()
     owner = UserBasicSerializer(read_only=True)
     tags = serializers.JSONField(required=False)
 
@@ -79,7 +118,6 @@ class TripSerializer(serializers.ModelSerializer):
             "trip_type",
             "owner",
             "participants",
-            "participants_ids",
             "stages",
             "created_at",
             "updated_at",
@@ -90,25 +128,29 @@ class TripSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["created_at", "updated_at", "owner"]
 
+    def get_participants(self, obj):
+        accepted_participants = obj.participants.all()
+
+        pending_invitations = TripInvitation.objects.filter(trip=obj, status='pending').select_related('invitee')
+        pending_users = [inv.invitee for inv in pending_invitations]
+
+        all_users = list(accepted_participants) + pending_users
+
+        seen = set()
+        unique_users = []
+        for user in all_users:
+            if user.id not in seen:
+                seen.add(user.id)
+                unique_users.append(user)
+
+        return TripParticipantSerializer(unique_users, many=True,
+                                         context={'request': self.context.get('request'), 'trip': obj}).data
+
     def create(self, validated_data):
-        participants_data = validated_data.pop('participants', [])
         validated_data["owner"] = self.context["request"].user
         trip = super().create(validated_data)
 
-        if participants_data:
-            trip.participants.set(participants_data)
-
         trip.participants.add(self.context["request"].user)
-
-        return trip
-
-    def update(self, instance, validated_data):
-        participants_data = validated_data.pop('participants', None)
-        trip = super().update(instance, validated_data)
-
-        if participants_data is not None:
-            trip.participants.set(participants_data)
-            trip.participants.add(trip.owner)
 
         return trip
 
@@ -135,7 +177,7 @@ class TripListSerializer(serializers.ModelSerializer):
         return obj.stages.count()
 
     def get_participants_count(self, obj):
-        return obj.participants.count()
+        return obj.participants.count() + obj.invitations.filter(status='pending').count()
 
 
 class StageElementSerializer(serializers.ModelSerializer):

@@ -22,6 +22,7 @@ export interface TripParticipant {
   last_name?: string
   email: string
   avatar_url?: string
+  invitation_status?: "accepted" | "pending" | "rejected"
 }
 
 export interface TripOwner {
@@ -31,6 +32,17 @@ export interface TripOwner {
   last_name?: string
   email: string
   avatar_url?: string
+}
+
+export interface TripInvitation {
+  id: number
+  trip: number
+  trip_name: string
+  inviter: TripOwner
+  invitee: TripParticipant
+  status: "pending" | "accepted" | "rejected"
+  created_at: string
+  updated_at: string
 }
 
 export interface TripData {
@@ -134,18 +146,11 @@ export class TripsApiClient extends BaseApiClient {
     return true
   }
 
-  async addParticipant(tripId: number, participantId: number) {
-    const trip = await this.getTripDetails(tripId)
-    const currentParticipantIds = trip.participants?.map((p: TripParticipant) => p.id) || []
-
-    if (!currentParticipantIds.includes(participantId)) {
-      currentParticipantIds.push(participantId)
-    }
-
-    const response = await fetch(`${TRIP_API_URL}/${tripId}/`, {
+  async inviteToTrip(tripId: number, inviteeId: number) {
+    const response = await fetch(`${TRIP_API_URL}/${tripId}/invite/`, {
       ...this._requestConfiguration(true),
-      method: "PUT",
-      body: JSON.stringify({ participants_ids: currentParticipantIds }),
+      method: "POST",
+      body: JSON.stringify({ invitee_id: inviteeId }),
     })
 
     if (!response.ok) {
@@ -155,15 +160,11 @@ export class TripsApiClient extends BaseApiClient {
     return await response.json()
   }
 
-  async removeParticipant(tripId: number, participantId: number) {
-    const trip = await this.getTripDetails(tripId)
-    const currentParticipantIds = trip.participants?.map((p: TripParticipant) => p.id) || []
-    const updatedParticipantIds = currentParticipantIds.filter((id) => id !== participantId)
-
-    const response = await fetch(`${TRIP_API_URL}/${tripId}/`, {
+  async respondToInvitation(invitationId: number, action: "accept" | "reject") {
+    const response = await fetch(`${API_URL}/trips/invitation/${invitationId}/respond/`, {
       ...this._requestConfiguration(true),
       method: "PUT",
-      body: JSON.stringify({ participants_ids: updatedParticipantIds }),
+      body: JSON.stringify({ action }),
     })
 
     if (!response.ok) {
