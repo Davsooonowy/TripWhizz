@@ -1,3 +1,4 @@
+import { TripInvitationDialog } from '@/components/notifications/trip-invitation-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ import {
 } from '@/lib/api/notifications';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
 
+import type React from 'react';
 import { useEffect, useState } from 'react';
 
 import { formatDistanceToNow } from 'date-fns';
@@ -35,6 +37,11 @@ export function NotificationDropdown() {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+
+  const [invitationDialog, setInvitationDialog] = useState<{
+    open: boolean;
+    notification: Notification | null;
+  }>({ open: false, notification: null });
 
   const fetchNotifications = async () => {
     try {
@@ -143,6 +150,7 @@ export function NotificationDropdown() {
       case 'friend_accept':
         return '/friends';
       case 'trip_invite':
+        return null;
       case 'trip_update':
         return '/';
       case 'expense_update':
@@ -160,133 +168,169 @@ export function NotificationDropdown() {
     }
   };
 
-  return (
-    <DropdownMenu open={isMobile ? false : isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative"
-          onClick={handleBellClick}
-        >
-          <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
-            <Badge
-              variant="destructive"
-              className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs"
-            >
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </Badge>
-          )}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
-        <DropdownMenuLabel className="flex items-center justify-between">
-          <span>Notifications</span>
-          {notifications.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleMarkAllAsRead}
-              className="h-8 text-xs"
-            >
-              <Check className="mr-1 h-3 w-3" />
-              Mark all as read
-            </Button>
-          )}
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
+  const handleNotificationClick = async (
+    notification: Notification,
+    event: React.MouseEvent,
+  ) => {
+    event.preventDefault();
 
-        {isLoading ? (
-          <div className="p-2 space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-start gap-3 p-2">
-                <Skeleton className="h-8 w-8 rounded-full" />
-                <div className="space-y-2 flex-1">
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-3 w-1/2" />
+    if (!notification.is_read) {
+      await handleMarkAsRead(notification.id);
+    }
+
+    if (notification.notification_type === 'trip_invite') {
+      setInvitationDialog({
+        open: true,
+        notification: notification,
+      });
+      setIsOpen(false);
+      return;
+    }
+
+    const link = getNotificationLink(notification);
+    if (link) {
+      navigate(link);
+      setIsOpen(false);
+    }
+  };
+
+  return (
+    <>
+      <DropdownMenu open={isMobile ? false : isOpen} onOpenChange={setIsOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative"
+            onClick={handleBellClick}
+          >
+            <Bell className="h-5 w-5" />
+            {unreadCount > 0 && (
+              <Badge
+                variant="destructive"
+                className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs"
+              >
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </Badge>
+            )}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-80">
+          <DropdownMenuLabel className="flex items-center justify-between">
+            <span>Notifications</span>
+            {notifications.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleMarkAllAsRead}
+                className="h-8 text-xs"
+              >
+                <Check className="mr-1 h-3 w-3" />
+                Mark all as read
+              </Button>
+            )}
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+
+          {isLoading ? (
+            <div className="p-2 space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-start gap-3 p-2">
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : notifications.length > 0 ? (
-          <ScrollArea className="max-h-80">
-            <DropdownMenuGroup>
-              {notifications.slice(0, 5).map((notification) => (
-                <DropdownMenuItem
-                  key={notification.id}
-                  asChild
-                  className={`p-3 ${!notification.is_read ? 'bg-muted/50' : ''}`}
-                >
-                  <Link
-                    to={getNotificationLink(notification)}
-                    onClick={() =>
-                      !notification.is_read && handleMarkAsRead(notification.id)
-                    }
-                  >
-                    <div className="flex items-start gap-3">
-                      {notification.sender ? (
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage
-                            src={notification.sender.avatar_url || undefined}
-                          />
-                          <AvatarFallback>
-                            {getInitials(
-                              notification.sender.first_name &&
-                                notification.sender.last_name
-                                ? `${notification.sender.first_name} ${notification.sender.last_name}`
-                                : notification.sender.username,
-                            )}
-                          </AvatarFallback>
-                        </Avatar>
-                      ) : (
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                          {getNotificationIcon(notification.notification_type)}
-                        </div>
-                      )}
-                      <div className="flex-1 space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                          {notification.title}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {notification.message}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(
-                            new Date(notification.created_at),
-                            { addSuffix: true },
-                          )}
-                        </p>
-                      </div>
-                      {!notification.is_read && (
-                        <div
-                          className="h-2 w-2 rounded-full bg-primary"
-                          aria-hidden="true"
-                        />
-                      )}
-                    </div>
-                  </Link>
-                </DropdownMenuItem>
               ))}
-              {notifications.length > 5 && (
-                <DropdownMenuItem
-                  asChild
-                  className="justify-center py-2 font-medium text-primary"
-                >
-                  <Link to="/notifications">See all notifications</Link>
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuGroup>
-          </ScrollArea>
-        ) : (
-          <div className="py-6 text-center">
-            <Bell className="mx-auto h-8 w-8 text-muted-foreground/30 mb-2" />
-            <p className="text-sm text-muted-foreground">
-              No notifications yet
-            </p>
-          </div>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+            </div>
+          ) : notifications.length > 0 ? (
+            <ScrollArea className="max-h-80">
+              <DropdownMenuGroup>
+                {notifications.slice(0, 5).map((notification) => {
+                  return (
+                    <DropdownMenuItem
+                      key={notification.id}
+                      className={`p-3 cursor-pointer ${!notification.is_read ? 'bg-muted/50' : ''}`}
+                      onClick={(e) => handleNotificationClick(notification, e)}
+                    >
+                      <div className="flex items-start gap-3 w-full">
+                        {notification.sender ? (
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage
+                              src={notification.sender.avatar_url || undefined}
+                            />
+                            <AvatarFallback>
+                              {getInitials(
+                                notification.sender.first_name &&
+                                  notification.sender.last_name
+                                  ? `${notification.sender.first_name} ${notification.sender.last_name}`
+                                  : notification.sender.username,
+                              )}
+                            </AvatarFallback>
+                          </Avatar>
+                        ) : (
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                            {getNotificationIcon(
+                              notification.notification_type,
+                            )}
+                          </div>
+                        )}
+                        <div className="flex-1 space-y-1">
+                          <p className="text-sm font-medium leading-none">
+                            {notification.title}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {notification.message}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(
+                              new Date(notification.created_at),
+                              { addSuffix: true },
+                            )}
+                          </p>
+                        </div>
+                        {!notification.is_read && (
+                          <div
+                            className="h-2 w-2 rounded-full bg-primary"
+                            aria-hidden="true"
+                          />
+                        )}
+                      </div>
+                    </DropdownMenuItem>
+                  );
+                })}
+                {notifications.length > 5 && (
+                  <DropdownMenuItem
+                    asChild
+                    className="justify-center py-2 font-medium text-primary"
+                  >
+                    <Link to="/notifications">See all notifications</Link>
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuGroup>
+            </ScrollArea>
+          ) : (
+            <div className="py-6 text-center">
+              <Bell className="mx-auto h-8 w-8 text-muted-foreground/30 mb-2" />
+              <p className="text-sm text-muted-foreground">
+                No notifications yet
+              </p>
+            </div>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <TripInvitationDialog
+        open={invitationDialog.open}
+        onOpenChange={(open) =>
+          setInvitationDialog({ open, notification: null })
+        }
+        notification={invitationDialog.notification}
+        onResponse={() => {
+          fetchNotifications();
+        }}
+      />
+    </>
   );
 }

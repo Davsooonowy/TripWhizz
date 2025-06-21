@@ -8,12 +8,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { UserSearchInput } from '@/components/util/user-search-input';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { getInitials } from '@/components/util/avatar-utils';
+import { UserSearchInput } from '@/components/util/user-search-input';
 import { FriendsApiClient } from '@/lib/api/friends';
 import type { FriendRequest } from '@/lib/api/friends';
 import type { User } from '@/lib/api/users';
@@ -23,12 +23,9 @@ import { useEffect, useState } from 'react';
 
 import { motion } from 'framer-motion';
 import {
-  AlertCircle,
   Check,
   Clock,
-  Search,
   Send,
-  UserCheck,
   UserMinus,
   UserPlus,
   Users,
@@ -44,14 +41,11 @@ export default function FriendsView() {
 
   const [activeTab, setActiveTab] = useState(tabFromQuery || 'friends');
   const [friends, setFriends] = useState<User[]>([]);
-  const [searchResults, setSearchResults] = useState<User[]>([]);
   const [friendRequests, setFriendRequests] = useState<{
     sent: FriendRequest[];
     received: FriendRequest[];
   }>({ sent: [], received: [] });
-  const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -99,27 +93,6 @@ export default function FriendsView() {
     fetchFriendsData();
   }, [toast]);
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
-
-    setIsSearching(true);
-    try {
-      const friendsApiClient = new FriendsApiClient(
-        authenticationProviderInstance,
-      );
-      const results = await friendsApiClient.searchUsers(searchQuery);
-      setSearchResults(results);
-    } catch {
-      toast({
-        title: 'Search Failed',
-        description: 'Could not complete the search. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
   const handleSendFriendRequest = async (userId: number) => {
     try {
       const friendsApiClient = new FriendsApiClient(
@@ -131,9 +104,6 @@ export default function FriendsView() {
         ...prev,
         sent: [...prev.sent, request],
       }));
-
-      setSearchResults((prev) => prev.filter((user) => user.id !== userId));
-
       toast({
         title: 'Friend Request Sent',
         description: 'Your friend request has been sent successfully.',
@@ -287,7 +257,7 @@ export default function FriendsView() {
                 <CardDescription>
                   {friends.length > 0
                     ? 'Manage your friends and travel companions'
-                    : 'You don\'t have any friends yet. Add some friends to start planning trips together!'}
+                    : "You don't have any friends yet. Add some friends to start planning trips together!"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -381,7 +351,7 @@ export default function FriendsView() {
                                 <AvatarFallback className="rounded-lg">
                                   {getInitials(
                                     request.sender.first_name &&
-                                    request.sender.last_name
+                                      request.sender.last_name
                                       ? `${request.sender.first_name} ${request.sender.last_name}`
                                       : request.sender.username,
                                   )}
@@ -456,7 +426,7 @@ export default function FriendsView() {
                                 <AvatarFallback className="rounded-lg">
                                   {getInitials(
                                     request.receiver.first_name &&
-                                    request.receiver.last_name
+                                      request.receiver.last_name
                                       ? `${request.receiver.first_name} ${request.receiver.last_name}`
                                       : request.receiver.username,
                                   )}
@@ -514,7 +484,6 @@ export default function FriendsView() {
                     placeholder="Search by name or email..."
                     onUserSelect={(user) => handleSendFriendRequest(user.id)}
                     excludeUserIds={friends.map((friend) => friend.id)}
-                    disabled={isSearching}
                   />
                 </div>
               </CardContent>

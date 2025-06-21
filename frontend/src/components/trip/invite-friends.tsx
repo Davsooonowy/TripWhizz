@@ -16,15 +16,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { useToast } from '@/components/ui/use-toast';
+import { UserSearchInput } from '@/components/util/user-search-input';
+import { FriendsApiClient } from '@/lib/api/friends';
+import { TripsApiClient } from '@/lib/api/trips';
+import type { User } from '@/lib/api/users';
+import { authenticationProviderInstance } from '@/lib/authentication-provider';
 import { cn } from '@/lib/utils';
 
 import { useEffect, useState } from 'react';
@@ -35,75 +32,11 @@ import {
   ArrowRight,
   Check,
   CheckCircle,
-  Copy,
-  Search,
-  Share2,
   UserPlus,
   Users,
   X,
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
-
-// Mock data for friends - in a real app, this would come from an API
-const mockFriends = [
-  {
-    id: 1,
-    name: 'Alex Johnson',
-    email: 'alex@example.com',
-    avatar: '/placeholder.svg?height=40&width=40',
-    status: 'online',
-  },
-  {
-    id: 2,
-    name: 'Sarah Miller',
-    email: 'sarah@example.com',
-    avatar: '/placeholder.svg?height=40&width=40',
-    status: 'offline',
-  },
-  {
-    id: 3,
-    name: 'James Wilson',
-    email: 'james@example.com',
-    avatar: '/placeholder.svg?height=40&width=40',
-    status: 'online',
-  },
-  {
-    id: 4,
-    name: 'Emily Davis',
-    email: 'emily@example.com',
-    avatar: '/placeholder.svg?height=40&width=40',
-    status: 'offline',
-  },
-  {
-    id: 5,
-    name: 'David Brown',
-    email: 'david@example.com',
-    avatar: '/placeholder.svg?height=40&width=40',
-    status: 'online',
-  },
-];
-
-// Mock data for recent contacts
-const mockRecentContacts = [
-  {
-    id: 6,
-    name: 'Michael Scott',
-    email: 'michael@example.com',
-    avatar: '/placeholder.svg?height=40&width=40',
-  },
-  {
-    id: 7,
-    name: 'Pam Beesly',
-    email: 'pam@example.com',
-    avatar: '/placeholder.svg?height=40&width=40',
-  },
-  {
-    id: 8,
-    name: 'Jim Halpert',
-    email: 'jim@example.com',
-    avatar: '/placeholder.svg?height=40&width=40',
-  },
-];
 
 interface InviteFriendsProps {
   tripType: 'private' | 'public';
@@ -116,49 +49,103 @@ export default function InviteFriends({ tripType }: InviteFriendsProps) {
   const tripData = location.state?.tripData || {};
   const tripId = location.state?.tripId;
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFriends, setSelectedFriends] = useState<number[]>([]);
+  const [searchQuery] = useState('');
+  const [selectedFriends, setSelectedFriends] = useState<User[]>([]);
+  const [friends, setFriends] = useState<User[]>([]);
+  const [recentContacts, setRecentContacts] = useState<User[]>([]);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showShareDialog, setShowShareDialog] = useState(false);
-  const [inviteLink, setInviteLink] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setInviteLink(
-      `https://tripwhizz.com/join/${tripId}/${Math.random().toString(36).substring(2, 10)}`,
-    );
+    loadFriendsData();
   }, [tripId]);
 
-  const filteredFriends = mockFriends.filter(
-    (friend) =>
-      friend.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      friend.email.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const loadFriendsData = async () => {
+    try {
+      setLoading(true);
+      const friendsApiClient = new FriendsApiClient(
+        authenticationProviderInstance,
+      );
 
-  const handleFriendSelect = (friendId: number) => {
-    setSelectedFriends((prev) =>
-      prev.includes(friendId)
-        ? prev.filter((id) => id !== friendId)
-        : [...prev, friendId],
-    );
+      const friendsData = await friendsApiClient.getFriends();
+      setFriends(friendsData);
+
+      setRecentContacts(friendsData.slice(0, 3));
+    } catch (error) {
+      toast({
+        title: 'Failed to load friends',
+        description: 'Could not load your friends list. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(inviteLink);
-    toast({
-      title: 'Link copied!',
-      description: 'Invite link has been copied to clipboard',
-      duration: 3000,
+  const filteredFriends = friends.filter(
+    (friend) =>
+      friend.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      friend.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (friend.first_name &&
+        friend.first_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (friend.last_name &&
+        friend.last_name.toLowerCase().includes(searchQuery.toLowerCase())),
+  );
+
+  const handleFriendSelect = (friend: User) => {
+    setSelectedFriends((prev) => {
+      const isAlreadySelected = prev.some((f) => f.id === friend.id);
+      if (isAlreadySelected) {
+        return prev.filter((f) => f.id !== friend.id);
+      } else {
+        return [...prev, friend];
+      }
     });
   };
 
-  const handleSubmit = () => {
+  const handleUserSearchSelect = (user: User) => {
+    handleFriendSelect(user);
+  };
+
+  const handleSubmit = async () => {
+    if (selectedFriends.length === 0) {
+      toast({
+        title: 'No friends selected',
+        description: 'Please select at least one friend to invite.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      const tripsApiClient = new TripsApiClient(authenticationProviderInstance);
+
+      // Send invitations to all selected friends
+      const invitationPromises = selectedFriends.map((friend) =>
+        tripsApiClient.inviteToTrip(tripId, friend.id),
+      );
+
+      await Promise.all(invitationPromises);
+
+      toast({
+        title: 'Invitations sent!',
+        description: `Successfully sent ${selectedFriends.length} invitation${selectedFriends.length > 1 ? 's' : ''}.`,
+      });
+
       setShowSuccessDialog(true);
-    }, 1500);
+    } catch (error) {
+      console.error('Failed to send invitations:', error);
+      toast({
+        title: 'Failed to send invitations',
+        description: 'Some invitations could not be sent. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleBack = () => {
@@ -173,6 +160,39 @@ export default function InviteFriends({ tripType }: InviteFriendsProps) {
   const finishAndGoHome = () => {
     navigate('/');
   };
+
+  const getDisplayName = (user: User): string => {
+    if (user.first_name && user.last_name) {
+      return `${user.first_name} ${user.last_name}`;
+    }
+    if (user.first_name) {
+      return user.first_name;
+    }
+    return user.username;
+  };
+
+  const getInitials = (user: User): string => {
+    const name = getDisplayName(user);
+    return name
+      .split(' ')
+      .map((part) => part[0] || '')
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-secondary/5 pb-20">
+        <div className="container max-w-4xl mx-auto px-4 py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Loading friends...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/5 pb-20">
@@ -197,25 +217,13 @@ export default function InviteFriends({ tripType }: InviteFriendsProps) {
               <CardTitle>Share Your Trip</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col md:flex-row gap-4 mb-6">
-                <Button
-                  className="flex-1 gap-2"
-                  variant="outline"
-                  onClick={() => setShowShareDialog(true)}
-                >
-                  <Share2 className="h-4 w-4" />
-                  <span>Share Invite Link</span>
-                </Button>
-              </div>
-
               <div className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search friends..."
-                    className="pl-10"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium">Search and Invite</h3>
+                  <UserSearchInput
+                    placeholder="Search for friends to invite..."
+                    onUserSelect={handleUserSearchSelect}
+                    excludeUserIds={selectedFriends.map((f) => f.id)}
                   />
                 </div>
 
@@ -235,136 +243,141 @@ export default function InviteFriends({ tripType }: InviteFriendsProps) {
                       </Button>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {selectedFriends.map((id) => {
-                        const friend = mockFriends.find((f) => f.id === id);
-                        if (!friend) return null;
-                        return (
-                          <Badge
-                            key={id}
-                            variant="secondary"
-                            className="pl-1 pr-1 py-1 gap-1"
+                      {selectedFriends.map((friend) => (
+                        <Badge
+                          key={friend.id}
+                          variant="secondary"
+                          className="pl-1 pr-1 py-1 gap-1"
+                        >
+                          <Avatar className="h-5 w-5 rounded-lg">
+                            <AvatarImage
+                              src={friend.avatar_url || '/placeholder.svg'}
+                              alt={getDisplayName(friend)}
+                            />
+                            <AvatarFallback className="rounded-lg">
+                              {getInitials(friend)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs">
+                            {getDisplayName(friend)}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-4 w-4 ml-1 hover:bg-transparent"
+                            onClick={() => handleFriendSelect(friend)}
                           >
-                            <Avatar className="h-5 w-5 rounded-lg">
-                              <AvatarImage
-                                src={friend.avatar || '/placeholder.svg'}
-                                alt={friend.name}
-                              />
-                              <AvatarFallback className="rounded-lg">
-                                {friend.name[0]}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-xs">{friend.name}</span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-4 w-4 ml-1 hover:bg-transparent"
-                              onClick={() => handleFriendSelect(id)}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </Badge>
-                        );
-                      })}
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {recentContacts.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium">Recent Contacts</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {recentContacts.map((contact) => (
+                        <Button
+                          key={contact.id}
+                          variant={
+                            selectedFriends.some((f) => f.id === contact.id)
+                              ? 'default'
+                              : 'outline'
+                          }
+                          className="justify-start gap-2 h-auto py-2"
+                          onClick={() => handleFriendSelect(contact)}
+                        >
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage
+                              src={contact.avatar_url || '/placeholder.svg'}
+                              alt={getDisplayName(contact)}
+                            />
+                            <AvatarFallback>
+                              {getInitials(contact)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="truncate text-sm">
+                            {getDisplayName(contact)}
+                          </span>
+                        </Button>
+                      ))}
                     </div>
                   </div>
                 )}
 
                 <div className="space-y-2">
-                  <h3 className="text-sm font-medium">Recent Contacts</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {mockRecentContacts.map((contact) => (
-                      <Button
-                        key={contact.id}
-                        variant="outline"
-                        className="justify-start gap-2 h-auto py-2"
-                        onClick={() => handleFriendSelect(contact.id)}
-                      >
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage
-                            src={contact.avatar || '/placeholder.svg'}
-                            alt={contact.name}
-                          />
-                          <AvatarFallback>{contact.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <span className="truncate text-sm">{contact.name}</span>
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium">Friends</h3>
+                  <h3 className="text-sm font-medium">Your Friends</h3>
                   <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
                     {filteredFriends.length > 0 ? (
-                      filteredFriends.map((friend) => (
-                        <div
-                          key={friend.id}
-                          className={cn(
-                            'flex items-center justify-between p-2 rounded-lg transition-colors',
-                            selectedFriends.includes(friend.id)
-                              ? 'bg-primary/10 border border-primary/30'
-                              : 'hover:bg-muted border border-transparent',
-                          )}
-                        >
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-10 w-10 relative rounded-lg">
-                              <AvatarImage
-                                src={friend.avatar || '/placeholder.svg'}
-                                alt={friend.name}
-                              />
-                              <AvatarFallback className="rounded-lg">
-                                {friend.name[0]}
-                              </AvatarFallback>
-                              <div
-                                className={cn(
-                                  'absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background',
-                                  friend.status === 'online'
-                                    ? 'bg-green-500'
-                                    : 'bg-gray-400',
-                                )}
-                              />
-                            </Avatar>
-                            <div>
-                              <p className="font-medium text-sm">
-                                {friend.name}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {friend.email}
-                              </p>
-                            </div>
-                          </div>
-                          <Button
-                            variant={
-                              selectedFriends.includes(friend.id)
-                                ? 'default'
-                                : 'ghost'
-                            }
-                            size="sm"
-                            className="gap-1"
-                            onClick={() => handleFriendSelect(friend.id)}
-                          >
-                            {selectedFriends.includes(friend.id) ? (
-                              <>
-                                <Check className="h-4 w-4" />
-                                <span className="sr-md:not-sr-only sr-only">
-                                  Selected
-                                </span>
-                              </>
-                            ) : (
-                              <>
-                                <UserPlus className="h-4 w-4" />
-                                <span className="sr-md:not-sr-only sr-only">
-                                  Invite
-                                </span>
-                              </>
+                      filteredFriends.map((friend) => {
+                        const isSelected = selectedFriends.some(
+                          (f) => f.id === friend.id,
+                        );
+                        return (
+                          <div
+                            key={friend.id}
+                            className={cn(
+                              'flex items-center justify-between p-2 rounded-lg transition-colors',
+                              isSelected
+                                ? 'bg-primary/10 border border-primary/30'
+                                : 'hover:bg-muted border border-transparent',
                             )}
-                          </Button>
-                        </div>
-                      ))
+                          >
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-10 w-10 relative rounded-lg">
+                                <AvatarImage
+                                  src={friend.avatar_url || '/placeholder.svg'}
+                                  alt={getDisplayName(friend)}
+                                />
+                                <AvatarFallback className="rounded-lg">
+                                  {getInitials(friend)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="font-medium text-sm">
+                                  {getDisplayName(friend)}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {friend.email}
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              variant={isSelected ? 'default' : 'ghost'}
+                              size="sm"
+                              className="gap-1"
+                              onClick={() => handleFriendSelect(friend)}
+                            >
+                              {isSelected ? (
+                                <>
+                                  <Check className="h-4 w-4" />
+                                  <span className="sr-md:not-sr-only sr-only">
+                                    Selected
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  <UserPlus className="h-4 w-4" />
+                                  <span className="sr-md:not-sr-only sr-only">
+                                    Invite
+                                  </span>
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        );
+                      })
                     ) : (
                       <div className="text-center py-8 text-muted-foreground">
                         <Users className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                        <p>No friends found matching "{searchQuery}"</p>
+                        <p>
+                          {searchQuery
+                            ? `No friends found matching "${searchQuery}"`
+                            : 'No friends found. Add some friends first!'}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -406,7 +419,7 @@ export default function InviteFriends({ tripType }: InviteFriendsProps) {
                   </>
                 ) : (
                   <>
-                    Send Invitations
+                    Send Invitations ({selectedFriends.length})
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </>
                 )}
@@ -422,14 +435,14 @@ export default function InviteFriends({ tripType }: InviteFriendsProps) {
         </div>
       </div>
 
-      {/* Success Dialog */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Invitations Sent Successfully!</DialogTitle>
             <DialogDescription>
               Your friends have been invited to join your trip to{' '}
-              {tripData.destination || 'your destination'}
+              {tripData.destination || 'your destination'}. They will receive
+              email notifications and can accept the invitations in the app.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-center py-6">
@@ -442,55 +455,6 @@ export default function InviteFriends({ tripType }: InviteFriendsProps) {
               Go to My Trips
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Share Trip Invite Link</DialogTitle>
-            <DialogDescription>
-              Anyone with this link can request to join your trip
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex items-center space-x-2">
-            <div className="grid flex-1 gap-2">
-              <Label htmlFor="link" className="sr-only">
-                Link
-              </Label>
-              <Input
-                id="link"
-                defaultValue={inviteLink}
-                readOnly
-                className="font-mono text-sm"
-              />
-            </div>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button type="submit" size="icon" onClick={handleCopyLink}>
-                    <Copy className="h-4 w-4" />
-                    <span className="sr-only">Copy</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Copy link</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <div className="flex justify-between items-center">
-            <div className="text-sm text-muted-foreground">
-              This link expires in 7 days
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowShareDialog(false)}
-            >
-              Close
-            </Button>
-          </div>
         </DialogContent>
       </Dialog>
     </div>

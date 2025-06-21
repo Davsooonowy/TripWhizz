@@ -1,19 +1,25 @@
-import { EmptyContent } from "@/components/not-available/empty-content"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { Progress } from "@/components/ui/progress"
-import { useTripContext } from "@/components/util/trip-context"
-import { ParticipantsList } from "@/components/trip/participants-list"
-import { type TripData, type TripStage, TripsApiClient } from "@/lib/api/trips"
-import { authenticationProviderInstance } from "@/lib/authentication-provider"
-import { cn } from "@/lib/utils"
+import { EmptyContent } from '@/components/not-available/empty-content';
+import { ParticipantsList } from '@/components/trip/participants-list';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Progress } from '@/components/ui/progress';
+import { useTripContext } from '@/components/util/trip-context';
+import { type TripData, type TripStage, TripsApiClient } from '@/lib/api/trips';
+import { authenticationProviderInstance } from '@/lib/authentication-provider';
+import { cn } from '@/lib/utils';
 
-import type React from "react"
-import { useEffect, useState } from "react"
+import type React from 'react';
+import { useEffect, useState } from 'react';
 
-import { AnimatePresence, motion } from "framer-motion"
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   AlertCircle,
   Building2,
@@ -30,9 +36,9 @@ import {
   Tent,
   Train,
   Users,
-} from "lucide-react"
-import { Link } from "react-router-dom"
-import { useNavigate } from "react-router-dom"
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const iconMap: Record<string, React.ElementType> = {
   plane: Plane,
@@ -42,95 +48,96 @@ const iconMap: Record<string, React.ElementType> = {
   camping: Tent,
   cruise: Ship,
   train: Train,
-  "road trip": Car,
-}
+  'road trip': Car,
+};
 
 export default function TripHome() {
-  const { selectedTrip, isLoading, error, refreshTrips } = useTripContext()
-  const [tripDetails, set_TripDetails] = useState<TripData | null>(null)
-  const [stages, setStages] = useState<TripStage[]>([])
-  const [isLoadingDetails, setIsLoadingDetails] = useState(false)
-  const [detailsError, setDetailsError] = useState<string | null>(null)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [companionsDialogOpen, setCompanionsDialogOpen] = useState(false)
-  const navigate = useNavigate()
+  const { selectedTrip, isLoading, error, refreshTrips } = useTripContext();
+  const [tripDetails, set_TripDetails] = useState<TripData | null>(null);
+  const [stages, setStages] = useState<TripStage[]>([]);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const [detailsError, setDetailsError] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [companionsDialogOpen, setCompanionsDialogOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTripDetails = async () => {
-      if (!selectedTrip?.id) return
+      if (!selectedTrip?.id) return;
 
-      setIsLoadingDetails(true)
-      setDetailsError(null)
+      setIsLoadingDetails(true);
+      setDetailsError(null);
 
       try {
-        const tripsApiClient = new TripsApiClient(authenticationProviderInstance)
-        const details = await tripsApiClient.getTripDetails(selectedTrip.id)
-        set_TripDetails(details)
-        setStages(details.stages || [])
-      } catch (err) {
-        console.error("Error fetching trip details:", err)
-        setDetailsError("Failed to load trip details. Please try again.")
+        const tripsApiClient = new TripsApiClient(
+          authenticationProviderInstance,
+        );
+        const details = await tripsApiClient.getTripDetails(selectedTrip.id);
+        set_TripDetails(details);
+        setStages(details.stages || []);
+      } catch {
+        setDetailsError('Failed to load trip details. Please try again.');
       } finally {
-        setIsLoadingDetails(false)
+        setIsLoadingDetails(false);
       }
-    }
+    };
 
-    fetchTripDetails()
-  }, [selectedTrip])
+    fetchTripDetails();
+  }, [selectedTrip]);
 
   const handleRefresh = async () => {
-    setIsRefreshing(true)
+    setIsRefreshing(true);
     try {
-      await refreshTrips()
+      await refreshTrips();
     } finally {
       setTimeout(() => {
-        setIsRefreshing(false)
-      }, 500)
+        setIsRefreshing(false);
+      }, 500);
     }
-  }
+  };
 
   const calculateDaysUntilTrip = () => {
-    if (!tripDetails?.start_date) return null
+    if (!tripDetails?.start_date) return null;
 
-    const startDate = new Date(tripDetails.start_date)
-    const today = new Date()
+    const startDate = new Date(tripDetails.start_date);
+    const today = new Date();
 
     // Reset time to compare just the dates
-    today.setHours(0, 0, 0, 0)
-    startDate.setHours(0, 0, 0, 0)
+    today.setHours(0, 0, 0, 0);
+    startDate.setHours(0, 0, 0, 0);
 
-    const diffTime = startDate.getTime() - today.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    const diffTime = startDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    return diffDays
-  }
+    return diffDays;
+  };
 
   const calculateTripProgress = () => {
-    if (!tripDetails?.start_date || !tripDetails?.end_date) return 0
+    if (!tripDetails?.start_date || !tripDetails?.end_date) return 0;
 
-    const startDate = new Date(tripDetails.start_date)
-    const endDate = new Date(tripDetails.end_date)
-    const today = new Date()
+    const startDate = new Date(tripDetails.start_date);
+    const endDate = new Date(tripDetails.end_date);
+    const today = new Date();
 
     // If trip hasn't started yet
-    if (today < startDate) return 0
+    if (today < startDate) return 0;
 
     // If trip has ended
-    if (today > endDate) return 100
+    if (today > endDate) return 100;
 
     // Calculate progress
-    const totalDuration = endDate.getTime() - startDate.getTime()
-    const elapsed = today.getTime() - startDate.getTime()
+    const totalDuration = endDate.getTime() - startDate.getTime();
+    const elapsed = today.getTime() - startDate.getTime();
 
-    return Math.round((elapsed / totalDuration) * 100)
-  }
+    return Math.round((elapsed / totalDuration) * 100);
+  };
 
   const getTripIcon = () => {
-    if (!tripDetails?.icon) return Plane
-    return iconMap[tripDetails.icon.toLowerCase()] || Plane
-  }
+    if (!tripDetails?.icon) return Plane;
+    return iconMap[tripDetails.icon.toLowerCase()] || Plane;
+  };
 
-  const TripIcon = getTripIcon()
+  const TripIcon = getTripIcon();
 
   if (isLoading || isLoadingDetails) {
     return (
@@ -138,11 +145,11 @@ export default function TripHome() {
         <div className="text-center">
           <LoadingSpinner size="lg" />
           <p className="mt-4 text-muted-foreground animate-pulse">
-            {isLoading ? "Changing your trip..." : "Loading trip details..."}
+            {isLoading ? 'Changing your trip...' : 'Loading trip details...'}
           </p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -150,7 +157,7 @@ export default function TripHome() {
       <div className="container max-w-4xl mx-auto px-4 py-8">
         <Alert variant="destructive" title="Error" description={error} />
       </div>
-    )
+    );
   }
 
   if (!selectedTrip) {
@@ -159,14 +166,14 @@ export default function TripHome() {
         title="No Trips Yet"
         message="You haven't created any trips yet. Start planning your next adventure!"
         buttonText="Create Trip"
-        onButtonClick={() => navigate("/trip/new")}
+        onButtonClick={() => navigate('/trip/new')}
       />
-    )
+    );
   }
 
-  const daysUntilTrip = calculateDaysUntilTrip()
-  const tripProgress = calculateTripProgress()
-  const participants = tripDetails?.participants || []
+  const daysUntilTrip = calculateDaysUntilTrip();
+  const tripProgress = calculateTripProgress();
+  const participants = tripDetails?.participants || [];
 
   return (
     <div className="container max-w-4xl mx-auto px-4 py-8 pb-20 md:pb-10">
@@ -181,13 +188,25 @@ export default function TripHome() {
         >
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold">Trip Dashboard</h1>
-            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+            >
               <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing}`} />
               Refresh
             </Button>
           </div>
 
-          {detailsError && <Alert variant="destructive" title="Error" description={detailsError} className="mb-6" />}
+          {detailsError && (
+            <Alert
+              variant="destructive"
+              title="Error"
+              description={detailsError}
+              className="mb-6"
+            />
+          )}
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -200,18 +219,27 @@ export default function TripHome() {
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className={cn("p-3 rounded-lg", tripDetails?.icon_color || "bg-primary")}
+                    className={cn(
+                      'p-3 rounded-lg',
+                      tripDetails?.icon_color || 'bg-primary',
+                    )}
                   >
                     <TripIcon className="h-6 w-6 text-white" />
                   </motion.div>
                   <div>
-                    <CardTitle className="text-xl">{tripDetails?.name || selectedTrip.name}</CardTitle>
+                    <CardTitle className="text-xl">
+                      {tripDetails?.name || selectedTrip.name}
+                    </CardTitle>
                     <CardDescription>
                       {tripDetails?.destination || selectedTrip.destination}
                       {tripDetails?.start_date && tripDetails?.end_date && (
                         <span>
-                          {" "}
-                          • {new Date(tripDetails.start_date).toLocaleDateString()} -{" "}
+                          {' '}
+                          •{' '}
+                          {new Date(
+                            tripDetails.start_date,
+                          ).toLocaleDateString()}{' '}
+                          -{' '}
                           {new Date(tripDetails.end_date).toLocaleDateString()}
                         </span>
                       )}
@@ -221,7 +249,9 @@ export default function TripHome() {
               </CardHeader>
               <CardContent>
                 {tripDetails?.description && (
-                  <p className="text-sm text-muted-foreground mb-4">{tripDetails.description}</p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {tripDetails.description}
+                  </p>
                 )}
 
                 <motion.div
@@ -236,7 +266,7 @@ export default function TripHome() {
                     value={
                       tripDetails?.start_date && tripDetails?.end_date
                         ? `${new Date(tripDetails.start_date).toLocaleDateString()} - ${new Date(tripDetails.end_date).toLocaleDateString()}`
-                        : "Not set"
+                        : 'Not set'
                     }
                   />
                   <StatCard
@@ -246,10 +276,10 @@ export default function TripHome() {
                       daysUntilTrip !== null
                         ? daysUntilTrip <= 0
                           ? daysUntilTrip === 0
-                            ? "Today!"
-                            : "In progress"
+                            ? 'Today!'
+                            : 'In progress'
                           : `${daysUntilTrip} days`
-                        : "Not set"
+                        : 'Not set'
                     }
                   />
                   <StatCard
@@ -270,7 +300,7 @@ export default function TripHome() {
                   <motion.div
                     className="space-y-2 mb-6"
                     initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: "100%" }}
+                    animate={{ opacity: 1, width: '100%' }}
                     transition={{ duration: 0.5, delay: 0.3 }}
                   >
                     <div className="flex justify-between text-sm">
@@ -306,8 +336,14 @@ export default function TripHome() {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.3, delay: 0.6 }}
                         >
-                          <Button variant="outline" className="w-full mt-2" asChild>
-                            <Link to="/trip/stages">View All {stages.length} Stages</Link>
+                          <Button
+                            variant="outline"
+                            className="w-full mt-2"
+                            asChild
+                          >
+                            <Link to="/trip/stages">
+                              View All {stages.length} Stages
+                            </Link>
                           </Button>
                         </motion.div>
                       )}
@@ -319,7 +355,9 @@ export default function TripHome() {
                       transition={{ duration: 0.2 }}
                     >
                       <Map className="h-12 w-12 mx-auto text-muted-foreground/50 mb-2" />
-                      <p className="text-muted-foreground mb-2">No stages added yet</p>
+                      <p className="text-muted-foreground mb-2">
+                        No stages added yet
+                      </p>
                       <Button size="sm" asChild>
                         <Link to="/trip/new/stages">
                           <Plus className="h-4 w-4 mr-2" />
@@ -353,8 +391,8 @@ export default function TripHome() {
                   whileHover={{ scale: 1.01 }}
                 >
                   <p>
-                    More trip planning features coming soon! Stay tuned for itinerary management, expense tracking, and
-                    more.
+                    More trip planning features coming soon! Stay tuned for
+                    itinerary management, expense tracking, and more.
                   </p>
                 </motion.div>
               </CardContent>
@@ -363,32 +401,32 @@ export default function TripHome() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Participants Dialog */}
       <ParticipantsList
         open={companionsDialogOpen}
         onOpenChange={setCompanionsDialogOpen}
         participants={participants}
         tripId={selectedTrip?.id}
         onParticipantsUpdate={refreshTrips}
+        tripOwner={selectedTrip?.owner}
       />
     </div>
-  )
+  );
 }
 
 interface StatCardProps {
-  icon: React.ReactNode
-  label: string
-  value: string
-  onClick?: () => void
-  clickable?: boolean
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  onClick?: () => void;
+  clickable?: boolean;
 }
 
 function StatCard({ icon, label, value, onClick, clickable }: StatCardProps) {
   return (
     <motion.div
       className={cn(
-        "bg-muted/50 rounded-lg p-3 flex flex-col items-center text-center",
-        clickable && "cursor-pointer hover:bg-muted",
+        'bg-muted/50 rounded-lg p-3 flex flex-col items-center text-center',
+        clickable && 'cursor-pointer hover:bg-muted',
       )}
       whileHover={clickable ? { scale: 1.05 } : {}}
       transition={{ duration: 0.2 }}
@@ -398,78 +436,81 @@ function StatCard({ icon, label, value, onClick, clickable }: StatCardProps) {
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="font-medium">{value}</p>
     </motion.div>
-  )
+  );
 }
 
 interface StageItemProps {
-  stage: TripStage
+  stage: TripStage;
 }
 
 function StageItem({ stage }: StageItemProps) {
-  const { selectedTrip } = useTripContext()
+  const { selectedTrip } = useTripContext();
 
   // Get category color based on category name or custom color
   const getCategoryColor = () => {
     if (stage.is_custom_category && stage.custom_category_color) {
-      return stage.custom_category_color
+      return stage.custom_category_color;
     }
 
     // Default colors based on category
     const categoryColors: Record<string, string> = {
-      accommodation: "bg-blue-500",
-      transport: "bg-green-500",
-      flight: "bg-purple-500",
-      dining: "bg-amber-500",
-      activity: "bg-pink-500",
-      attraction: "bg-teal-500",
-      event: "bg-red-500",
-      cruise: "bg-indigo-500",
-      train: "bg-cyan-500",
-      relaxation: "bg-orange-500",
-    }
+      accommodation: 'bg-blue-500',
+      transport: 'bg-green-500',
+      flight: 'bg-purple-500',
+      dining: 'bg-amber-500',
+      activity: 'bg-pink-500',
+      attraction: 'bg-teal-500',
+      event: 'bg-red-500',
+      cruise: 'bg-indigo-500',
+      train: 'bg-cyan-500',
+      relaxation: 'bg-orange-500',
+    };
 
-    return categoryColors[stage.category] || "bg-gray-500"
-  }
+    return categoryColors[stage.category] || 'bg-gray-500';
+  };
 
   return (
     <Link to={`/trip/${selectedTrip?.id}/stages/${stage.id}`}>
       <motion.div
         className="flex items-center p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-        whileHover={{ x: 5, backgroundColor: "hsl(var(--muted)/50)" }}
+        whileHover={{ x: 5, backgroundColor: 'hsl(var(--muted)/50)' }}
         transition={{ duration: 0.2 }}
       >
-        <div className={cn("w-2 h-10 rounded-full mr-3", getCategoryColor())}></div>
+        <div
+          className={cn('w-2 h-10 rounded-full mr-3', getCategoryColor())}
+        ></div>
         <div className="flex-1 min-w-0">
           <p className="font-medium truncate">{stage.name}</p>
           <div className="flex items-center text-xs text-muted-foreground">
             <span className="truncate capitalize">{stage.category}</span>
             {stage.start_date && stage.end_date && (
               <span className="ml-2">
-                {new Date(stage.start_date).toLocaleDateString()} - {new Date(stage.end_date).toLocaleDateString()}
+                {new Date(stage.start_date).toLocaleDateString()} -{' '}
+                {new Date(stage.end_date).toLocaleDateString()}
               </span>
             )}
           </div>
         </div>
       </motion.div>
     </Link>
-  )
+  );
 }
 
 interface AlertProps {
-  variant: "default" | "destructive"
-  title: string
-  description: string
-  className?: string
+  variant: 'default' | 'destructive';
+  title: string;
+  description: string;
+  className?: string;
 }
 
 function Alert({ variant, title, description, className }: AlertProps) {
   return (
     <div
       className={cn(
-        "p-4 rounded-lg border",
-        variant === "destructive"
-          ? "bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300"
-          : "bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300",
+        'p-4 rounded-lg border',
+        variant === 'destructive'
+          ? 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300'
+          : 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300',
         className,
       )}
     >
@@ -483,5 +524,5 @@ function Alert({ variant, title, description, className }: AlertProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

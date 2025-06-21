@@ -39,6 +39,7 @@ class Friendship(models.Model):
         ('pending', 'Pending'),
         ('accepted', 'Accepted'),
         ('rejected', 'Rejected'),
+        ('expired', 'Expired'),
     ]
 
     sender = models.ForeignKey(Profile, related_name='sent_friendships', on_delete=models.CASCADE)
@@ -46,9 +47,18 @@ class Friendship(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         unique_together = ('sender', 'receiver')
+
+    def save(self, *args, **kwargs):
+        if not self.expires_at and self.status == 'pending':
+            self.expires_at = timezone.now() + timedelta(days=15)
+        super().save(*args, **kwargs)
+
+    def is_expired(self):
+        return self.expires_at and timezone.now() > self.expires_at
 
     def __str__(self):
         return f"{self.sender.username} -> {self.receiver.username} ({self.status})"

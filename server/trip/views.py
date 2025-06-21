@@ -5,6 +5,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from .models import Trip, Stage, StageElement, StageElementReaction, TripInvitation
 from .serializers import (
@@ -16,6 +17,7 @@ from .serializers import (
     TripInvitationSerializer,
 )
 from user_account.models import Notification
+from user_account.utils import send_trip_invitation_email
 
 User = get_user_model()
 
@@ -147,34 +149,29 @@ class TripInviteView(APIView):
                 {"detail": "User is already a participant."}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        existing_invitation = TripInvitation.objects.filter(trip=trip, invitee=invitee).first()
-        if existing_invitation:
-            if existing_invitation.status == 'pending':
-                return Response(
-                    {"detail": "Invitation already sent."}, status=status.HTTP_400_BAD_REQUEST
-                )
-            else:
-                existing_invitation.status = 'pending'
-                existing_invitation.inviter = request.user
-                existing_invitation.save()
-
-                Notification.objects.create(
-                    recipient=invitee,
-                    sender=request.user,
-                    notification_type='trip_invite',
-                    title='Trip Invitation',
-                    message=f'{request.user.username} invited you to join "{trip.name}"',
-                    related_object_id=existing_invitation.id
-                )
-
-                serializer = TripInvitationSerializer(existing_invitation, context={'request': request})
-                return Response(serializer.data, status=status.HTTP_200_OK)
-
-        invitation = TripInvitation.objects.create(
+        existing_invitation = TripInvitation.objects.filter(
             trip=trip,
-            inviter=request.user,
-            invitee=invitee
-        )
+            invitee=invitee,
+            status='pending'
+        ).first()
+
+        if existing_invitation and not existing_invitation.is_expired():
+            return Response(
+                {"detail": "Invitation already sent."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if existing_invitation and existing_invitation.is_expired():
+            existing_invitation.status = 'pending'
+            existing_invitation.inviter = request.user
+            existing_invitation.expires_at = timezone.now() + timezone.timedelta(days=7)
+            existing_invitation.save()
+            invitation = existing_invitation
+        else:
+            invitation = TripInvitation.objects.create(
+                trip=trip,
+                inviter=request.user,
+                invitee=invitee
+            )
 
         Notification.objects.create(
             recipient=invitee,
@@ -184,6 +181,11 @@ class TripInviteView(APIView):
             message=f'{request.user.username} invited you to join "{trip.name}"',
             related_object_id=invitation.id
         )
+
+        try:
+            send_trip_invitation_email(invitation)
+        except Exception as e:
+            print(f"Failed to send invitation email: {e}")
 
         serializer = TripInvitationSerializer(invitation, context={'request': request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -198,6 +200,22 @@ class TripInvitationResponseView(APIView):
         except TripInvitation.DoesNotExist:
             return Response(
                 {"detail": "Invitation not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if invitation.is_expired() and invitation.status == 'pending':
+            invitation.status = 'expired'
+            invitation.save()
+
+        if invitation.status == 'expired':
+            return Response(
+                {"detail": "This invitation has expired. Please ask for a new invitation."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if invitation.status != 'pending':
+            return Response(
+                {"detail": "This invitation is no longer available."},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
         action = request.data.get("action")
@@ -228,6 +246,68 @@ class TripInvitationResponseView(APIView):
         serializer = TripInvitationSerializer(invitation, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+class TripRemoveParticipantView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, pk, participant_id):
+        try:
+            trip = Trip.objects.filter(pk=pk, owner=request.user).first()
+            if not trip:
+                return Response(
+                    {"detail": "Trip not found or you don't have permission."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        except Trip.DoesNotExist:
+            return Response(
+                {"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        try:
+            participant = User.objects.get(id=participant_id)
+        except User.DoesNotExist:
+            return Response(
+                {"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if not trip.participants.filter(id=participant_id).exists():
+            return Response(
+                {"detail": "User is not a participant of this trip."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if trip.owner.id == participant_id:
+            return Response(
+                {"detail": "Cannot remove the trip owner."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        trip.participants.remove(participant)
+
+        Notification.objects.create(
+            recipient=participant,
+            sender=request.user,
+            notification_type='trip_update',
+            title='Removed from Trip',
+            message=f'You have been removed from "{trip.name}" by {request.user.username}',
+            related_object_id=trip.id
+        )
+
+        remaining_participants = trip.participants.exclude(id=request.user.id)
+        for other_participant in remaining_participants:
+            Notification.objects.create(
+                recipient=other_participant,
+                sender=request.user,
+                notification_type='trip_update',
+                title='Trip Member Removed',
+                message=f'{participant.username} was removed from "{trip.name}"',
+                related_object_id=trip.id
+            )
+
+        return Response(
+            {"detail": f"{participant.username} has been removed from the trip."},
+            status=status.HTTP_200_OK
+        )
 
 class ReorderStagesView(APIView):
     permission_classes = [permissions.IsAuthenticated]
