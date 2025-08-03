@@ -198,69 +198,70 @@ export default function StageDetails() {
   }, [error]);
 
   if (unreactionedElements.length > 0) {
-  const currentElement = unreactionedElements[0];
-  const remaining = unreactionedElements.length;
+    const currentElement = unreactionedElements[0];
+    const remaining = unreactionedElements.length;
 
-  return (
-    <div className="container max-w-4xl mx-auto px-4 py-8 flex flex-col items-center justify-center">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
-        <div className="h-64 w-full bg-muted flex items-center justify-center">
-          {currentElement.image ? (
-            <img
-              src={currentElement.image}
-              alt={currentElement.name}
-              className="object-cover w-full h-full"
-            />
-          ) : (
-            <div className="text-muted-foreground text-sm">Brak zdjęcia</div>
-          )}
-        </div>
-        <div className="p-6 space-y-2">
-          <h2 className="text-xl font-semibold text-gray-900">
-            {currentElement.name}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {currentElement.description}
-          </p>
-          {currentElement.url && (
-            <a
-              href={currentElement.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-primary underline"
-            >
-              {currentElement.url}
-            </a>
-          )}
-        </div>
-        <div className="px-6 pb-6 pt-2">
-          <p className="text-center text-xs text-muted-foreground mb-2">
-            Pozostało do oceny: {remaining}
-          </p>
-          <div className="flex justify-center gap-2">
-            {[1, 2, 3, 4, 5].map((value) => (
-              <Button
-                key={value}
-                variant={
-                  currentElement.userReaction === value ? 'default' : 'outline'
-                }
-                onClick={() => handleReaction(currentElement.id, value)}
-                className="w-10 h-10 p-0 rounded-full"
+    return (
+      <div className="container max-w-4xl mx-auto px-4 py-8 flex flex-col items-center justify-center">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+          <div className="h-64 w-full bg-muted flex items-center justify-center">
+            {currentElement.image ? (
+              <img
+                src={currentElement.image}
+                alt={currentElement.name}
+                className="object-cover w-full h-full"
+              />
+            ) : (
+              <div className="text-muted-foreground text-sm">No photo</div>
+            )}
+          </div>
+          <div className="p-6 space-y-2">
+            <h2 className="text-xl font-semibold text-gray-900">
+              {currentElement.name}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {currentElement.description}
+            </p>
+            {currentElement.url && (
+              <a
+                href={currentElement.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-primary underline"
               >
-                {value}
-              </Button>
-            ))}
+                {currentElement.url}
+              </a>
+            )}
+          </div>
+          <div className="px-6 pb-6 pt-2">
+            <p className="text-center text-xs text-muted-foreground mb-2">
+              Left to be graded: {remaining}
+            </p>
+            <div className="flex justify-center gap-2">
+              {[1, 2, 3, 4, 5].map((value) => (
+                <Button
+                  key={value}
+                  variant={
+                    currentElement.userReaction === value ? 'default' : 'outline'
+                  }
+                  onClick={() => handleReaction(currentElement.id, value)}
+                  className="w-10 h-10 p-0 rounded-full"
+                >
+                  {value}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
+        {error && (
+          <div className="p-4 bg-red-100 text-red-500 rounded-md mt-4">
+            {error}
+          </div>
+        )}
       </div>
-      {error && (
-        <div className="p-4 bg-red-100 text-red-500 rounded-md mt-4">
-          {error}
-        </div>
-      )}
-    </div>
-  );
-}
+    );
+  }
+
   return (
     <div className="container max-w-4xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">{stageName} Details</h1>

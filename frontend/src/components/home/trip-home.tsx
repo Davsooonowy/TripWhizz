@@ -40,6 +40,7 @@ import {
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { StagesApiClient } from '@/lib/api/stages.ts';
+import { setErrorMap } from 'zod';
 
 const iconMap: Record<string, React.ElementType> = {
   plane: Plane,
@@ -446,7 +447,7 @@ interface StageItemProps {
 
 function StageItem({ stage }: StageItemProps) {
   const { selectedTrip } = useTripContext();
-
+  const [detailsError, setDetailsError] = useState<string | null>(null);
   const [unreactionedCount, setUnreactionedCount] = useState<number>(0);
 
   useEffect(() => {
@@ -456,8 +457,9 @@ function StageItem({ stage }: StageItemProps) {
         const elements = await apiClient.getStageElements(stage.id);
         const unreacted = elements.filter((el) => !el.userReaction);
         setUnreactionedCount(unreacted.length);
+        setDetailsError(null);
       } catch (error) {
-        console.error('Failed to fetch stage elements', error);
+        setDetailsError('Failed to load stage elements. Please try again.');
       }
     };
 
@@ -515,6 +517,14 @@ function StageItem({ stage }: StageItemProps) {
           >
             {unreactionedCount} elements to rate
           </Badge>
+        )}
+        {detailsError && (
+          <Alert
+            variant="destructive"
+            title="Error"
+            description={detailsError}
+            className="mb-6"
+          />
         )}
       </motion.div>
     </Link>
