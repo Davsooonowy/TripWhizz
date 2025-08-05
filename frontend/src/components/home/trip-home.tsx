@@ -39,6 +39,8 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import { StagesApiClient } from '@/lib/api/stages.ts';
+import { setErrorMap } from 'zod';
 
 const iconMap: Record<string, React.ElementType> = {
   plane: Plane,
@@ -445,6 +447,24 @@ interface StageItemProps {
 
 function StageItem({ stage }: StageItemProps) {
   const { selectedTrip } = useTripContext();
+  const [detailsError, setDetailsError] = useState<string | null>(null);
+  const [unreactionedCount, setUnreactionedCount] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchUnreactionedElements = async () => {
+      try {
+        const apiClient = new StagesApiClient(authenticationProviderInstance);
+        const elements = await apiClient.getStageElements(stage.id);
+        const unreacted = elements.filter((el) => !el.userReaction);
+        setUnreactionedCount(unreacted.length);
+        setDetailsError(null);
+      } catch (error) {
+        setDetailsError('Failed to load stage elements. Please try again.');
+      }
+    };
+
+    fetchUnreactionedElements();
+  }, [stage.id]);
 
   // Get category color based on category name or custom color
   const getCategoryColor = () => {
@@ -472,7 +492,7 @@ function StageItem({ stage }: StageItemProps) {
   return (
     <Link to={`/trip/${selectedTrip?.id}/stages/${stage.id}`}>
       <motion.div
-        className="flex items-center p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+        className="relative flex items-center p-3 border rounded-lg hover:bg-muted/50 transition-colors"
         whileHover={{ x: 5, backgroundColor: 'hsl(var(--muted)/50)' }}
         transition={{ duration: 0.2 }}
       >
@@ -491,6 +511,21 @@ function StageItem({ stage }: StageItemProps) {
             )}
           </div>
         </div>
+        {unreactionedCount > 0 && (
+          <Badge
+            className="bg-red-500 absolute top-2 right-2 text-xs px-2 py-0.5"
+          >
+            {unreactionedCount} elements to rate
+          </Badge>
+        )}
+        {detailsError && (
+          <Alert
+            variant="destructive"
+            title="Error"
+            description={detailsError}
+            className="mb-6"
+          />
+        )}
       </motion.div>
     </Link>
   );
