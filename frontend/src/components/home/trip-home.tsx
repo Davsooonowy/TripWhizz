@@ -12,6 +12,7 @@ import {
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Progress } from '@/components/ui/progress';
 import { useTripContext } from '@/components/util/trip-context';
+import { StagesApiClient } from '@/lib/api/stages.ts';
 import { type TripData, type TripStage, TripsApiClient } from '@/lib/api/trips';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
 import { cn } from '@/lib/utils';
@@ -39,7 +40,6 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
-import { StagesApiClient } from '@/lib/api/stages.ts';
 import { setErrorMap } from 'zod';
 
 const iconMap: Record<string, React.ElementType> = {
@@ -512,9 +512,7 @@ function StageItem({ stage }: StageItemProps) {
           </div>
         </div>
         {unreactionedCount > 0 && (
-          <Badge
-            className="bg-red-500 absolute top-2 right-2 text-xs px-2 py-0.5"
-          >
+          <Badge className="bg-red-500 absolute top-2 right-2 text-xs px-2 py-0.5">
             {unreactionedCount} elements to rate
           </Badge>
         )}

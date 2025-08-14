@@ -242,7 +242,9 @@ export default function StageDetails() {
                 <Button
                   key={value}
                   variant={
-                    currentElement.userReaction === value ? 'default' : 'outline'
+                    currentElement.userReaction === value
+                      ? 'default'
+                      : 'outline'
                   }
                   onClick={() => handleReaction(currentElement.id, value)}
                   className="w-10 h-10 p-0 rounded-full"

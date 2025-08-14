@@ -133,3 +133,53 @@ class StageElementReaction(models.Model):
     stage_element = models.ForeignKey(StageElement, on_delete=models.CASCADE)
     reaction = models.IntegerField(choices=[(i, str(i)) for i in range(1, 6)])
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class PackingList(models.Model):
+    LIST_TYPE_CHOICES = [
+        ("private", "Private"),
+        ("shared", "Shared"),
+    ]
+
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="packing_lists")
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    list_type = models.CharField(max_length=20, choices=LIST_TYPE_CHOICES, default="private")
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="created_packing_lists")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.list_type}) - {self.trip.name}"
+
+    class Meta:
+        ordering = ["-created_at"]
+        unique_together = ("trip", "name", "list_type")
+
+
+class PackingItem(models.Model):
+    PRIORITY_CHOICES = [
+        ("low", "Low"),
+        ("medium", "Medium"),
+        ("high", "High"),
+    ]
+
+    packing_list = models.ForeignKey(PackingList, on_delete=models.CASCADE, related_name="items")
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    category = models.CharField(max_length=100, blank=True, null=True)
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default="medium")
+    quantity = models.PositiveIntegerField(default=1)
+    is_packed = models.BooleanField(default=False)
+    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="assigned_packing_items")
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="created_packing_items")
+    packed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="packed_packing_items")
+    packed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} x{self.quantity}"
+
+    class Meta:
+        ordering = ["-created_at"]

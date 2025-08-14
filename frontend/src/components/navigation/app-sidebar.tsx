@@ -29,91 +29,115 @@ import {
   Map,
 } from 'lucide-react';
 
-const data = {
-  navMain: [
-    {
-      title: 'Itinerary',
-      url: '/itinerary',
-      icon: Calendar,
-      items: [
-        {
-          title: 'Day Plans',
-          url: '/itinerary/days',
-        },
-        {
-          title: 'Activities',
-          url: '/itinerary/activities',
-        },
-        {
-          title: 'Bookings',
-          url: '/itinerary/bookings',
-        },
-      ],
-    },
-    {
-      title: 'Expenses',
-      url: '/expenses',
-      icon: DollarSign,
-      items: [
-        {
-          title: 'Overview',
-          url: '/expenses/overview',
-        },
-        {
-          title: 'Split Bills',
-          url: '/expenses/split',
-        },
-        {
-          title: 'Add Expense',
-          url: '/expenses/add',
-        },
-      ],
-    },
-    {
-      title: 'Maps',
-      url: '/maps',
-      icon: Map,
-      items: [
-        {
-          title: 'Destinations',
-          url: '/maps/destinations',
-        },
-        {
-          title: 'Navigation',
-          url: '/maps/navigation',
-        },
-        {
-          title: 'Points of Interest',
-          url: '/maps/poi',
-        },
-      ],
-    },
-    {
-      title: 'Packing List',
-      url: '/packing',
-      icon: CheckSquare,
-      items: [
-        {
-          title: 'My Items',
-          url: '/packing/items',
-        },
-        {
-          title: 'Shared Items',
-          url: '/packing/shared',
-        },
-        {
-          title: 'Templates',
-          url: '/packing/templates',
-        },
-      ],
-    },
-  ],
-};
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
-  const { trips } = useTripContext();
+  const { trips, selectedTrip } = useTripContext();
   const hasTrips = trips.length > 0;
+
+  const data = {
+    navMain: [
+      {
+        title: 'Itinerary',
+        url: selectedTrip ? `/trip/${selectedTrip.id}/itinerary` : '/itinerary',
+        icon: Calendar,
+        items: [
+          {
+            title: 'Day Plans',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/itinerary/days`
+              : '/itinerary/days',
+          },
+          {
+            title: 'Activities',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/itinerary/activities`
+              : '/itinerary/activities',
+          },
+          {
+            title: 'Bookings',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/itinerary/bookings`
+              : '/itinerary/bookings',
+          },
+        ],
+      },
+      {
+        title: 'Expenses',
+        url: selectedTrip ? `/trip/${selectedTrip.id}/expenses` : '/expenses',
+        icon: DollarSign,
+        items: [
+          {
+            title: 'Overview',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/expenses/overview`
+              : '/expenses/overview',
+          },
+          {
+            title: 'Split Bills',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/expenses/split`
+              : '/expenses/split',
+          },
+          {
+            title: 'Add Expense',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/expenses/add`
+              : '/expenses/add',
+          },
+        ],
+      },
+      {
+        title: 'Maps',
+        url: selectedTrip ? `/trip/${selectedTrip.id}/maps` : '/maps',
+        icon: Map,
+        items: [
+          {
+            title: 'Destinations',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/maps/destinations`
+              : '/maps/destinations',
+          },
+          {
+            title: 'Navigation',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/maps/navigation`
+              : '/maps/navigation',
+          },
+          {
+            title: 'Points of Interest',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/maps/poi`
+              : '/maps/poi',
+          },
+        ],
+      },
+      {
+        title: 'Packing List',
+        url: selectedTrip ? `/trip/${selectedTrip.id}/packing` : '/packing',
+        icon: CheckSquare,
+        items: [
+          {
+            title: 'My Items',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/packing/items`
+              : '/packing/items',
+          },
+          {
+            title: 'Shared Items',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/packing/shared`
+              : '/packing/shared',
+          },
+          {
+            title: 'Templates',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/packing/templates`
+              : '/packing/templates',
+          },
+        ],
+      },
+    ],
+  };
 
   return (
     <Sidebar collapsible="icon" {...props}>

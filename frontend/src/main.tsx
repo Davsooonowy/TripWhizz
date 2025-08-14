@@ -50,6 +50,12 @@ const PublicTripInvitePage = React.lazy(
 const StageDetailsPage = React.lazy(
   () => import('@/components/trip/stage-details.tsx'),
 );
+const PackingListPage = React.lazy(() => import('@/pages/packing'));
+const PackingItemsPage = React.lazy(() => import('@/pages/packing/items'));
+const SharedPackingPage = React.lazy(() => import('@/pages/packing/shared'));
+const PackingTemplatesPage = React.lazy(
+  () => import('@/pages/packing/templates'),
+);
 
 const protectedLoginLoader = async () => {
   if (!authenticationProviderInstance.isAuthenticated()) {
@@ -86,6 +92,22 @@ const router = createBrowserRouter([
       {
         path: '/trip/:tripId/stages/:stageId',
         element: <StageDetailsPage />,
+      },
+      {
+        path: '/trip/:tripId/packing',
+        element: <PackingListPage />,
+      },
+      {
+        path: '/trip/:tripId/packing/items',
+        element: <PackingItemsPage />,
+      },
+      {
+        path: '/trip/:tripId/packing/shared',
+        element: <SharedPackingPage />,
+      },
+      {
+        path: '/trip/:tripId/packing/templates',
+        element: <PackingTemplatesPage />,
       },
       {
         path: '/trip/new',
