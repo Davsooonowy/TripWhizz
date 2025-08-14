@@ -1,8 +1,10 @@
-import * as React from 'react';
-import { Link } from 'react-router-dom';
-import { useTripContext } from '@/components/util/trip-context';
 import { Button } from '@/components/ui/button';
-import { Package, Plus, Users, FileText } from 'lucide-react';
+import { useTripContext } from '@/components/util/trip-context';
+
+import * as React from 'react';
+
+import { FileText, Package, Plus, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function PackingListPage() {
   const { selectedTrip, trips, isLoading } = useTripContext();
@@ -26,7 +28,8 @@ export default function PackingListPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">No Trips Available</h1>
           <p className="text-muted-foreground mb-6">
-            You don't have any trips yet. Create a trip first to access the packing list.
+            You don't have any trips yet. Create a trip first to access the
+            packing list.
           </p>
         </div>
       </div>
@@ -40,7 +43,8 @@ export default function PackingListPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">No Trip Selected</h1>
           <p className="text-muted-foreground mb-6">
-            Please select a trip from the trip switcher to view its packing list.
+            Please select a trip from the trip switcher to view its packing
+            list.
           </p>
         </div>
       </div>
@@ -52,10 +56,11 @@ export default function PackingListPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Packing List</h1>
         <p className="text-muted-foreground">
-          Organize your travel essentials for <span className="font-semibold">{selectedTrip.name}</span>
+          Organize your travel essentials for{' '}
+          <span className="font-semibold">{selectedTrip.name}</span>
         </p>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* My Items Card */}
         <Link to={`/trip/${selectedTrip.id}/packing/items`} className="block">
@@ -92,7 +97,10 @@ export default function PackingListPage() {
         </Link>
 
         {/* Templates Card */}
-        <Link to={`/trip/${selectedTrip.id}/packing/templates`} className="block">
+        <Link
+          to={`/trip/${selectedTrip.id}/packing/templates`}
+          className="block"
+        >
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-purple-200">
             <div className="flex items-center gap-3 mb-4">
               <FileText className="h-8 w-8 text-purple-500" />
@@ -115,18 +123,24 @@ export default function PackingListPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-500">0</div>
-            <div className="text-sm text-gray-600 dark:text-gray-300">Items Packed</div>
+            <div className="text-sm text-gray-600 dark:text-gray-300">
+              Items Packed
+            </div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-green-500">0</div>
-            <div className="text-sm text-gray-600 dark:text-gray-300">Shared Items</div>
+            <div className="text-sm text-gray-600 dark:text-gray-300">
+              Shared Items
+            </div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-500">0</div>
-            <div className="text-sm text-gray-600 dark:text-gray-300">Templates Used</div>
+            <div className="text-sm text-gray-600 dark:text-gray-300">
+              Templates Used
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-} 
+}

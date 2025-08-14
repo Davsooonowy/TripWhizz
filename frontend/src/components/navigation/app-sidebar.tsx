@@ -43,15 +43,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         items: [
           {
             title: 'Day Plans',
-            url: selectedTrip ? `/trip/${selectedTrip.id}/itinerary/days` : '/itinerary/days',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/itinerary/days`
+              : '/itinerary/days',
           },
           {
             title: 'Activities',
-            url: selectedTrip ? `/trip/${selectedTrip.id}/itinerary/activities` : '/itinerary/activities',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/itinerary/activities`
+              : '/itinerary/activities',
           },
           {
             title: 'Bookings',
-            url: selectedTrip ? `/trip/${selectedTrip.id}/itinerary/bookings` : '/itinerary/bookings',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/itinerary/bookings`
+              : '/itinerary/bookings',
           },
         ],
       },
@@ -62,15 +68,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         items: [
           {
             title: 'Overview',
-            url: selectedTrip ? `/trip/${selectedTrip.id}/expenses/overview` : '/expenses/overview',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/expenses/overview`
+              : '/expenses/overview',
           },
           {
             title: 'Split Bills',
-            url: selectedTrip ? `/trip/${selectedTrip.id}/expenses/split` : '/expenses/split',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/expenses/split`
+              : '/expenses/split',
           },
           {
             title: 'Add Expense',
-            url: selectedTrip ? `/trip/${selectedTrip.id}/expenses/add` : '/expenses/add',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/expenses/add`
+              : '/expenses/add',
           },
         ],
       },
@@ -81,15 +93,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         items: [
           {
             title: 'Destinations',
-            url: selectedTrip ? `/trip/${selectedTrip.id}/maps/destinations` : '/maps/destinations',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/maps/destinations`
+              : '/maps/destinations',
           },
           {
             title: 'Navigation',
-            url: selectedTrip ? `/trip/${selectedTrip.id}/maps/navigation` : '/maps/navigation',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/maps/navigation`
+              : '/maps/navigation',
           },
           {
             title: 'Points of Interest',
-            url: selectedTrip ? `/trip/${selectedTrip.id}/maps/poi` : '/maps/poi',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/maps/poi`
+              : '/maps/poi',
           },
         ],
       },
@@ -100,15 +118,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         items: [
           {
             title: 'My Items',
-            url: selectedTrip ? `/trip/${selectedTrip.id}/packing/items` : '/packing/items',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/packing/items`
+              : '/packing/items',
           },
           {
             title: 'Shared Items',
-            url: selectedTrip ? `/trip/${selectedTrip.id}/packing/shared` : '/packing/shared',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/packing/shared`
+              : '/packing/shared',
           },
           {
             title: 'Templates',
-            url: selectedTrip ? `/trip/${selectedTrip.id}/packing/templates` : '/packing/templates',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/packing/templates`
+              : '/packing/templates',
           },
         ],
       },

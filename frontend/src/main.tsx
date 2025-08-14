@@ -53,7 +53,9 @@ const StageDetailsPage = React.lazy(
 const PackingListPage = React.lazy(() => import('@/pages/packing'));
 const PackingItemsPage = React.lazy(() => import('@/pages/packing/items'));
 const SharedPackingPage = React.lazy(() => import('@/pages/packing/shared'));
-const PackingTemplatesPage = React.lazy(() => import('@/pages/packing/templates'));
+const PackingTemplatesPage = React.lazy(
+  () => import('@/pages/packing/templates'),
+);
 
 const protectedLoginLoader = async () => {
   if (!authenticationProviderInstance.isAuthenticated()) {
