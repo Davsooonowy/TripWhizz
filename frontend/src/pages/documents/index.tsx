@@ -79,7 +79,10 @@ export default function DocumentsPage() {
         </Link>
 
         {/* Shared Documents Card */}
-        <Link to={`/trip/${selectedTrip.id}/documents?visibility=shared`} className="block">
+        <Link
+          to={`/trip/${selectedTrip.id}/documents?visibility=shared`}
+          className="block"
+        >
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-green-200">
             <div className="flex items-center gap-3 mb-4">
               <Users className="h-8 w-8 text-green-500" />
@@ -96,7 +99,10 @@ export default function DocumentsPage() {
         </Link>
 
         {/* Private Documents Card */}
-        <Link to={`/trip/${selectedTrip.id}/documents?visibility=private`} className="block">
+        <Link
+          to={`/trip/${selectedTrip.id}/documents?visibility=private`}
+          className="block"
+        >
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-purple-200">
             <div className="flex items-center gap-3 mb-4">
               <Shield className="h-8 w-8 text-purple-500" />
@@ -113,7 +119,10 @@ export default function DocumentsPage() {
         </Link>
 
         {/* Upload Document Card */}
-        <Link to={`/trip/${selectedTrip.id}/documents/upload`} className="block">
+        <Link
+          to={`/trip/${selectedTrip.id}/documents/upload`}
+          className="block"
+        >
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-orange-200">
             <div className="flex items-center gap-3 mb-4">
               <Plus className="h-8 w-8 text-orange-500" />

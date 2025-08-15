@@ -1,10 +1,10 @@
 from celery import shared_task
 from django.utils import timezone
 from .models import TripInvitation
-from user_account.models import Friendship, Notification
+from user_account.models import Notification
 from datetime import timedelta
 
-from .models import Document, Trip
+from .models import Document
 
 
 @shared_task

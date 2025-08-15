@@ -1,6 +1,6 @@
-import { BaseApiClient } from './base';
 import { AuthenticationProvider } from '../authentication-provider';
 import { API_URL } from '../config';
+import { BaseApiClient } from './base';
 
 export interface DocumentCategory {
   id: number;
@@ -120,7 +120,7 @@ export class DocumentsApiClient extends BaseApiClient {
     filters?: DocumentFilters,
   ): Promise<Document[]> {
     const params = new URLSearchParams();
-    
+
     if (filters?.visibility) {
       params.append('visibility', filters.visibility);
     }
@@ -135,8 +135,10 @@ export class DocumentsApiClient extends BaseApiClient {
     }
 
     const queryString = params.toString();
-    const url = queryString ? `${this.url(tripId)}?${queryString}` : this.url(tripId);
-    
+    const url = queryString
+      ? `${this.url(tripId)}?${queryString}`
+      : this.url(tripId);
+
     const response = await fetch(url, {
       ...this._requestConfiguration(true),
       method: 'GET',
@@ -149,10 +151,7 @@ export class DocumentsApiClient extends BaseApiClient {
     return await response.json();
   }
 
-  async getDocument(
-    tripId: number,
-    documentId: number,
-  ): Promise<Document> {
+  async getDocument(tripId: number, documentId: number): Promise<Document> {
     const response = await fetch(`${this.url(tripId)}${documentId}/`, {
       ...this._requestConfiguration(true),
       method: 'GET',
@@ -183,16 +182,22 @@ export class DocumentsApiClient extends BaseApiClient {
       formData.append('custom_tags', JSON.stringify(data.custom_tags));
     }
     if (data.auto_delete_after_trip !== undefined) {
-      formData.append('auto_delete_after_trip', data.auto_delete_after_trip.toString());
+      formData.append(
+        'auto_delete_after_trip',
+        data.auto_delete_after_trip.toString(),
+      );
     }
     if (data.delete_days_after_trip) {
-      formData.append('delete_days_after_trip', data.delete_days_after_trip.toString());
+      formData.append(
+        'delete_days_after_trip',
+        data.delete_days_after_trip.toString(),
+      );
     }
 
     // For FormData, don't set Content-Type header - let browser set it with boundary
     const config = this._requestConfiguration(true);
     delete config.headers['Content-Type'];
-    
+
     const response = await fetch(this.url(tripId), {
       ...config,
       method: 'POST',
@@ -239,13 +244,10 @@ export class DocumentsApiClient extends BaseApiClient {
     tripId: number,
     documentId: number,
   ): Promise<DocumentComment[]> {
-    const response = await fetch(
-      `${this.url(tripId)}${documentId}/comments/`,
-      {
-        ...this._requestConfiguration(true),
-        method: 'GET',
-      },
-    );
+    const response = await fetch(`${this.url(tripId)}${documentId}/comments/`, {
+      ...this._requestConfiguration(true),
+      method: 'GET',
+    });
 
     if (!response.ok) {
       throw new Error(`Error HTTP: ${response.status}`);
@@ -259,14 +261,11 @@ export class DocumentsApiClient extends BaseApiClient {
     documentId: number,
     data: CreateCommentData,
   ): Promise<DocumentComment> {
-    const response = await fetch(
-      `${this.url(tripId)}${documentId}/comments/`,
-      {
-        ...this._requestConfiguration(true),
-        method: 'POST',
-        body: JSON.stringify(data),
-      },
-    );
+    const response = await fetch(`${this.url(tripId)}${documentId}/comments/`, {
+      ...this._requestConfiguration(true),
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
 
     if (!response.ok) {
       throw new Error(`Error HTTP: ${response.status}`);

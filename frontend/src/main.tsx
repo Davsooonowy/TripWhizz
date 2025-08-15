@@ -57,8 +57,12 @@ const PackingTemplatesPage = React.lazy(
   () => import('@/pages/packing/templates'),
 );
 const DocumentsPage = React.lazy(() => import('@/pages/documents'));
-const TripDocumentsPage = React.lazy(() => import('@/pages/trip/[id]/documents'));
-const DocumentUploadPage = React.lazy(() => import('@/pages/trip/[id]/documents/upload'));
+const TripDocumentsPage = React.lazy(
+  () => import('@/pages/trip/[id]/documents'),
+);
+const DocumentUploadPage = React.lazy(
+  () => import('@/pages/trip/[id]/documents/upload'),
+);
 
 const protectedLoginLoader = async () => {
   if (!authenticationProviderInstance.isAuthenticated()) {

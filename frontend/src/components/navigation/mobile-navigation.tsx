@@ -7,9 +7,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { useTripContext } from '@/components/util/trip-context';
 import { NotificationsApiClient } from '@/lib/api/notifications';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
-import { useTripContext } from '@/components/util/trip-context';
 import { cn } from '@/lib/utils';
 
 import type React from 'react';
