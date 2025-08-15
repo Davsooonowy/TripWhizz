@@ -89,41 +89,51 @@ export default function TripDocumentsPage() {
     handleFilterChange('search', searchTerm || undefined);
   };
 
-  const handleViewDocument = (document: Document) => {
+  const handleViewDocument = (doc: Document) => {
     // For now, just download the document
     // In the future, this could open a preview modal
-    handleDownloadDocument(document);
+    handleDownloadDocument(doc);
   };
 
-  const handleDownloadDocument = (document: Document) => {
-    if (document.file_url) {
+  const handleDownloadDocument = (doc: Document) => {
+
+    if (doc.file_url) {
       const link = document.createElement('a');
-      link.href = document.file_url;
-      link.download = document.title;
+      link.href = doc.file_url;
+      link.download = doc.title;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else if (doc.file) {
+      // Fallback to the file field if file_url is not available
+      const link = document.createElement('a');
+      link.href = doc.file;
+      link.download = doc.title;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     } else {
-      console.error('No file URL available for download');
+      console.error('No file URL or file field available for download');
+      alert('Unable to download file. Please try again later.');
     }
   };
 
-  const handleEditDocument = (document: Document) => {
+  const handleEditDocument = (doc: Document) => {
     // Navigate to edit page or open edit modal
-    console.log('Edit document:', document.id);
-    // TODO: Implement edit functionality
+    // TODO: Implement edit functionality - for now just show an alert
+    alert(`Edit functionality for "${doc.title}" will be implemented soon!`);
   };
 
-  const handleViewComments = (document: Document) => {
+  const handleViewComments = (doc: Document) => {
     // Open comments modal or navigate to comments page
-    console.log('View comments for document:', document.id);
-    // TODO: Implement comments view
+    // TODO: Implement comments view - for now just show an alert
+    alert(`Comments functionality for "${doc.title}" will be implemented soon!`);
   };
 
-  const handleDeleteDocument = async (document: Document) => {
-    if (window.confirm(`Are you sure you want to delete "${document.title}"?`)) {
+  const handleDeleteDocument = async (doc: Document) => {
+    if (window.confirm(`Are you sure you want to delete "${doc.title}"?`)) {
       try {
-        await documentsApiClient.deleteDocument(selectedTrip!.id, document.id);
+        await documentsApiClient.deleteDocument(selectedTrip!.id, doc.id);
         // Reload documents
         loadDocuments();
       } catch (error) {
