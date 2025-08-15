@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from .models import Trip, Stage, StageElement, TripInvitation, PackingList, PackingItem
+from .models import Trip, Stage, StageElement, TripInvitation, PackingList, PackingItem, DocumentCategory, Document, DocumentComment
 
 User = get_user_model()
 
@@ -240,3 +240,155 @@ class PackingListSerializer(serializers.ModelSerializer):
 		request = self.context.get('request')
 		trip = self.context.get('trip')
 		return PackingList.objects.create(created_by=request.user, trip=trip, **validated_data)
+
+
+class DocumentCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DocumentCategory
+        fields = [
+            "id",
+            "name",
+            "description",
+            "icon",
+            "color",
+            "is_default",
+            "created_at",
+        ]
+
+
+class DocumentCommentSerializer(serializers.ModelSerializer):
+    author = UserBasicSerializer(read_only=True)
+
+    class Meta:
+        model = DocumentComment
+        fields = [
+            "id",
+            "document",
+            "author",
+            "content",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class DocumentSerializer(serializers.ModelSerializer):
+    category = DocumentCategorySerializer(read_only=True)
+    uploaded_by = UserBasicSerializer(read_only=True)
+    comments = DocumentCommentSerializer(many=True, read_only=True)
+    comment_count = serializers.SerializerMethodField()
+    file_url = serializers.SerializerMethodField()
+    file_extension = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Document
+        fields = [
+            "id",
+            "trip",
+            "title",
+            "description",
+            "file",
+            "file_url",
+            "file_type",
+            "file_size",
+            "file_extension",
+            "visibility",
+            "category",
+            "custom_tags",
+            "uploaded_by",
+            "comments",
+            "comment_count",
+            "auto_delete_after_trip",
+            "delete_days_after_trip",
+            "created_at",
+            "updated_at",
+        ]
+
+    def get_comment_count(self, obj):
+        return obj.comments.count()
+
+    def get_file_url(self, obj):
+        if obj.file:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.file.url)
+        return None
+
+    def get_file_extension(self, obj):
+        if obj.file:
+            return obj.file.name.split('.')[-1].upper()
+        return None
+
+
+class DocumentCreateSerializer(serializers.ModelSerializer):
+    custom_tags = serializers.CharField(required=False, allow_blank=True)
+    
+    class Meta:
+        model = Document
+        fields = [
+            "title",
+            "description",
+            "file",
+            "visibility",
+            "category",
+            "custom_tags",
+            "auto_delete_after_trip",
+            "delete_days_after_trip",
+        ]
+
+    def validate_file(self, value):
+        # Validate file size (max 50MB)
+        max_size = 50 * 1024 * 1024  # 50MB
+        if value.size > max_size:
+            raise serializers.ValidationError("File size must be under 50MB")
+        
+        # Validate file type
+        allowed_types = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'txt', 'md']
+        file_extension = value.name.split('.')[-1].lower()
+        if file_extension not in allowed_types:
+            raise serializers.ValidationError(f"File type .{file_extension} is not supported")
+        
+        return value
+
+    def create(self, validated_data):
+        # Handle custom_tags JSON string
+        custom_tags = validated_data.pop('custom_tags', '')
+        if custom_tags:
+            try:
+                import json
+                validated_data['custom_tags'] = json.loads(custom_tags)
+            except (json.JSONDecodeError, TypeError):
+                validated_data['custom_tags'] = []
+        else:
+            validated_data['custom_tags'] = []
+        
+        # Set file type based on extension
+        file = validated_data['file']
+        file_extension = file.name.split('.')[-1].lower()
+        
+        if file_extension in ['jpg', 'jpeg', 'png', 'gif']:
+            validated_data['file_type'] = 'image'
+        elif file_extension == 'pdf':
+            validated_data['file_type'] = 'pdf'
+        elif file_extension in ['txt', 'md']:
+            validated_data['file_type'] = 'text' if file_extension == 'txt' else 'markdown'
+        else:
+            validated_data['file_type'] = 'other'
+        
+        validated_data['file_size'] = file.size
+        validated_data['uploaded_by'] = self.context['request'].user
+        
+        return super().create(validated_data)
+
+
+class DocumentUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Document
+        fields = [
+            "title",
+            "description",
+            "visibility",
+            "category",
+            "custom_tags",
+            "auto_delete_after_trip",
+            "delete_days_after_trip",
+        ]

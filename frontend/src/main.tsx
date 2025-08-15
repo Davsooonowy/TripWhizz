@@ -56,6 +56,13 @@ const SharedPackingPage = React.lazy(() => import('@/pages/packing/shared'));
 const PackingTemplatesPage = React.lazy(
   () => import('@/pages/packing/templates'),
 );
+const DocumentsPage = React.lazy(() => import('@/pages/documents'));
+const TripDocumentsPage = React.lazy(
+  () => import('@/pages/trip/[id]/documents'),
+);
+const DocumentUploadPage = React.lazy(
+  () => import('@/pages/trip/[id]/documents/upload'),
+);
 
 const protectedLoginLoader = async () => {
   if (!authenticationProviderInstance.isAuthenticated()) {
@@ -108,6 +115,18 @@ const router = createBrowserRouter([
       {
         path: '/trip/:tripId/packing/templates',
         element: <PackingTemplatesPage />,
+      },
+      {
+        path: '/documents',
+        element: <DocumentsPage />,
+      },
+      {
+        path: '/trip/:tripId/documents',
+        element: <TripDocumentsPage />,
+      },
+      {
+        path: '/trip/:tripId/documents/upload',
+        element: <DocumentUploadPage />,
       },
       {
         path: '/trip/new',

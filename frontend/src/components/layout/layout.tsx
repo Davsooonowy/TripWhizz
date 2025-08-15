@@ -69,7 +69,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }, [isMobile]);
 
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider defaultOpen={true}>
       <AppSidebar />
       {isMobile && <MobileNavigation />}
       <main className={`flex-1 overflow-auto ${isMobile ? 'pb-16' : ''}`}>

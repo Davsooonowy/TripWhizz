@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/components/ui/use-toast';
 import { useTripContext } from '@/components/util/trip-context';
 import {
   PackingApiClient,
@@ -13,7 +14,6 @@ import {
 import { type TripParticipant, TripsApiClient } from '@/lib/api/trips';
 import { UsersApiClient } from '@/lib/api/users';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
-import { useToast } from '@/components/ui/use-toast';
 
 import { useEffect, useMemo, useState } from 'react';
 
@@ -77,7 +77,8 @@ export default function SharedPackingPage() {
         title: 'Error',
         description: 'Failed to fetch active user',
         variant: 'destructive',
-      });    }
+      });
+    }
   };
 
   fetchUserId();

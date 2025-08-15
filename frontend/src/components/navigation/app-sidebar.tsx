@@ -24,6 +24,7 @@ import {
   Calendar,
   CheckSquare,
   DollarSign,
+  FileText,
   MoonIcon as IconMoon,
   SunIcon as IconSun,
   Map,
@@ -133,6 +134,31 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             url: selectedTrip
               ? `/trip/${selectedTrip.id}/packing/templates`
               : '/packing/templates',
+          },
+        ],
+      },
+      {
+        title: 'Documents',
+        url: selectedTrip ? `/trip/${selectedTrip.id}/documents` : '/documents',
+        icon: FileText,
+        items: [
+          {
+            title: 'All Documents',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/documents`
+              : '/documents',
+          },
+          {
+            title: 'Shared',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/documents?visibility=shared`
+              : '/documents?visibility=shared',
+          },
+          {
+            title: 'Private',
+            url: selectedTrip
+              ? `/trip/${selectedTrip.id}/documents?visibility=private`
+              : '/documents?visibility=private',
           },
         ],
       },

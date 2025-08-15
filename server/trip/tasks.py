@@ -1,52 +1,62 @@
 from celery import shared_task
 from django.utils import timezone
 from .models import TripInvitation
-from user_account.models import Friendship, Notification
+from user_account.models import Notification
 from datetime import timedelta
+
+from .models import Document
 
 
 @shared_task
-def cleanup_expired_invitations():
+def cleanup_expired_documents():
+    """
+    Clean up documents that are set to auto-delete after trip ends
+    """
     now = timezone.now()
+    deleted_count = 0
+    
+    # Find documents that should be deleted
+    documents_to_delete = Document.objects.filter(
+        auto_delete_after_trip=True,
+        trip__end_date__lt=now - timedelta(days=1)  # Trip ended at least 1 day ago
+    )
+    
+    for document in documents_to_delete:
+        # Check if enough days have passed since trip ended
+        days_since_trip_end = (now.date() - document.trip.end_date).days
+        if days_since_trip_end >= document.delete_days_after_trip:
+            try:
+                # Delete the document file first
+                if document.file:
+                    document.file.delete(save=False)
+                # Delete the document record
+                document.delete()
+                deleted_count += 1
+            except Exception as e:
+                print(f"Error deleting document {document.id}: {e}")
+    
+    print(f"Cleaned up {deleted_count} expired documents")
+    return deleted_count
 
-    expired_trip_invitations = TripInvitation.objects.filter(
+
+@shared_task
+def cleanup_expired_trip_invitations():
+    """
+    Clean up expired trip invitations
+    """
+    now = timezone.now()
+    
+    # Find expired invitations
+    expired_invitations = TripInvitation.objects.filter(
         status='pending',
         expires_at__lt=now
     )
-
-    expired_count = 0
-    for invitation in expired_trip_invitations:
-        invitation.status = 'expired'
-        invitation.save()
-
-        # Mark related notifications as read/inactive
-        Notification.objects.filter(
-            notification_type='trip_invite',
-            related_object_id=invitation.id,
-            is_read=False
-        ).update(is_read=True)
-
-        expired_count += 1
-
-    expired_friend_requests = Friendship.objects.filter(
-        status='pending',
-        expires_at__lt=now
-    )
-
-    friend_expired_count = 0
-    for friendship in expired_friend_requests:
-        friendship.status = 'expired'
-        friendship.save()
-
-        Notification.objects.filter(
-            notification_type='friend_request',
-            related_object_id=friendship.id,
-            is_read=False
-        ).update(is_read=True)
-
-        friend_expired_count += 1
-
-    return f"Expired {expired_count} trip invitations and {friend_expired_count} friend requests"
+    
+    # Update status to expired
+    expired_count = expired_invitations.update(status='expired')
+    
+    print(f"Marked {expired_count} trip invitations as expired")
+    return expired_count
 
 
 @shared_task

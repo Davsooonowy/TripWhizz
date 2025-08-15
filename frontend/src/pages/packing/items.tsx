@@ -339,43 +339,6 @@ export default function PackingItemsPage() {
                           </Badge>
                         )}
                       </div>
-                      {(item.created_by || item.packed_by) && (
-                        <div className="mt-2 flex items-center gap-2">
-                          {/* Creator */}
-                          {item.created_by && (
-                            <div className="flex items-center gap-1">
-                              <Avatar className="h-6 w-6">
-                                <AvatarImage
-                                  src={item.created_by.avatar_url || undefined}
-                                />
-                                <AvatarFallback className="text-xs bg-blue-100 text-blue-700">
-                                  {getUserInitials(item.created_by)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-xs text-muted-foreground">
-                                Added by
-                              </span>
-                            </div>
-                          )}
-
-                          {/* Packed by */}
-                          {item.packed_by && (
-                            <div className="flex items-center gap-1">
-                              <Avatar className="h-6 w-6">
-                                <AvatarImage
-                                  src={item.packed_by.avatar_url || undefined}
-                                />
-                                <AvatarFallback className="text-xs bg-purple-100 text-purple-700">
-                                  {getUserInitials(item.packed_by)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-xs text-muted-foreground">
-                                Packed by
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      )}
                     </div>
                     <Button
                       variant="ghost"
