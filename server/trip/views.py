@@ -1,5 +1,6 @@
 from django.db import transaction
 from django.db.models import Avg, Q, Count, Case, When, IntegerField, F
+from django.shortcuts import get_object_or_404
 from rest_framework import status, permissions
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
@@ -7,7 +8,7 @@ from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
-from .models import Trip, Stage, StageElement, StageElementReaction, TripInvitation, PackingList, PackingItem
+from .models import Trip, Stage, StageElement, StageElementReaction, TripInvitation, PackingList, PackingItem, DocumentCategory, Document, DocumentComment
 from .serializers import (
 	TripSerializer,
 	TripListSerializer,
@@ -17,6 +18,11 @@ from .serializers import (
 	TripInvitationSerializer,
 	PackingListSerializer,
 	PackingItemSerializer,
+	DocumentCategorySerializer,
+	DocumentSerializer,
+	DocumentCreateSerializer,
+	DocumentUpdateSerializer,
+	DocumentCommentSerializer,
 )
 from user_account.models import Notification
 from user_account.utils import send_trip_invitation_email
@@ -799,3 +805,203 @@ class ToggleItemPackedView(GenericAPIView):
 			item.packed_at = None
 		item.save()
 		return Response(self.get_serializer(item).data, status=status.HTTP_200_OK)
+
+
+class DocumentCategoryView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """Get all document categories"""
+        categories = DocumentCategory.objects.filter(is_default=True)
+        serializer = DocumentCategorySerializer(categories, many=True)
+        return Response(serializer.data)
+
+
+class DocumentView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, trip_id):
+        """Get all documents for a trip"""
+        trip = get_object_or_404(Trip, id=trip_id)
+        
+        # Check if user has access to this trip
+        if not (request.user == trip.owner or trip.participants.filter(id=request.user.id).exists()):
+            return Response({"error": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Get documents based on visibility and user permissions
+        documents = Document.objects.filter(trip=trip)
+        
+        # Filter by visibility
+        if request.query_params.get('visibility') == 'private':
+            documents = documents.filter(uploaded_by=request.user)
+        elif request.query_params.get('visibility') == 'shared':
+            documents = documents.filter(visibility='shared')
+        
+        # Filter by category
+        category_id = request.query_params.get('category')
+        if category_id:
+            documents = documents.filter(category_id=category_id)
+        
+        # Filter by search query
+        search = request.query_params.get('search')
+        if search:
+            documents = documents.filter(title__icontains=search)
+        
+        # Filter by file type
+        file_type = request.query_params.get('file_type')
+        if file_type:
+            documents = documents.filter(file_type=file_type)
+        
+        serializer = DocumentSerializer(documents, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def post(self, request, trip_id):
+        """Upload a new document"""
+        trip = get_object_or_404(Trip, id=trip_id)
+        
+        # Check if user has access to this trip
+        if not (request.user == trip.owner or trip.participants.filter(id=request.user.id).exists()):
+            return Response({"error": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
+        
+        serializer = DocumentCreateSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            document = serializer.save(trip=trip)
+            
+            # Create notification for new document
+            if document.visibility == 'shared':
+                # Notify trip participants about new shared document
+                for participant in trip.participants.all():
+                    if participant != request.user:
+                        # You can implement notification creation here
+                        pass
+            
+            response_serializer = DocumentSerializer(document, context={'request': request})
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DocumentDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, trip_id, document_id):
+        """Get document details"""
+        trip = get_object_or_404(Trip, id=trip_id)
+        document = get_object_or_404(Document, id=document_id, trip=trip)
+        
+        # Check if user has access to this document
+        if document.visibility == 'private' and document.uploaded_by != request.user:
+            if not (request.user == trip.owner or trip.participants.filter(id=request.user.id).exists()):
+                return Response({"error": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
+        
+        serializer = DocumentSerializer(document, context={'request': request})
+        return Response(serializer.data)
+
+    def put(self, request, trip_id, document_id):
+        """Update document"""
+        trip = get_object_or_404(Trip, id=trip_id)
+        document = get_object_or_404(Document, id=document_id, trip=trip)
+        
+        # Check if user can edit this document
+        if document.uploaded_by != request.user and request.user != trip.owner:
+            return Response({"error": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
+        
+        serializer = DocumentUpdateSerializer(document, data=request.data, partial=True)
+        if serializer.is_valid():
+            document = serializer.save()
+            response_serializer = DocumentSerializer(document, context={'request': request})
+            return Response(response_serializer.data)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, trip_id, document_id):
+        """Delete document"""
+        trip = get_object_or_404(Trip, id=trip_id)
+        document = get_object_or_404(Document, id=document_id, trip=trip)
+        
+        # Check if user can delete this document
+        if document.uploaded_by != request.user and request.user != trip.owner:
+            return Response({"error": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
+        
+        document.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class DocumentCommentView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, trip_id, document_id):
+        """Get comments for a document"""
+        trip = get_object_or_404(Trip, id=trip_id)
+        document = get_object_or_404(Document, id=document_id, trip=trip)
+        
+        # Check if user has access to this document
+        if document.visibility == 'private' and document.uploaded_by != request.user:
+            if not (request.user == trip.owner or trip.participants.filter(id=request.user.id).exists()):
+                return Response({"error": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
+        
+        comments = document.comments.all()
+        serializer = DocumentCommentSerializer(comments, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, trip_id, document_id):
+        """Add a comment to a document"""
+        trip = get_object_or_404(Trip, id=trip_id)
+        document = get_object_or_404(Document, id=document_id, trip=trip)
+        
+        # Check if user has access to this document
+        if document.visibility == 'private' and document.uploaded_by != request.user:
+            if not (request.user == trip.owner or trip.participants.filter(id=request.user.id).exists()):
+                return Response({"error": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
+        
+        serializer = DocumentCommentSerializer(data=request.data)
+        if serializer.is_valid():
+            comment = serializer.save(
+                document=document,
+                author=request.user
+            )
+            
+            # Create notification for new comment
+            if document.visibility == 'shared' and comment.author != document.uploaded_by:
+                # Notify document owner about new comment
+                pass
+            
+            response_serializer = DocumentCommentSerializer(comment)
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DocumentCommentDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def put(self, request, trip_id, document_id, comment_id):
+        """Update a comment"""
+        trip = get_object_or_404(Trip, id=trip_id)
+        document = get_object_or_404(Document, id=document_id, trip=trip)
+        comment = get_object_or_404(DocumentComment, id=comment_id, document=document)
+        
+        # Check if user can edit this comment
+        if comment.author != request.user:
+            return Response({"error": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
+        
+        serializer = DocumentCommentSerializer(comment, data=request.data, partial=True)
+        if serializer.is_valid():
+            comment = serializer.save()
+            response_serializer = DocumentCommentSerializer(comment)
+            return Response(response_serializer.data)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, trip_id, document_id, comment_id):
+        """Delete a comment"""
+        trip = get_object_or_404(Trip, id=trip_id)
+        document = get_object_or_404(Document, id=document_id, trip=trip)
+        comment = get_object_or_404(DocumentComment, id=comment_id, document=document)
+        
+        # Check if user can delete this comment
+        if comment.author != request.user and request.user != trip.owner:
+            return Response({"error": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
+        
+        comment.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

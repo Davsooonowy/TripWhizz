@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/sheet';
 import { NotificationsApiClient } from '@/lib/api/notifications';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
+import { useTripContext } from '@/components/util/trip-context';
 import { cn } from '@/lib/utils';
 
 import type React from 'react';
@@ -28,6 +29,7 @@ import {
 import { Link, useLocation } from 'react-router-dom';
 
 export function MobileNavigation() {
+  const { selectedTrip } = useTripContext();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
@@ -121,17 +123,19 @@ export function MobileNavigation() {
               </SheetClose>
 
               <div className="grid grid-cols-2 gap-4">
-                <SheetClose asChild>
-                  <Link
-                    to="/documents/new"
-                    className="flex flex-col items-center justify-center p-6 rounded-2xl border hover:bg-accent transition-all duration-300 shadow-sm"
-                  >
-                    <div className="bg-primary/10 p-3 rounded-xl mb-3">
-                      <FileText className="h-7 w-7 text-primary" />
-                    </div>
-                    <span className="text-sm font-medium">New Document</span>
-                  </Link>
-                </SheetClose>
+                {selectedTrip && (
+                  <SheetClose asChild>
+                    <Link
+                      to={`/trip/${selectedTrip.id}/documents/upload`}
+                      className="flex flex-col items-center justify-center p-6 rounded-2xl border hover:bg-accent transition-all duration-300 shadow-sm"
+                    >
+                      <div className="bg-primary/10 p-3 rounded-xl mb-3">
+                        <FileText className="h-7 w-7 text-primary" />
+                      </div>
+                      <span className="text-sm font-medium">New Document</span>
+                    </Link>
+                  </SheetClose>
+                )}
 
                 <SheetClose asChild>
                   <Link

@@ -22,4 +22,11 @@ urlpatterns = [
 	path('trip/<int:pk>/packing-lists/<int:list_id>/items/', views.PackingItemView.as_view(), name='packing-items'),
 	path('trip/<int:pk>/packing-lists/<int:list_id>/items/<int:item_id>/', views.PackingItemDetailView.as_view(), name='packing-item-detail'),
 	path('trip/<int:pk>/packing-lists/<int:list_id>/items/<int:item_id>/toggle/', views.ToggleItemPackedView.as_view(), name='packing-item-toggle'),
+	
+	# Document URLs
+	path('document-categories/', views.DocumentCategoryView.as_view(), name='document-categories'),
+	path('trip/<int:trip_id>/documents/', views.DocumentView.as_view(), name='trip-documents'),
+	path('trip/<int:trip_id>/documents/<int:document_id>/', views.DocumentDetailView.as_view(), name='trip-document-detail'),
+	path('trip/<int:trip_id>/documents/<int:document_id>/comments/', views.DocumentCommentView.as_view(), name='trip-document-comments'),
+	path('trip/<int:trip_id>/documents/<int:document_id>/comments/<int:comment_id>/', views.DocumentCommentDetailView.as_view(), name='trip-document-comment-detail'),
 ]

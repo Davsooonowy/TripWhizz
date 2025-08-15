@@ -183,3 +183,88 @@ class PackingItem(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+
+
+class DocumentCategory(models.Model):
+    """Predefined categories for documents"""
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True, null=True)
+    icon = models.CharField(max_length=50, blank=True, null=True)
+    color = models.CharField(max_length=20, default="#3B82F6")
+    is_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name_plural = "Document categories"
+
+
+class Document(models.Model):
+    """Trip documents that can be shared or private"""
+    DOCUMENT_TYPE_CHOICES = [
+        ("pdf", "PDF"),
+        ("image", "Image"),
+        ("text", "Text"),
+        ("markdown", "Markdown"),
+        ("other", "Other"),
+    ]
+
+    VISIBILITY_CHOICES = [
+        ("private", "Private"),
+        ("shared", "Shared"),
+    ]
+
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="documents")
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    file = models.FileField(upload_to="trip_documents/")
+    file_type = models.CharField(max_length=20, choices=DOCUMENT_TYPE_CHOICES)
+    file_size = models.PositiveIntegerField(help_text="File size in bytes")
+    visibility = models.CharField(max_length=20, choices=VISIBILITY_CHOICES, default="shared")
+    category = models.ForeignKey(DocumentCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name="documents")
+    custom_tags = models.JSONField(default=list, blank=True, help_text="Custom tags like 'Day 1', 'Visa', 'Food'")
+    
+    # Metadata
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="uploaded_documents")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    # Auto-cleanup
+    auto_delete_after_trip = models.BooleanField(default=False, help_text="Delete document X days after trip ends")
+    delete_days_after_trip = models.PositiveIntegerField(default=30, help_text="Days after trip end to delete document")
+
+    def __str__(self):
+        return f"{self.title} - {self.trip.name}"
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    @property
+    def is_image(self):
+        return self.file_type == "image"
+
+    @property
+    def is_pdf(self):
+        return self.file_type == "pdf"
+
+    @property
+    def is_text_based(self):
+        return self.file_type in ["text", "markdown"]
+
+
+class DocumentComment(models.Model):
+    """Comments and notes on documents"""
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name="comments")
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="document_comments")
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Comment by {self.author.username} on {self.document.title}"
+
+    class Meta:
+        ordering = ["created_at"]
