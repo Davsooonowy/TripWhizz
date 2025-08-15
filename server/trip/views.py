@@ -831,11 +831,16 @@ class DocumentView(APIView):
         # Get documents based on visibility and user permissions
         documents = Document.objects.filter(trip=trip)
         
-        # Filter by visibility
+        # Filter by visibility - by default, show shared documents and user's private documents
         if request.query_params.get('visibility') == 'private':
             documents = documents.filter(uploaded_by=request.user)
         elif request.query_params.get('visibility') == 'shared':
             documents = documents.filter(visibility='shared')
+        else:
+            # Default: show shared documents + user's own private documents
+            documents = documents.filter(
+                Q(visibility='shared') | Q(uploaded_by=request.user)
+            )
         
         # Filter by category
         category_id = request.query_params.get('category')

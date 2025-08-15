@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useToast } from '@/components/ui/use-toast';
 import { useTripContext } from '@/components/util/trip-context';
 import { DocumentsApiClient } from '@/lib/api/documents';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
@@ -11,8 +12,6 @@ import * as React from 'react';
 import { useEffect, useState } from 'react';
 
 import { 
-  Download, 
-  Edit, 
   Eye, 
   FileText, 
   Filter, 
@@ -20,14 +19,14 @@ import {
   Plus, 
   Search, 
   Trash2, 
-  Upload,
-  MessageSquare
+  Upload
 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 
 export default function TripDocumentsPage() {
   const { selectedTrip, trips, isLoading } = useTripContext();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { toast } = useToast();
   
   const [documents, setDocuments] = useState<Document[]>([]);
   const [categories, setCategories] = useState<DocumentCategory[]>([]);
@@ -96,7 +95,6 @@ export default function TripDocumentsPage() {
   };
 
   const handleDownloadDocument = (doc: Document) => {
-
     if (doc.file_url) {
       const link = document.createElement('a');
       link.href = doc.file_url;
@@ -118,26 +116,31 @@ export default function TripDocumentsPage() {
     }
   };
 
-  const handleEditDocument = (doc: Document) => {
-    // Navigate to edit page or open edit modal
-    // TODO: Implement edit functionality - for now just show an alert
-    alert(`Edit functionality for "${doc.title}" will be implemented soon!`);
-  };
-
-  const handleViewComments = (doc: Document) => {
-    // Open comments modal or navigate to comments page
-    // TODO: Implement comments view - for now just show an alert
-    alert(`Comments functionality for "${doc.title}" will be implemented soon!`);
-  };
-
   const handleDeleteDocument = async (doc: Document) => {
     if (window.confirm(`Are you sure you want to delete "${doc.title}"?`)) {
       try {
         await documentsApiClient.deleteDocument(selectedTrip!.id, doc.id);
         // Reload documents
         loadDocuments();
-      } catch (error) {
+        toast({
+          title: "Document deleted",
+          description: `"${doc.title}" has been deleted successfully.`,
+        });
+      } catch (error: any) {
         console.error('Error deleting document:', error);
+        if (error.message?.includes('403') || error.message?.includes('Forbidden')) {
+          toast({
+            title: "Permission denied",
+            description: "You can only delete documents that you created.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to delete document. Please try again.",
+            variant: "destructive",
+          });
+        }
       }
     }
   };
@@ -349,17 +352,11 @@ export default function TripDocumentsPage() {
                         )}
 
                                                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-gray-500 dark:text-gray-400">
-                           <span>Uploaded by {document.uploaded_by.first_name || document.uploaded_by.username}</span>
-                           <span className="hidden sm:inline">•</span>
-                           <span>{formatFileSize(document.file_size)}</span>
-                           <span className="hidden sm:inline">•</span>
-                           <span>{formatDate(document.created_at)}</span>
-                           {document.comment_count > 0 && (
-                             <>
-                               <span className="hidden sm:inline">•</span>
-                               <span>{document.comment_count} comment{document.comment_count !== 1 ? 's' : ''}</span>
-                             </>
-                           )}
+                                                       <span>Uploaded by {document.uploaded_by.first_name || document.uploaded_by.username}</span>
+                            <span className="hidden sm:inline">•</span>
+                            <span>{formatFileSize(document.file_size)}</span>
+                            <span className="hidden sm:inline">•</span>
+                            <span>{formatDate(document.created_at)}</span>
                          </div>
 
                         {document.custom_tags && document.custom_tags.length > 0 && (
@@ -378,49 +375,31 @@ export default function TripDocumentsPage() {
                     </div>
 
                                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-2 ml-4">
-                       <Button 
-                         variant="outline" 
-                         size="sm"
-                         onClick={() => handleViewDocument(document)}
-                         className="w-full sm:w-auto"
-                       >
-                         <Eye className="h-4 w-4 mr-2" />
-                         <span className="hidden sm:inline">View</span>
-                       </Button>
-                       <Button 
-                         variant="outline" 
-                         size="sm"
-                         onClick={() => handleDownloadDocument(document)}
-                         className="w-full sm:w-auto"
-                       >
-                         <Download className="h-4 w-4 mr-2" />
-                         <span className="hidden sm:inline">Download</span>
-                       </Button>
-                       <DropdownMenu>
-                         <DropdownMenuTrigger asChild>
-                           <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                             <MoreHorizontal className="h-4 w-4" />
-                           </Button>
-                         </DropdownMenuTrigger>
-                         <DropdownMenuContent align="end">
-                           <DropdownMenuItem onClick={() => handleEditDocument(document)}>
-                             <Edit className="h-4 w-4 mr-2" />
-                             Edit
-                           </DropdownMenuItem>
-                           <DropdownMenuItem onClick={() => handleViewComments(document)}>
-                             <MessageSquare className="h-4 w-4 mr-2" />
-                             Comments ({document.comment_count})
-                           </DropdownMenuItem>
-                           <DropdownMenuSeparator />
-                           <DropdownMenuItem 
-                             onClick={() => handleDeleteDocument(document)}
-                             className="text-red-600 focus:text-red-600"
-                           >
-                             <Trash2 className="h-4 w-4 mr-2" />
-                             Delete
-                           </DropdownMenuItem>
-                         </DropdownMenuContent>
-                       </DropdownMenu>
+                                               <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleViewDocument(document)}
+                          className="w-full sm:w-auto"
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          <span className="hidden sm:inline">View</span>
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem 
+                              onClick={() => handleDeleteDocument(document)}
+                              className="text-red-600 focus:text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                      </div>
                   </div>
                 </div>

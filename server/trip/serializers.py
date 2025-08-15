@@ -320,6 +320,8 @@ class DocumentSerializer(serializers.ModelSerializer):
 
 
 class DocumentCreateSerializer(serializers.ModelSerializer):
+    custom_tags = serializers.CharField(required=False, allow_blank=True)
+    
     class Meta:
         model = Document
         fields = [
@@ -348,6 +350,17 @@ class DocumentCreateSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
+        # Handle custom_tags JSON string
+        custom_tags = validated_data.pop('custom_tags', '')
+        if custom_tags:
+            try:
+                import json
+                validated_data['custom_tags'] = json.loads(custom_tags)
+            except (json.JSONDecodeError, TypeError):
+                validated_data['custom_tags'] = []
+        else:
+            validated_data['custom_tags'] = []
+        
         # Set file type based on extension
         file = validated_data['file']
         file_extension = file.name.split('.')[-1].lower()

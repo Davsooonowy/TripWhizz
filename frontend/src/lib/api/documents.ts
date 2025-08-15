@@ -180,7 +180,7 @@ export class DocumentsApiClient extends BaseApiClient {
       formData.append('category', data.category.toString());
     }
     if (data.custom_tags && data.custom_tags.length > 0) {
-      data.custom_tags.forEach(tag => formData.append('custom_tags', tag));
+      formData.append('custom_tags', JSON.stringify(data.custom_tags));
     }
     if (data.auto_delete_after_trip !== undefined) {
       formData.append('auto_delete_after_trip', data.auto_delete_after_trip.toString());
