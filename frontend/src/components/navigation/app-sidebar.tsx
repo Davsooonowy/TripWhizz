@@ -74,7 +74,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               : '/expenses/overview',
           },
           {
-            title: 'Split Bills',
+            title: 'Settle Up',
             url: selectedTrip
               ? `/trip/${selectedTrip.id}/expenses/split`
               : '/expenses/split',

@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
-from .models import Trip, Stage, StageElement, StageElementReaction, TripInvitation, PackingList, PackingItem, DocumentCategory, Document, DocumentComment
+from .models import Trip, Stage, StageElement, StageElementReaction, TripInvitation, PackingList, PackingItem, DocumentCategory, Document, DocumentComment, Expense, Settlement
 from .serializers import (
 	TripSerializer,
 	TripListSerializer,
@@ -23,6 +23,8 @@ from .serializers import (
 	DocumentCreateSerializer,
 	DocumentUpdateSerializer,
 	DocumentCommentSerializer,
+    ExpenseSerializer,
+    SettlementSerializer,
 )
 from user_account.models import Notification
 from user_account.utils import send_trip_invitation_email
@@ -1010,3 +1012,143 @@ class DocumentCommentDetailView(APIView):
         
         comment.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ExpenseListCreateView(GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ExpenseSerializer
+
+    def get_trip(self, request, pk):
+        try:
+            return Trip.objects.filter(
+                Q(pk=pk) & (Q(owner=request.user) | Q(participants=request.user))
+            ).distinct().get()
+        except Trip.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        trip = self.get_trip(request, pk)
+        if not trip:
+            return Response({"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND)
+        expenses = Expense.objects.filter(trip=trip).select_related("paid_by").prefetch_related("shares__user")
+        serializer = self.get_serializer(expenses, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, pk):
+        trip = self.get_trip(request, pk)
+        if not trip:
+            return Response({"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(data=request.data, context={"request": request, "trip": trip})
+        if serializer.is_valid():
+            expense = serializer.save()
+            return Response(self.get_serializer(expense).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ExpenseDetailView(GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ExpenseSerializer
+
+    def get_objects(self, request, pk, expense_id):
+        trip = Trip.objects.filter(Q(pk=pk) & (Q(owner=request.user) | Q(participants=request.user))).distinct().first()
+        if not trip:
+            return None, None
+        expense = Expense.objects.filter(pk=expense_id, trip=trip).first()
+        return trip, expense
+
+    def get(self, request, pk, expense_id):
+        trip, expense = self.get_objects(request, pk, expense_id)
+        if not expense:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(self.get_serializer(expense).data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk, expense_id):
+        trip, expense = self.get_objects(request, pk, expense_id)
+        if not expense:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(expense, data=request.data, partial=True)
+        if serializer.is_valid():
+            expense = serializer.save()
+            return Response(self.get_serializer(expense).data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, expense_id):
+        trip, expense = self.get_objects(request, pk, expense_id)
+        if not expense:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        expense.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SettlementListCreateView(GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = SettlementSerializer
+
+    def get_trip(self, request, pk):
+        try:
+            return Trip.objects.filter(
+                Q(pk=pk) & (Q(owner=request.user) | Q(participants=request.user))
+            ).distinct().get()
+        except Trip.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        trip = self.get_trip(request, pk)
+        if not trip:
+            return Response({"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND)
+        settlements = Settlement.objects.filter(trip=trip).select_related("payer", "payee")
+        serializer = self.get_serializer(settlements, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, pk):
+        trip = self.get_trip(request, pk)
+        if not trip:
+            return Response({"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(data=request.data, context={"trip": trip})
+        if serializer.is_valid():
+            settlement = serializer.save()
+            return Response(self.get_serializer(settlement).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TripBalanceView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        try:
+            trip = Trip.objects.filter(
+                Q(pk=pk) & (Q(owner=request.user) | Q(participants=request.user))
+            ).distinct().get()
+        except Trip.DoesNotExist:
+            return Response({"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        from collections import defaultdict
+        balances = defaultdict(float)
+
+        expenses = Expense.objects.filter(trip=trip).select_related("paid_by").prefetch_related("shares")
+        for exp in expenses:
+            balances[exp.paid_by_id] += float(exp.amount)
+            for share in exp.shares.all():
+                balances[share.user_id] -= float(share.owed_amount)
+
+        settlements = Settlement.objects.filter(trip=trip)
+        for s in settlements:
+            balances[s.payer_id] += float(s.amount)
+            balances[s.payee_id] -= float(s.amount)
+
+        users = Trip.objects.filter(pk=trip.pk).values_list("participants__id", flat=True)
+        users = set([u for u in users if u is not None] + [trip.owner_id])
+        result = []
+        for user_id in users:
+            user = User.objects.get(pk=user_id)
+            result.append({
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                },
+                "balance": round(balances[user_id], 2)
+            })
+
+        return Response(result, status=status.HTTP_200_OK)

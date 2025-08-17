@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from .models import Trip, Stage, StageElement, TripInvitation, PackingList, PackingItem, DocumentCategory, Document, DocumentComment
+from .models import Trip, Stage, StageElement, TripInvitation, PackingList, PackingItem, DocumentCategory, Document, DocumentComment, Expense, ExpenseShare, Settlement
 
 User = get_user_model()
 
@@ -392,3 +392,229 @@ class DocumentUpdateSerializer(serializers.ModelSerializer):
             "auto_delete_after_trip",
             "delete_days_after_trip",
         ]
+
+
+class ExpenseShareSerializer(serializers.ModelSerializer):
+    user = UserBasicSerializer(read_only=True)
+    user_id = serializers.IntegerField(write_only=True, required=True)
+    percentage = serializers.DecimalField(max_digits=5, decimal_places=2, required=False, allow_null=True)
+    shares_count = serializers.IntegerField(required=False, allow_null=True)
+    owed_amount = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
+
+    class Meta:
+        model = ExpenseShare
+        fields = [
+            "id",
+            "user",
+            "user_id",
+            "percentage",
+            "shares_count",
+            "owed_amount",
+        ]
+        read_only_fields = ["id"]
+
+
+class ExpenseSerializer(serializers.ModelSerializer):
+    paid_by = UserBasicSerializer(read_only=True)
+    paid_by_id = serializers.IntegerField(write_only=True, required=True)
+    shares = ExpenseShareSerializer(many=True)
+
+    class Meta:
+        model = Expense
+        fields = [
+            "id",
+            "trip",
+            "description",
+            "amount",
+            "currency",
+            "paid_by",
+            "paid_by_id",
+            "split_method",
+            "shares",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at", "trip", "paid_by"]
+
+    def validate(self, attrs):
+        shares_data = self.initial_data.get("shares", [])
+        split_method = attrs.get("split_method", self.instance.split_method if self.instance else "equal")
+        amount = attrs.get("amount", self.instance.amount if self.instance else None)
+        if amount is None:
+            raise serializers.ValidationError({"amount": "Amount is required"})
+
+        if not shares_data:
+            raise serializers.ValidationError({"shares": "At least one share is required"})
+
+        if split_method == "equal":
+            pass
+        elif split_method == "percentage":
+            total_percentage = sum([
+                float(s.get("percentage") or 0) for s in shares_data
+            ])
+            if round(total_percentage, 2) != 100.00:
+                raise serializers.ValidationError({"shares": "Percentages must sum to 100%"})
+        elif split_method == "exact":
+            total_owed = sum([
+                float(s.get("owed_amount") or 0) for s in shares_data
+            ])
+            if round(total_owed, 2) != float(amount):
+                raise serializers.ValidationError({"shares": "Exact amounts must sum to total amount"})
+        elif split_method == "shares":
+            def to_int(x):
+                try:
+                    return int(x)
+                except (TypeError, ValueError):
+                    try:
+                        return int(float(x))
+                    except (TypeError, ValueError):
+                        return 0
+            total_shares = sum([to_int(s.get("shares_count")) for s in shares_data])
+            if total_shares <= 0:
+                raise serializers.ValidationError({"shares": "Total shares must be greater than 0"})
+        else:
+            raise serializers.ValidationError({"split_method": "Invalid split method"})
+
+        trip = self.context.get("trip")
+        paid_by_id = self.initial_data.get("paid_by_id")
+        if not paid_by_id:
+            raise serializers.ValidationError({"paid_by_id": "paid_by_id is required"})
+        trip_user_ids = set(list(trip.participants.values_list('id', flat=True)) + [trip.owner_id])
+        if int(paid_by_id) not in trip_user_ids:
+            raise serializers.ValidationError({"paid_by_id": "Payer must be a trip member"})
+        for share in shares_data:
+            user_id = int(share.get("user_id"))
+            if user_id not in trip_user_ids:
+                raise serializers.ValidationError({"shares": f"User {user_id} is not a trip member"})
+
+        return attrs
+
+    def _compute_owed_amount(self, split_method, amount, share):
+        if split_method == "equal":
+            return round(float(amount) / len(self.initial_data.get("shares", [])), 2)
+        if split_method == "percentage":
+            try:
+                return round(float(amount) * float(share.get("percentage") or 0) / 100.0, 2)
+            except (TypeError, ValueError):
+                return 0.0
+        if split_method == "exact":
+            try:
+                return round(float(share.get("owed_amount") or 0), 2)
+            except (TypeError, ValueError):
+                return 0.0
+        if split_method == "shares":
+            def to_int(x):
+                try:
+                    return int(x)
+                except (TypeError, ValueError):
+                    try:
+                        return int(float(x))
+                    except (TypeError, ValueError):
+                        return 0
+            shares_list = self.initial_data.get("shares", [])
+            total_shares = sum(to_int(s.get("shares_count")) for s in shares_list)
+            user_shares = to_int(share.get("shares_count"))
+            if total_shares <= 0 or user_shares <= 0:
+                return 0.0
+            return round(float(amount) * (user_shares / total_shares), 2)
+        return 0.0
+
+    def create(self, validated_data):
+        trip = self.context.get("trip")
+        shares_data = validated_data.pop("shares", [])
+        paid_by_id = validated_data.pop("paid_by_id")
+        split_method = validated_data.get("split_method")
+        amount = validated_data.get("amount")
+
+        expense = Expense.objects.create(trip=trip, paid_by_id=paid_by_id, **validated_data)
+
+        share_objects = []
+        for share in shares_data:
+            user_id = share.get("user_id")
+            owed_amount = self._compute_owed_amount(split_method, amount, share)
+            share_objects.append(
+                ExpenseShare(
+                    expense=expense,
+                    user_id=user_id,
+                    percentage=share.get("percentage"),
+                    shares_count=share.get("shares_count"),
+                    owed_amount=owed_amount,
+                )
+            )
+        ExpenseShare.objects.bulk_create(share_objects)
+
+        return expense
+
+    def update(self, instance, validated_data):
+        shares_data = validated_data.pop("shares", None)
+        paid_by_id = validated_data.pop("paid_by_id", None)
+        split_method = validated_data.get("split_method", instance.split_method)
+        amount = validated_data.get("amount", instance.amount)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if paid_by_id:
+            instance.paid_by_id = paid_by_id
+        instance.save()
+
+        if shares_data is not None:
+            instance.shares.all().delete()
+            share_objects = []
+            for share in shares_data:
+                user_id = share.get("user_id")
+                owed_amount = self._compute_owed_amount(split_method, amount, share)
+                share_objects.append(
+                    ExpenseShare(
+                        expense=instance,
+                        user_id=user_id,
+                        percentage=share.get("percentage"),
+                        shares_count=share.get("shares_count"),
+                        owed_amount=owed_amount,
+                    )
+                )
+            ExpenseShare.objects.bulk_create(share_objects)
+
+        return instance
+
+
+class SettlementSerializer(serializers.ModelSerializer):
+    payer = UserBasicSerializer(read_only=True)
+    payee = UserBasicSerializer(read_only=True)
+    payer_id = serializers.IntegerField(write_only=True, required=True)
+    payee_id = serializers.IntegerField(write_only=True, required=True)
+
+    class Meta:
+        model = Settlement
+        fields = [
+            "id",
+            "trip",
+            "payer",
+            "payee",
+            "payer_id",
+            "payee_id",
+            "amount",
+            "currency",
+            "note",
+            "created_at",
+        ]
+        read_only_fields = ["id", "trip", "payer", "payee", "created_at"]
+
+    def create(self, validated_data):
+        trip = self.context.get("trip")
+        payer_id = validated_data.pop("payer_id")
+        payee_id = validated_data.pop("payee_id")
+        return Settlement.objects.create(trip=trip, payer_id=payer_id, payee_id=payee_id, **validated_data)
+
+    def validate(self, attrs):
+        trip = self.context.get("trip")
+        payer_id = int(self.initial_data.get("payer_id"))
+        payee_id = int(self.initial_data.get("payee_id"))
+        amount = float(self.initial_data.get("amount", 0))
+        if payer_id == payee_id:
+            raise serializers.ValidationError({"payer_id": "Payer and payee must be different"})
+        if amount <= 0:
+            raise serializers.ValidationError({"amount": "Amount must be positive"})
+        trip_user_ids = set(list(trip.participants.values_list('id', flat=True)) + [trip.owner_id])
+        if payer_id not in trip_user_ids or payee_id not in trip_user_ids:
+            raise serializers.ValidationError({"detail": "Both payer and payee must be trip members"})
+        return attrs
