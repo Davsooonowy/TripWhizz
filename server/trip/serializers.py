@@ -520,7 +520,6 @@ class ExpenseSerializer(serializers.ModelSerializer):
         return 0.0
 
     def create(self, validated_data):
-        request = self.context.get("request")
         trip = self.context.get("trip")
         shares_data = validated_data.pop("shares", [])
         paid_by_id = validated_data.pop("paid_by_id")
