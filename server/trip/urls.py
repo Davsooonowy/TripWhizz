@@ -29,4 +29,10 @@ urlpatterns = [
 	path('trip/<int:trip_id>/documents/<int:document_id>/', views.DocumentDetailView.as_view(), name='trip-document-detail'),
 	path('trip/<int:trip_id>/documents/<int:document_id>/comments/', views.DocumentCommentView.as_view(), name='trip-document-comments'),
 	path('trip/<int:trip_id>/documents/<int:document_id>/comments/<int:comment_id>/', views.DocumentCommentDetailView.as_view(), name='trip-document-comment-detail'),
+
+	# Expenses URLs
+	path('trip/<int:pk>/expenses/', views.ExpenseListCreateView.as_view(), name='trip-expenses'),
+	path('trip/<int:pk>/expenses/<int:expense_id>/', views.ExpenseDetailView.as_view(), name='trip-expense-detail'),
+	path('trip/<int:pk>/balances/', views.TripBalanceView.as_view(), name='trip-balances'),
+	path('trip/<int:pk>/settlements/', views.SettlementListCreateView.as_view(), name='trip-settlements'),
 ]

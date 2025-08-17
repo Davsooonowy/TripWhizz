@@ -268,3 +268,56 @@ class DocumentComment(models.Model):
 
     class Meta:
         ordering = ["created_at"]
+
+
+class Expense(models.Model):
+    SPLIT_METHOD_CHOICES = [
+        ("equal", "Equal"),
+        ("percentage", "Percentage"),
+        ("exact", "Exact Amounts"),
+        ("shares", "Shares"),
+    ]
+
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="expenses")
+    description = models.CharField(max_length=255)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    currency = models.CharField(max_length=10, default="PLN")
+    paid_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="paid_expenses"
+    )
+    split_method = models.CharField(max_length=20, choices=SPLIT_METHOD_CHOICES, default="equal")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.description} ({self.amount} {self.currency}) - {self.trip.name}"
+
+    class Meta:
+        ordering = ["-created_at"]
+
+
+class ExpenseShare(models.Model):
+    expense = models.ForeignKey(Expense, on_delete=models.CASCADE, related_name="shares")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="expense_shares")
+    percentage = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    shares_count = models.PositiveIntegerField(null=True, blank=True)
+    owed_amount = models.DecimalField(max_digits=12, decimal_places=2)
+
+    class Meta:
+        unique_together = ("expense", "user")
+
+    def __str__(self):
+        return f"{self.user.username} owes {self.owed_amount} for {self.expense.description}"
+
+
+class Settlement(models.Model):
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="settlements")
+    payer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="made_settlements")
+    payee = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="received_settlements")
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    currency = models.CharField(max_length=10, default="PLN")
+    note = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.payer.username} -> {self.payee.username}: {self.amount} {self.currency} ({self.trip.name})"
