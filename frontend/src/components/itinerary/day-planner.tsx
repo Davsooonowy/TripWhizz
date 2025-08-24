@@ -57,7 +57,6 @@ export default function DayPlanner({ tripId }: { tripId?: string }) {
   const pxPerHour = 48;
   const gridHeight = hourCount * pxPerHour;
 
-  // Load events from backend when trip resolved
   useEffect(() => {
     const load = async () => {
       if (!resolvedTripId) return;
@@ -430,5 +429,3 @@ export default function DayPlanner({ tripId }: { tripId?: string }) {
     </div>
   );
 }
-
-

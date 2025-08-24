@@ -54,5 +54,3 @@ export class ItineraryApiClient extends BaseApiClient {
     return true;
   }
 }
-
-
