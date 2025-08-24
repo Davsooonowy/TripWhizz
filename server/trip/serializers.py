@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from .models import Trip, Stage, StageElement, TripInvitation, PackingList, PackingItem, DocumentCategory, Document, DocumentComment, Expense, ExpenseShare, Settlement
+from .models import Trip, Stage, StageElement, TripInvitation, PackingList, PackingItem, DocumentCategory, Document, DocumentComment, Expense, ExpenseShare, Settlement, ItineraryEvent
 
 User = get_user_model()
 
@@ -618,3 +618,24 @@ class SettlementSerializer(serializers.ModelSerializer):
         if payer_id not in trip_user_ids or payee_id not in trip_user_ids:
             raise serializers.ValidationError({"detail": "Both payer and payee must be trip members"})
         return attrs
+
+
+class ItineraryEventSerializer(serializers.ModelSerializer):
+    created_by = UserBasicSerializer(read_only=True)
+
+    class Meta:
+        model = ItineraryEvent
+        fields = [
+            "id",
+            "trip",
+            "date",
+            "title",
+            "description",
+            "start_minutes",
+            "end_minutes",
+            "color",
+            "created_by",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "trip", "created_by", "created_at", "updated_at"]

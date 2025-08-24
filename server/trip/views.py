@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
-from .models import Trip, Stage, StageElement, StageElementReaction, TripInvitation, PackingList, PackingItem, DocumentCategory, Document, DocumentComment, Expense, Settlement
+from .models import Trip, Stage, StageElement, StageElementReaction, TripInvitation, PackingList, PackingItem, DocumentCategory, Document, DocumentComment, Expense, Settlement, ItineraryEvent
 from .serializers import (
 	TripSerializer,
 	TripListSerializer,
@@ -25,6 +25,7 @@ from .serializers import (
 	DocumentCommentSerializer,
     ExpenseSerializer,
     SettlementSerializer,
+    ItineraryEventSerializer,
 )
 from user_account.models import Notification
 from user_account.utils import send_trip_invitation_email
@@ -1152,3 +1153,66 @@ class TripBalanceView(APIView):
             })
 
         return Response(result, status=status.HTTP_200_OK)
+
+
+class ItineraryEventListCreateView(GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ItineraryEventSerializer
+
+    def get_trip(self, request, pk):
+        try:
+            return Trip.objects.filter(
+                Q(pk=pk) & (Q(owner=request.user) | Q(participants=request.user))
+            ).distinct().get()
+        except Trip.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        trip = self.get_trip(request, pk)
+        if not trip:
+            return Response({"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND)
+        date = request.query_params.get("date")
+        qs = ItineraryEvent.objects.filter(trip=trip)
+        if date:
+            qs = qs.filter(date=date)
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, pk):
+        trip = self.get_trip(request, pk)
+        if not trip:
+            return Response({"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            event = serializer.save(trip=trip, created_by=request.user)
+            return Response(self.get_serializer(event).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ItineraryEventDetailView(GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ItineraryEventSerializer
+
+    def get_objects(self, request, pk, event_id):
+        trip = Trip.objects.filter(Q(pk=pk) & (Q(owner=request.user) | Q(participants=request.user))).distinct().first()
+        if not trip:
+            return None, None
+        event = ItineraryEvent.objects.filter(pk=event_id, trip=trip).first()
+        return trip, event
+
+    def put(self, request, pk, event_id):
+        trip, event = self.get_objects(request, pk, event_id)
+        if not event:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(event, data=request.data, partial=True)
+        if serializer.is_valid():
+            event = serializer.save()
+            return Response(self.get_serializer(event).data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, event_id):
+        trip, event = self.get_objects(request, pk, event_id)
+        if not event:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        event.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
