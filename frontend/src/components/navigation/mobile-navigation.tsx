@@ -139,7 +139,7 @@ export function MobileNavigation() {
 
                 <SheetClose asChild>
                   <Link
-                    to="/expenses/new"
+                    to={selectedTrip ? `http://localhost:2137/trip/${selectedTrip.id}/expenses/add` : '/expenses/add'}
                     className="flex flex-col items-center justify-center p-6 rounded-2xl border hover:bg-accent transition-all duration-300 shadow-sm"
                   >
                     <div className="bg-primary/10 p-3 rounded-xl mb-3">

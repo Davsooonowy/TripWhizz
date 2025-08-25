@@ -321,3 +321,22 @@ class Settlement(models.Model):
 
     def __str__(self):
         return f"{self.payer.username} -> {self.payee.username}: {self.amount} {self.currency} ({self.trip.name})"
+
+
+class ItineraryEvent(models.Model):
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="itinerary_events")
+    date = models.DateField()
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    start_minutes = models.PositiveIntegerField(help_text="Minutes since 00:00")
+    end_minutes = models.PositiveIntegerField(help_text="Minutes since 00:00")
+    color = models.CharField(max_length=20, blank=True, null=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="created_itinerary_events")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["date", "start_minutes"]
+
+    def __str__(self):
+        return f"{self.title} ({self.date}) - {self.trip.name}"

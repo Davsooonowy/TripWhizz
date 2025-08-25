@@ -63,6 +63,10 @@ const TripDocumentsPage = React.lazy(
 const DocumentUploadPage = React.lazy(
   () => import('@/pages/trip/[id]/documents/upload'),
 );
+const ItineraryDaysPage = React.lazy(() => import('@/pages/itinerary/days'));
+const TripItineraryDaysPage = React.lazy(
+  () => import('@/pages/trip/[id]/itinerary/days'),
+);
 const TripExpensesOverviewPage = React.lazy(
   () => import('@/pages/trip/[id]/expenses/overview'),
 );
@@ -124,6 +128,14 @@ const router = createBrowserRouter([
       {
         path: '/trip/:tripId/packing/templates',
         element: <PackingTemplatesPage />,
+      },
+      {
+        path: '/itinerary/days',
+        element: <ItineraryDaysPage />,
+      },
+      {
+        path: '/trip/:tripId/itinerary/days',
+        element: <TripItineraryDaysPage />,
       },
       {
         path: '/documents',

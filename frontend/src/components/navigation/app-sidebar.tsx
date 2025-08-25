@@ -27,7 +27,6 @@ import {
   FileText,
   MoonIcon as IconMoon,
   SunIcon as IconSun,
-  Map,
 } from 'lucide-react';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -55,10 +54,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               : '/itinerary/activities',
           },
           {
-            title: 'Bookings',
+            title: 'Maps',
             url: selectedTrip
-              ? `/trip/${selectedTrip.id}/itinerary/bookings`
-              : '/itinerary/bookings',
+              ? `/trip/${selectedTrip.id}/maps`
+              : '/maps',
           },
         ],
       },
@@ -84,31 +83,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             url: selectedTrip
               ? `/trip/${selectedTrip.id}/expenses/add`
               : '/expenses/add',
-          },
-        ],
-      },
-      {
-        title: 'Maps',
-        url: selectedTrip ? `/trip/${selectedTrip.id}/maps` : '/maps',
-        icon: Map,
-        items: [
-          {
-            title: 'Destinations',
-            url: selectedTrip
-              ? `/trip/${selectedTrip.id}/maps/destinations`
-              : '/maps/destinations',
-          },
-          {
-            title: 'Navigation',
-            url: selectedTrip
-              ? `/trip/${selectedTrip.id}/maps/navigation`
-              : '/maps/navigation',
-          },
-          {
-            title: 'Points of Interest',
-            url: selectedTrip
-              ? `/trip/${selectedTrip.id}/maps/poi`
-              : '/maps/poi',
           },
         ],
       },

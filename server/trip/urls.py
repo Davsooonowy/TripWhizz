@@ -35,4 +35,8 @@ urlpatterns = [
 	path('trip/<int:pk>/expenses/<int:expense_id>/', views.ExpenseDetailView.as_view(), name='trip-expense-detail'),
 	path('trip/<int:pk>/balances/', views.TripBalanceView.as_view(), name='trip-balances'),
 	path('trip/<int:pk>/settlements/', views.SettlementListCreateView.as_view(), name='trip-settlements'),
+
+	# Itinerary events
+	path('trip/<int:pk>/itinerary/events/', views.ItineraryEventListCreateView.as_view(), name='trip-itinerary-events'),
+	path('trip/<int:pk>/itinerary/events/<int:event_id>/', views.ItineraryEventDetailView.as_view(), name='trip-itinerary-event-detail'),
 ]
