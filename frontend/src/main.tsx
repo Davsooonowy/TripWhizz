@@ -67,6 +67,12 @@ const ItineraryDaysPage = React.lazy(() => import('@/pages/itinerary/days'));
 const TripItineraryDaysPage = React.lazy(
   () => import('@/pages/trip/[id]/itinerary/days'),
 );
+const ItineraryActivitiesPage = React.lazy(
+  () => import('@/pages/itinerary/activities'),
+);
+const TripItineraryActivitiesPage = React.lazy(
+  () => import('@/pages/trip/[id]/itinerary/activities'),
+);
 const TripExpensesOverviewPage = React.lazy(
   () => import('@/pages/trip/[id]/expenses/overview'),
 );
@@ -136,6 +142,14 @@ const router = createBrowserRouter([
       {
         path: '/trip/:tripId/itinerary/days',
         element: <TripItineraryDaysPage />,
+      },
+      {
+        path: '/itinerary/activities',
+        element: <ItineraryActivitiesPage />,
+      },
+      {
+        path: '/trip/:tripId/itinerary/activities',
+        element: <TripItineraryActivitiesPage />,
       },
       {
         path: '/documents',

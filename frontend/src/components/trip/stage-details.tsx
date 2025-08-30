@@ -1,6 +1,10 @@
 import { AddStageElement } from '@/components/trip/add-stage-element.tsx';
 import { Badge } from '@/components/ui/badge.tsx';
 import { Button } from '@/components/ui/button.tsx';
+import { Input } from '@/components/ui/input.tsx';
+import { Textarea } from '@/components/ui/textarea.tsx';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog.tsx';
 import {
   Card,
   CardContent,
@@ -16,7 +20,10 @@ import {
 } from '@/components/ui/tooltip.tsx';
 import { StageElement, StagesApiClient } from '@/lib/api/stages.ts';
 import { TripsApiClient } from '@/lib/api/trips.ts';
+import { ItineraryApiClient, type ItineraryEventDto } from '@/lib/api/itinerary';
+import { UsersApiClient } from '@/lib/api/users.ts';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
+import { useToast } from '@/components/ui/use-toast';
 
 import { useEffect, useState } from 'react';
 
@@ -28,6 +35,7 @@ import { ItemDetailsModal } from './item-details-modal.tsx';
 
 export default function StageDetails() {
   const { tripId, stageId } = useParams();
+  const { toast } = useToast();
   const [stageName, setStageName] = useState<string>('Stage');
   const [selectedItem, setSelectedItem] = useState<StageElement | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -38,6 +46,15 @@ export default function StageDetails() {
     StageElement[]
   >([]);
   const [error, setError] = useState<string | null>(null);
+  const [stageEndDate, setStageEndDate] = useState<string | null>(null);
+  const [isOwner, setIsOwner] = useState<boolean>(false);
+  const [winner, setWinner] = useState<StageElement | null>(null);
+  const [showWinnerModal, setShowWinnerModal] = useState(false);
+  const [eventTitle, setEventTitle] = useState<string>('');
+  const [eventDescription, setEventDescription] = useState<string>('');
+  const [eventDate, setEventDate] = useState<Date | null>(null);
+  const [startTime, setStartTime] = useState<string>('10:00');
+  const [endTime, setEndTime] = useState<string>('11:00');
 
   useEffect(() => {
     const fetchStageElements = async () => {
@@ -94,10 +111,23 @@ export default function StageDetails() {
 
         if (stage) {
           setStageName(stage.name);
+          // capture stage end date if present
+          // supports either end_date or dateRange
+          // @ts-ignore
+          if (stage.end_date) setStageEndDate(stage.end_date);
         } else {
           setStageName('Stage not found');
         }
         setError(null);
+
+        // determine owner
+        const usersApiClient = new UsersApiClient(authenticationProviderInstance);
+        try {
+          const me = await usersApiClient.getActiveUser();
+          setIsOwner(!!tripDetails.owner && tripDetails.owner.id === me.id);
+        } catch {
+          setIsOwner(false);
+        }
       } catch {
         setError('Error fetching stage details. Please try again.');
         setStageName('Error loading stage');
@@ -106,6 +136,65 @@ export default function StageDetails() {
 
     fetchStageDetails();
   }, [tripId, stageId]);
+
+  // pick winning element by highest averageReaction
+  useEffect(() => {
+    if (!elements || elements.length === 0) {
+      setWinner(null);
+      return;
+    }
+    const withScore = elements.filter((e) => typeof e.averageReaction === 'number');
+    if (withScore.length === 0) {
+      setWinner(null);
+      return;
+    }
+    const best = withScore.reduce((acc, cur) =>
+      (cur.averageReaction ?? 0) > (acc.averageReaction ?? 0) ? cur : acc,
+    withScore[0]);
+    setWinner(best);
+  }, [elements]);
+
+  const hasDeadlinePassed = stageEndDate ? new Date(stageEndDate) < new Date() : false;
+
+  const openWinnerDialog = () => {
+    if (!winner) return;
+    setEventTitle(winner.name);
+    setEventDescription(winner.description || '');
+    // default date to stage end or today
+    const d = stageEndDate ? new Date(stageEndDate) : new Date();
+    d.setHours(0, 0, 0, 0);
+    setEventDate(d);
+    setStartTime('10:00');
+    setEndTime('11:00');
+    setShowWinnerModal(true);
+  };
+
+  const toMinutes = (time: string) => {
+    const [h, m] = time.split(':').map((x) => parseInt(x, 10));
+    return h * 60 + m;
+  };
+
+  const createEventFromWinner = async () => {
+    if (!tripId || !winner || !eventDate) return;
+    try {
+      const api = new ItineraryApiClient(authenticationProviderInstance);
+      const isoDate = new Date(eventDate);
+      isoDate.setHours(0, 0, 0, 0);
+      const payload: ItineraryEventDto = {
+        date: isoDate.toISOString().slice(0,10),
+        title: eventTitle || winner.name,
+        description: eventDescription,
+        start_minutes: Math.min(toMinutes(startTime), toMinutes(endTime) - 1),
+        end_minutes: Math.max(toMinutes(endTime), toMinutes(startTime) + 15),
+        color: '#10b981',
+      };
+      await api.createEvent(Number(tripId), payload);
+      toast({ title: 'Event added', description: 'Winning option added to Day Plans.' });
+      setShowWinnerModal(false);
+    } catch (e) {
+      toast({ title: 'Failed to add event', description: 'Please try again later.' });
+    }
+  };
 
   const handleReaction = async (id: number, reaction: 'like' | 'dislike') => {
     try {
@@ -268,6 +357,18 @@ export default function StageDetails() {
     <div className="container max-w-4xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">{stageName} Details</h1>
 
+      {isOwner && hasDeadlinePassed && winner && (
+        <div className="mb-6 border rounded-xl p-4 bg-muted">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <div className="font-semibold">Voting concluded</div>
+              <div className="text-sm text-muted-foreground">Winner: {winner.name}. Add it to your Day Plans?</div>
+            </div>
+            <Button onClick={openWinnerDialog}>Add to Day Plans</Button>
+          </div>
+        </div>
+      )}
+
       <Button className="mb-4" onClick={() => setIsAddModalOpen(true)}>
         Add New Element
       </Button>
@@ -395,6 +496,60 @@ export default function StageDetails() {
       {error && (
         <div className="p-4 bg-red-100 text-red-500 rounded-md">{error}</div>
       )}
+
+      <Dialog open={showWinnerModal} onOpenChange={(open) => (!open ? setShowWinnerModal(false) : null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add winning option to Day Plans</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              placeholder="Event title"
+              value={eventTitle}
+              onChange={(e) => setEventTitle(e.target.value)}
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                type="time"
+                value={startTime}
+                min="00:00"
+                max="23:59"
+                step={15 * 60}
+                className="bg-background focus:bg-muted"
+                onChange={(e) => setStartTime(e.target.value)}
+              />
+              <Input
+                type="time"
+                value={endTime}
+                min="00:00"
+                max="23:59"
+                step={15 * 60}
+                className="bg-background focus:bg-muted"
+                onChange={(e) => setEndTime(e.target.value)}
+              />
+            </div>
+            <DatePicker
+              date={eventDate ?? undefined}
+              setDate={(d) => {
+                if (!d) return;
+                d.setHours(0,0,0,0);
+                setEventDate(d);
+              }}
+              className="w-full"
+            />
+            <Textarea
+              placeholder="Description"
+              value={eventDescription}
+              onChange={(e) => setEventDescription(e.target.value)}
+              className="min-h-[100px]"
+            />
+          </div>
+          <DialogFooter className="flex flex-col md:flex-row gap-2 md:gap-2">
+            <Button className="w-full md:w-auto" variant="secondary" onClick={() => setShowWinnerModal(false)}>Cancel</Button>
+            <Button className="w-full md:w-auto" onClick={createEventFromWinner}>Add</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
