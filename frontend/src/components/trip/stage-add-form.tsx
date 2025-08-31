@@ -5,9 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { stageCategories } from '@/components/trip/stage-constants';
 import { cn } from '@/lib/utils';
-import { Plus } from 'lucide-react';
+import { MapPin, Plus } from 'lucide-react';
+import { stageCategories } from '@/components/trip/stage-constants';
 
 import { useState } from 'react';
 
@@ -15,7 +15,19 @@ export interface StageFormData {
   name: string;
   category: string;
   description?: string;
-  dateRange?: { from: Date | undefined; to: Date | undefined };
+  dateRange?: { from?: Date; to?: Date };
+}
+
+function getCategoryDetails(categoryId: string) {
+  const found = stageCategories.find((c) => c.id === categoryId);
+  return (
+    found || {
+      id: 'unknown',
+      name: 'Unknown',
+      icon: MapPin,
+      color: 'bg-gray-500',
+    }
+  );
 }
 
 export default function StageAddForm({ onSubmit, submitting }: { onSubmit: (data: StageFormData) => void; submitting?: boolean }) {
@@ -37,21 +49,43 @@ export default function StageAddForm({ onSubmit, submitting }: { onSubmit: (data
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
-                {stageCategories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    <div className="flex items-center">
-                      <cat.icon className="h-4 w-4 mr-2 text-primary" />
-                      {cat.name}
-                    </div>
-                  </SelectItem>
-                ))}
+                {stageCategories.map((cat) => {
+                  const details = getCategoryDetails(cat.id);
+                  const Icon = details.icon as any;
+                  return (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      <div className="flex items-center">
+                        <div className={cn('p-1.5 rounded-md mr-2', details.color)}>
+                          <Icon className="h-3 w-3 text-white" />
+                        </div>
+                        {details.name}
+                      </div>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
         </div>
+        {form.category && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            {(() => {
+              const selected = getCategoryDetails(form.category);
+              const Icon = selected.icon as any;
+              return (
+                <>
+                  <div className={cn('p-2 rounded-md', selected.color)}>
+                    <Icon className="h-4 w-4 text-white" />
+                  </div>
+                  <span>Selected: {selected.name}</span>
+                </>
+              );
+            })()}
+          </div>
+        )}
         <div className="space-y-2">
           <Label htmlFor="stage-date">Date Range (Optional)</Label>
-          <DatePickerWithRange date={form.dateRange} setDate={(dateRange) => setForm((prev) => ({ ...prev, dateRange }))} />
+          <DatePickerWithRange date={form.dateRange as any} setDate={(dateRange) => setForm((prev) => ({ ...prev, dateRange }))} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="stage-description">Description (Optional)</Label>
@@ -66,5 +100,3 @@ export default function StageAddForm({ onSubmit, submitting }: { onSubmit: (data
     </Card>
   );
 }
-
-

@@ -13,14 +13,14 @@ import { useEffect, useMemo, useState } from 'react';
 type GroupedEvents = Record<string, ItineraryEventDto[]>;
 
 function formatDisplayDate(isoDate: string): string {
-  const d = new Date(isoDate);
+  const data = new Date(isoDate);
   const formatter = new Intl.DateTimeFormat(undefined, {
     weekday: 'short',
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   });
-  return formatter.format(d);
+  return formatter.format(data);
 }
 
 function minutesToTimeLabel(minutes: number): string {
@@ -50,7 +50,6 @@ export default function ActivitiesList({ tripId }: { tripId?: string }) {
       try {
         setError(null);
         const list = await apiClient.listEvents(resolvedTripId);
-        // Ensure events are sorted by date then start time
         list.sort((a, b) => {
           if (a.date < b.date) return -1;
           if (a.date > b.date) return 1;
@@ -58,8 +57,7 @@ export default function ActivitiesList({ tripId }: { tripId?: string }) {
         });
         setEvents(list);
       } catch (e) {
-        console.error('Failed to load itinerary activities', e);
-        setError('Failed to load activities');
+        setError('Failed to load activities. Please try again.');
       }
     };
     run();
@@ -85,7 +83,7 @@ export default function ActivitiesList({ tripId }: { tripId?: string }) {
       await apiClient.deleteEvent(resolvedTripId, id);
       setEvents((prev) => prev ? prev.filter((e) => e.id !== id) : prev);
     } catch (e) {
-      console.error('Failed to delete event', e);
+      setError('Failed to delete event. Please try again.');
     } finally {
       setEditing(null);
     }
@@ -113,7 +111,7 @@ export default function ActivitiesList({ tripId }: { tripId?: string }) {
       });
       setEditing(null);
     } catch (e) {
-      console.error('Failed to update event', e);
+      setError('Failed to update event. Please try again.');
     }
   };
 
@@ -122,7 +120,7 @@ export default function ActivitiesList({ tripId }: { tripId?: string }) {
       <h1 className="text-2xl font-bold mb-4">Activities</h1>
 
       {error && (
-        <div className="text-sm text-red-500 mb-4">{error}</div>
+        <div className="p-4 bg-red-100 text-red-500 rounded-md mb-4">{error}</div>
       )}
 
       {events === null ? (

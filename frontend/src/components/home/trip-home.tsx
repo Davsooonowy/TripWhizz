@@ -81,6 +81,7 @@ export default function TripHome() {
   const [editDescription, setEditDescription] = useState('');
   const [editStartDate, setEditStartDate] = useState<Date | null>(null);
   const [editEndDate, setEditEndDate] = useState<Date | null>(null);
+  const tripsApiClient = new TripsApiClient(authenticationProviderInstance);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -91,15 +92,12 @@ export default function TripHome() {
       setDetailsError(null);
 
       try {
-        const tripsApiClient = new TripsApiClient(
-          authenticationProviderInstance,
-        );
         const details = await tripsApiClient.getTripDetails(selectedTrip.id);
         set_TripDetails(details);
         setStages(details.stages || []);
         try {
-          const me = await new UsersApiClient(authenticationProviderInstance).getActiveUser();
-          setIsOwner(!!details.owner && details.owner.id === me.id);
+          const user = await new UsersApiClient(authenticationProviderInstance).getActiveUser();
+          setIsOwner(!!details.owner && details.owner.id === user.id);
         } catch {
           setIsOwner(false);
         }
@@ -130,7 +128,6 @@ export default function TripHome() {
     const startDate = new Date(tripDetails.start_date);
     const today = new Date();
 
-    // Reset time to compare just the dates
     today.setHours(0, 0, 0, 0);
     startDate.setHours(0, 0, 0, 0);
 
@@ -147,13 +144,10 @@ export default function TripHome() {
     const endDate = new Date(tripDetails.end_date);
     const today = new Date();
 
-    // If trip hasn't started yet
     if (today < startDate) return 0;
 
-    // If trip has ended
     if (today > endDate) return 100;
 
-    // Calculate progress
     const totalDuration = endDate.getTime() - startDate.getTime();
     const elapsed = today.getTime() - startDate.getTime();
 
@@ -180,8 +174,7 @@ export default function TripHome() {
   const saveEdit = async () => {
     if (!selectedTrip?.id) return;
     try {
-      const api = new TripsApiClient(authenticationProviderInstance);
-      await api.updateTrip(selectedTrip.id, {
+      await tripsApiClient.updateTrip(selectedTrip.id, {
         name: editName,
         destination: editDestination,
         description: editDescription,
@@ -199,8 +192,7 @@ export default function TripHome() {
   const confirmDelete = async () => {
     if (!selectedTrip?.id) return;
     try {
-      const api = new TripsApiClient(authenticationProviderInstance);
-      await api.deleteTrip(selectedTrip.id);
+      await tripsApiClient.deleteTrip(selectedTrip.id);
       toast({ title: 'Trip deleted' });
       setDeleteOpen(false);
       await refreshTrips();
@@ -549,7 +541,6 @@ export default function TripHome() {
               if (!selectedTrip?.id) return;
               try {
                 setAddingStage(true);
-                const tripsApiClient = new TripsApiClient(authenticationProviderInstance);
                 const stagesData = [
                   {
                     name: data.name,
