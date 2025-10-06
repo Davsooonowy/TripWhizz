@@ -28,6 +28,7 @@ from .serializers import (
     ItineraryEventSerializer,
 )
 from user_account.models import Notification
+from user_account.models import UserPreferences as AccountUserPreferences
 from user_account.utils import send_trip_invitation_email
 
 User = get_user_model()
@@ -742,6 +743,24 @@ class PackingItemView(GenericAPIView):
 			user = User.objects.filter(pk=assigned_to_id).first()
 			item.assigned_to = user
 		item.save()
+		if packing_list.list_type == 'shared':
+			for participant in trip.participants.all():
+				if participant != request.user:
+					try:
+						prefs = participant.preferences
+						cfg = (prefs.data or {}).get('notifications', {})
+						if cfg.get('packing_list_added') is False:
+							continue
+					except AccountUserPreferences.DoesNotExist:
+						pass
+					Notification.objects.create(
+						recipient=participant,
+						sender=request.user,
+						notification_type='packing_added',
+						title='New packing item',
+						message=f'{request.user.username} added "{item.name}" to {packing_list.name}',
+						related_object_id=item.id,
+					)
 		return Response(self.get_serializer(item).data, status=status.HTTP_201_CREATED)
 
 
@@ -880,8 +899,21 @@ class DocumentView(APIView):
                 # Notify trip participants about new shared document
                 for participant in trip.participants.all():
                     if participant != request.user:
-                        # You can implement notification creation here
-                        pass
+                        try:
+                            prefs = participant.preferences
+                            cfg = (prefs.data or {}).get('notifications', {})
+                            if cfg.get('document_added') is False:
+                                continue
+                        except AccountUserPreferences.DoesNotExist:
+                            pass
+                        Notification.objects.create(
+                            recipient=participant,
+                            sender=request.user,
+                            notification_type='document_added',
+                            title='New document uploaded',
+                            message=f'{request.user.username} uploaded "{document.title}"',
+                            related_object_id=document.id,
+                        )
             
             response_serializer = DocumentSerializer(document, context={'request': request})
             return Response(response_serializer.data, status=status.HTTP_201_CREATED)
@@ -1042,6 +1074,23 @@ class ExpenseListCreateView(GenericAPIView):
         serializer = self.get_serializer(data=request.data, context={"request": request, "trip": trip})
         if serializer.is_valid():
             expense = serializer.save()
+            for participant in trip.participants.all():
+                if participant != request.user:
+                    try:
+                        prefs = participant.preferences
+                        cfg = (prefs.data or {}).get('notifications', {})
+                        if cfg.get('expense_added') is False:
+                            continue
+                    except AccountUserPreferences.DoesNotExist:
+                        pass
+                    Notification.objects.create(
+                        recipient=participant,
+                        sender=request.user,
+                        notification_type='expense_update',
+                        title='New expense added',
+                        message=f'{request.user.username} added an expense: {expense.description} ({expense.amount} {expense.currency})',
+                        related_object_id=expense.id,
+                    )
             return Response(self.get_serializer(expense).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

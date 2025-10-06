@@ -71,6 +71,8 @@ class Notification(models.Model):
         ('trip_invite', 'Trip Invitation'),
         ('trip_update', 'Trip Update'),
         ('expense_update', 'Expense Update'),
+        ('document_added', 'Document Added'),
+        ('packing_added', 'Packing Item Added'),
     ]
 
     recipient = models.ForeignKey(Profile, related_name='notifications', on_delete=models.CASCADE)
