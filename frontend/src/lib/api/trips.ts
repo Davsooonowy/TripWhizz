@@ -245,3 +245,80 @@ export class TripsApiClient extends BaseApiClient {
     return await response.json();
   }
 }
+
+export interface TripMapPin {
+  id: number;
+  trip: number;
+  created_by: TripOwner;
+  title: string;
+  description?: string;
+  latitude: number;
+  longitude: number;
+  reason?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TripMapSettings {
+  default_latitude?: number | null;
+  default_longitude?: number | null;
+  default_zoom?: number | null;
+}
+
+export class TripMapsApiClient extends BaseApiClient {
+  async getPins(tripId: number): Promise<TripMapPin[]> {
+    const response = await fetch(`${TRIP_API_URL}/${tripId}/maps/pins/`, {
+      ...this._requestConfiguration(true),
+      method: 'GET',
+    });
+    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+    return await response.json();
+  }
+
+  async createPin(tripId: number, data: Partial<TripMapPin>): Promise<TripMapPin> {
+    const response = await fetch(`${TRIP_API_URL}/${tripId}/maps/pins/`, {
+      ...this._requestConfiguration(true),
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+    return await response.json();
+  }
+
+  async updatePin(tripId: number, pinId: number, data: Partial<TripMapPin>): Promise<TripMapPin> {
+    const response = await fetch(`${TRIP_API_URL}/${tripId}/maps/pins/${pinId}/`, {
+      ...this._requestConfiguration(true),
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+    return await response.json();
+  }
+
+  async deletePin(tripId: number, pinId: number): Promise<void> {
+    const response = await fetch(`${TRIP_API_URL}/${tripId}/maps/pins/${pinId}/`, {
+      ...this._requestConfiguration(true),
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+  }
+
+  async getSettings(tripId: number): Promise<TripMapSettings> {
+    const response = await fetch(`${TRIP_API_URL}/${tripId}/maps/settings/`, {
+      ...this._requestConfiguration(true),
+      method: 'GET',
+    });
+    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+    return await response.json();
+  }
+
+  async updateSettings(tripId: number, data: Partial<TripMapSettings>): Promise<TripMapSettings> {
+    const response = await fetch(`${TRIP_API_URL}/${tripId}/maps/settings/`, {
+      ...this._requestConfiguration(true),
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+    return await response.json();
+  }
+}

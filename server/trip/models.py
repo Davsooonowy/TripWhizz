@@ -340,3 +340,33 @@ class ItineraryEvent(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.date}) - {self.trip.name}"
+
+
+class TripMapPin(models.Model):
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="map_pins")
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="created_trip_pins")
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    reason = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.title} ({self.latitude}, {self.longitude}) - {self.trip.name}"
+
+
+class TripMapSettings(models.Model):
+    trip = models.OneToOneField(Trip, on_delete=models.CASCADE, related_name="map_settings")
+    default_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    default_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    default_zoom = models.PositiveIntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"MapSettings for {self.trip.name}"
