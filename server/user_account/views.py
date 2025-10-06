@@ -20,7 +20,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import PendingUser, Profile, Friendship, Notification
+from .models import PendingUser, Profile, Friendship, Notification, UserPreferences
 from .serializers import (
     UserSerializer,
     LoginSerializer,
@@ -28,6 +28,7 @@ from .serializers import (
     FriendshipSerializer,
     FriendListSerializer,
     NotificationSerializer,
+    UserPreferencesSerializer,
 )
 from .utils import generate_otp, send_otp_email, send_password_reset_email
 from .redis_utils import check_friend_request_rate_limit
@@ -112,6 +113,8 @@ class UserView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, user_id):
+        if request.user.id != user_id:
+            return JsonResponse({"error": "You can only delete your own account"}, status=403)
         try:
             user = User.objects.get(id=user_id)
             user.delete()
@@ -530,3 +533,20 @@ class NotificationMarkReadView(APIView):
         else:
             Notification.objects.filter(recipient=request.user).update(is_read=True)
             return Response({"message": "All notifications marked as read"})
+
+
+class UserPreferencesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        prefs, _ = UserPreferences.objects.get_or_create(user=request.user)
+        serializer = UserPreferencesSerializer(prefs)
+        return Response(serializer.data)
+
+    def put(self, request):
+        prefs, _ = UserPreferences.objects.get_or_create(user=request.user)
+        serializer = UserPreferencesSerializer(prefs, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

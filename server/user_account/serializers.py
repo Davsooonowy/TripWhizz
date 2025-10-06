@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from django.db import models
-from .models import Friendship, Notification
+from .models import Friendship, Notification, UserPreferences
 
 User = get_user_model()
 
@@ -178,3 +178,15 @@ class GoogleAuthResponseSerializer(serializers.Serializer):
     name = serializers.CharField()
     given_name = serializers.CharField()
     family_name = serializers.CharField(required=False)
+
+
+class UserPreferencesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserPreferences
+        fields = [
+            'id',
+            'data',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']

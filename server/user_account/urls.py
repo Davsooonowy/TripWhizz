@@ -32,4 +32,5 @@ urlpatterns = [
     path("notifications/count/", views.NotificationCountView.as_view(), name="notification_count"),
     path("notifications/read/", views.NotificationMarkReadView.as_view(), name="mark_all_notifications_read"),
     path("notifications/read/<int:pk>/", views.NotificationMarkReadView.as_view(), name="mark_notification_read"),
+    path("user/preferences/", views.UserPreferencesView.as_view(), name="user_preferences"),
 ]
