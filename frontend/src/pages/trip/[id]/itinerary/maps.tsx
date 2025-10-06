@@ -205,30 +205,62 @@ export default function TripMapsPage() {
         console.warn('map pan failed', err);
       }
 
-      // place or move search marker
-      if (!searchMarkerRef.current && window.google?.maps) {
-        searchMarkerRef.current = new window.google.maps.Marker({
-          position: { lat, lng },
-          map: mapInstance,
-          title: place.name || 'Searched place',
-        });
-      } else if (searchMarkerRef.current) {
-        searchMarkerRef.current.setPosition({ lat, lng });
-        searchMarkerRef.current.setMap(mapInstance);
-        searchMarkerRef.current.setTitle(place.name || 'Searched place');
-      }
+      // Open add-pin dialog prefilled and set temporary pin position
+      setNewPinTitle(place.name || '');
+      setNewPinDescription(place.formatted_address || '');
+      setAddingPinAt({ lat, lng });
     });
 
     return () => {
       if (listener) (listener as any).remove?.();
       // do not remove input element
+      // leave temp marker cleanup to addingPinAt effect
+      autocompleteRef.current = null;
+    };
+  }, [isGoogleLoaded, mapInstance]);
+
+  // When addingPinAt is set, show a draggable temporary marker on the map
+  useEffect(() => {
+    if (!mapInstance) return;
+
+    // remove existing temp marker if any
+    if (!addingPinAt) {
       if (searchMarkerRef.current) {
         try { searchMarkerRef.current.setMap(null); } catch (err) { console.warn(err); }
         searchMarkerRef.current = null;
       }
-      autocompleteRef.current = null;
+      return;
+    }
+
+    const { lat, lng } = addingPinAt;
+
+    // create or move temporary draggable marker
+    if (!searchMarkerRef.current && window.google?.maps) {
+      searchMarkerRef.current = new window.google.maps.Marker({
+        position: { lat, lng },
+        map: mapInstance,
+        draggable: true,
+        title: newPinTitle || 'New pin',
+      });
+      // update addingPinAt when user drags the temp marker
+      searchMarkerRef.current.addListener('dragend', (e: any) => {
+        const pLat = e.latLng.lat();
+        const pLng = e.latLng.lng();
+        setAddingPinAt({ lat: pLat, lng: pLng });
+      });
+    } else if (searchMarkerRef.current) {
+      searchMarkerRef.current.setPosition({ lat, lng });
+      searchMarkerRef.current.setMap(mapInstance);
+      searchMarkerRef.current.setTitle(newPinTitle || 'New pin');
+    }
+
+    // ensure dialog opens when addingPinAt is set
+    // Dialog open is controlled by !!addingPinAt
+
+    return () => {
+      // cleanup handled above when addingPinAt becomes null
     };
-  }, [isGoogleLoaded, mapInstance]);
+  }, [addingPinAt, mapInstance, newPinTitle]);
 
   const loadMore = useCallback(async () => {
     if (!tripId || !hasMore) return;
@@ -256,6 +288,11 @@ export default function TripMapsPage() {
       } as any);
       setPins((prev) => [created, ...prev]);
       setAddingPinAt(null);
+      // remove temporary marker after submitting
+      if (searchMarkerRef.current) {
+        try { searchMarkerRef.current.setMap(null); } catch (err) { console.warn(err); }
+        searchMarkerRef.current = null;
+      }
       setNewPinTitle('');
       setNewPinDescription('');
       setNewPinReason('');
@@ -296,8 +333,6 @@ export default function TripMapsPage() {
       toast({ title: 'Failed to save default location', description: e.message, variant: 'destructive' });
     }
   }, [tripId, settings, mapsClient, toast]);
-
-  const canUseMap = !!GOOGLE_MAPS_API_KEY;
 
   // Search input placed above the map
   return (
