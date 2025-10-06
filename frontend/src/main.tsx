@@ -29,6 +29,7 @@ const ResetPassword = React.lazy(
 const NotificationsPage = React.lazy(() => import('@/pages/notifications'));
 const SettingsPage = React.lazy(() => import('@/pages/settings'));
 const FriendsPage = React.lazy(() => import('@/pages/friends'));
+const AboutPage = React.lazy(() => import('@/pages/about'));
 const ProfileSettingsPage = React.lazy(
   () => import('@/pages/settings/profile'),
 );
@@ -212,6 +213,10 @@ const router = createBrowserRouter([
       {
         path: '/settings/profile',
         element: <ProfileSettingsPage />,
+      },
+      {
+        path: '/about',
+        element: <AboutPage />,
       },
     ],
   },

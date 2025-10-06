@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from django.db import models
-from .models import Friendship, Notification
+from .models import Friendship, Notification, UserPreferences
 
 User = get_user_model()
 
@@ -31,6 +31,14 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
     def get_avatar_url(self, obj):
+        try:
+            prefs = obj.preferences
+            visible = prefs.data.get('privacy', {}).get('profile_visible', True)
+            if visible is False:
+                return None
+        except UserPreferences.DoesNotExist:
+            pass
+
         if obj.avatar and hasattr(obj.avatar, 'url'):
             request = self.context.get('request')
             if request:
@@ -148,6 +156,14 @@ class FriendListSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'first_name', 'last_name', 'email', 'avatar_url']
 
     def get_avatar_url(self, obj):
+        try:
+            prefs = obj.preferences
+            visible = prefs.data.get('privacy', {}).get('profile_visible', True)
+            if visible is False:
+                return None
+        except UserPreferences.DoesNotExist:
+            pass
+
         if obj.avatar and hasattr(obj.avatar, 'url'):
             request = self.context.get('request')
             if request:
@@ -178,3 +194,15 @@ class GoogleAuthResponseSerializer(serializers.Serializer):
     name = serializers.CharField()
     given_name = serializers.CharField()
     family_name = serializers.CharField(required=False)
+
+
+class UserPreferencesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserPreferences
+        fields = [
+            'id',
+            'data',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']

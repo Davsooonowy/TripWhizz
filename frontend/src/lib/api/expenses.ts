@@ -1,3 +1,4 @@
+import { toast } from '@/components/ui/use-toast';
 import { BaseApiClient } from '@/lib/api/base.ts';
 import { API_URL } from '@/lib/config.ts';
 
@@ -44,7 +45,9 @@ export class ExpensesApiClient extends BaseApiClient {
       const data = await res.json();
       if (data?.detail) msg = data.detail;
       else if (typeof data === 'object') msg = JSON.stringify(data);
-    } catch {}
+    } catch {
+      toast({ title: 'Error', description: 'Failed to load expenses', variant: 'destructive' });
+    }
     throw new Error(msg);
   }
 
@@ -81,7 +84,9 @@ export class ExpensesApiClient extends BaseApiClient {
     });
     if (!response.ok) {
       let msg = `HTTP ${response.status}`;
-      try { const data = await response.json(); msg = data?.detail || msg; } catch {}
+      try { const data = await response.json(); msg = data?.detail || msg; } catch {
+        toast({ title: 'Error', description: 'Failed to delete expense', variant: 'destructive' });
+      }
       throw new Error(msg);
     }
     return true;

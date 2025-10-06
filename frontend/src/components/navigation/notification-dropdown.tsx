@@ -16,10 +16,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/use-toast';
 import { getInitials } from '@/components/util/avatar-utils';
 import { useIsMobile } from '@/hooks/use-mobile';
-import {
-  type Notification,
-  NotificationsApiClient,
-} from '@/lib/api/notifications';
+import { type Notification, NotificationsApiClient } from '@/lib/api/notifications';
+import { PreferencesApiClient, type UserPreferencesDTO } from '@/lib/api/preferences';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
 
 import type React from 'react';
@@ -37,6 +35,7 @@ export function NotificationDropdown() {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const [prefs, setPrefs] = useState<UserPreferencesDTO | null>(null);
 
   const [invitationDialog, setInvitationDialog] = useState<{
     open: boolean;
@@ -74,11 +73,21 @@ export function NotificationDropdown() {
         const countData = await notificationsApiClient.getUnreadCount();
         setUnreadCount(countData.count);
       } catch (error) {
-        console.error('Error fetching notification count:', error);
+        toast({ title: 'Error', description: 'Failed to fetch notification count', variant: 'destructive' });
+      }
+    };
+    const fetchPrefs = async () => {
+      try {
+        const client = new PreferencesApiClient(authenticationProviderInstance);
+        const p = await client.getPreferences();
+        setPrefs(p);
+      } catch {
+        toast({ title: 'Error', description: 'Failed to load preferences', variant: 'destructive' });
       }
     };
 
     fetchUnreadCount();
+    fetchPrefs();
     const interval = setInterval(fetchUnreadCount, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -99,7 +108,7 @@ export function NotificationDropdown() {
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      toast({ title: 'Error', description: 'Failed to mark as read', variant: 'destructive' });
     }
   };
 
@@ -247,7 +256,17 @@ export function NotificationDropdown() {
           ) : notifications.length > 0 ? (
             <ScrollArea className="max-h-80">
               <DropdownMenuGroup>
-                {notifications.slice(0, 5).map((notification) => {
+                {notifications
+                  .filter((n) => {
+                    const cfg = (prefs?.data?.notifications || {}) as any;
+                    if (n.notification_type === 'friend_accept' && cfg.friend_acceptance === false) return false;
+                    if (n.notification_type === 'expense_update' && cfg.expense_added === false) return false;
+                    if (n.notification_type === 'trip_invite' && cfg.trip_invite === false) return false;
+                    if (n.notification_type === 'trip_update' && cfg.trip_update === false) return false;
+                    return true;
+                  })
+                  .slice(0, 5)
+                  .map((notification) => {
                   return (
                     <DropdownMenuItem
                       key={notification.id}

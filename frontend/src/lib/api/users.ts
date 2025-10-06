@@ -165,4 +165,14 @@ export class UsersApiClient extends BaseApiClient {
       throw new Error('Failed to resend OTP');
     }
   }
+
+  async deleteAccount(userId: number): Promise<void> {
+    const response = await fetch(`${AUTH_API_URL}/${userId}/`, {
+      ...this._requestConfiguration(true),
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      throw new Error('Failed to delete account');
+    }
+  }
 }
