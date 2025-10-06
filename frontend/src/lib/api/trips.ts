@@ -265,9 +265,20 @@ export interface TripMapSettings {
   default_zoom?: number | null;
 }
 
+export interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
 export class TripMapsApiClient extends BaseApiClient {
-  async getPins(tripId: number): Promise<TripMapPin[]> {
-    const response = await fetch(`${TRIP_API_URL}/${tripId}/maps/pins/`, {
+  async getPins(tripId: number, page?: number, pageSize?: number): Promise<PaginatedResponse<TripMapPin>> {
+    const params = new URLSearchParams();
+    if (page) params.set('page', String(page));
+    if (pageSize) params.set('page_size', String(pageSize));
+    const query = params.toString() ? `?${params.toString()}` : '';
+    const response = await fetch(`${TRIP_API_URL}/${tripId}/maps/pins/${query}`, {
       ...this._requestConfiguration(true),
       method: 'GET',
     });

@@ -3,6 +3,7 @@ from django.db.models import Avg, Q, Count, Case, When, IntegerField, F
 from django.shortcuts import get_object_or_404
 from rest_framework import status, permissions
 from rest_framework.generics import GenericAPIView
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
@@ -1224,6 +1225,11 @@ class TripMapPinListCreateView(GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = TripMapPinSerializer
 
+    class StandardPagination(PageNumberPagination):
+        page_size = 5
+        page_size_query_param = "page_size"
+        max_page_size = 15
+
     def get_trip(self, request, pk):
         try:
             return Trip.objects.filter(
@@ -1236,8 +1242,11 @@ class TripMapPinListCreateView(GenericAPIView):
         trip = self.get_trip(request, pk)
         if not trip:
             return Response({"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND)
-        pins = TripMapPin.objects.filter(trip=trip).select_related("created_by")
-        return Response(self.get_serializer(pins, many=True).data, status=status.HTTP_200_OK)
+        pins = TripMapPin.objects.filter(trip=trip).select_related("created_by").order_by("-created_at")
+        paginator = self.StandardPagination()
+        page = paginator.paginate_queryset(pins, request, view=self)
+        data = self.get_serializer(page, many=True).data
+        return paginator.get_paginated_response(data)
 
     def post(self, request, pk):
         trip = self.get_trip(request, pk)
@@ -1265,7 +1274,8 @@ class TripMapPinDetailView(GenericAPIView):
         trip, pin = self.get_objects(request, pk, pin_id)
         if not pin:
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
-        if not (request.user == trip.owner or request.user == pin.created_by):
+        # Only the creator can update a pin
+        if request.user != pin.created_by:
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
         serializer = self.get_serializer(pin, data=request.data, partial=True)
         if serializer.is_valid():
@@ -1277,7 +1287,8 @@ class TripMapPinDetailView(GenericAPIView):
         trip, pin = self.get_objects(request, pk, pin_id)
         if not pin:
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
-        if not (request.user == trip.owner or request.user == pin.created_by):
+        # Only the creator can delete a pin
+        if request.user != pin.created_by:
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
         pin.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
