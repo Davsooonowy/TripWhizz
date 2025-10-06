@@ -31,6 +31,14 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
     def get_avatar_url(self, obj):
+        try:
+            prefs = obj.preferences
+            visible = prefs.data.get('privacy', {}).get('profile_visible', True)
+            if visible is False:
+                return None
+        except UserPreferences.DoesNotExist:
+            pass
+
         if obj.avatar and hasattr(obj.avatar, 'url'):
             request = self.context.get('request')
             if request:
@@ -148,6 +156,14 @@ class FriendListSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'first_name', 'last_name', 'email', 'avatar_url']
 
     def get_avatar_url(self, obj):
+        try:
+            prefs = obj.preferences
+            visible = prefs.data.get('privacy', {}).get('profile_visible', True)
+            if visible is False:
+                return None
+        except UserPreferences.DoesNotExist:
+            pass
+
         if obj.avatar and hasattr(obj.avatar, 'url'):
             request = self.context.get('request')
             if request:

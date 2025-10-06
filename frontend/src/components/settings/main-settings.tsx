@@ -220,7 +220,7 @@ export default function MainSettings() {
             <SettingsSection title="Notifications" delay={0.35}>
               <SettingsItem
                 icon={<Bell className="h-5 w-5" />}
-                title="Friend invitations"
+                title="Friend requests"
                 action={
                   <Switch
                     checked={Boolean(preferences?.data?.notifications?.friend_request ?? true)}
@@ -247,6 +247,36 @@ export default function MainSettings() {
                   />
                 }
               />
+              <SettingsItem
+                icon={<Bell className="h-5 w-5" />}
+                title="Friend request accepted"
+                action={
+                  <Switch
+                    checked={Boolean((preferences?.data as any)?.notifications?.friend_acceptance ?? true)}
+                    onCheckedChange={async (checked) => {
+                      try {
+                        const client = new PreferencesApiClient(
+                          authenticationProviderInstance,
+                        );
+                        const payload: Partial<UserPreferencesDTO> = {
+                          data: {
+                            ...(preferences?.data ?? {}),
+                            notifications: {
+                              ...(preferences?.data?.notifications ?? {}),
+                              friend_acceptance: checked,
+                            },
+                          },
+                        };
+                        const saved = await client.updatePreferences(payload);
+                        setPreferences(saved);
+                      } catch (e) {
+                        console.error('Failed to save notifications', e);
+                      }
+                    }}
+                  />
+                }
+              />
+
               <SettingsItem
                 icon={<Bell className="h-5 w-5" />}
                 title="Trip invitations"
@@ -278,7 +308,7 @@ export default function MainSettings() {
               />
               <SettingsItem
                 icon={<Bell className="h-5 w-5" />}
-                title="Trip updates"
+                title="Trip changes"
                 action={
                   <Switch
                     checked={Boolean(preferences?.data?.notifications?.trip_update ?? true)}
@@ -305,38 +335,11 @@ export default function MainSettings() {
                   />
                 }
               />
+
+              {/* Collaboration */}
               <SettingsItem
                 icon={<Bell className="h-5 w-5" />}
-                title="Friend acceptance"
-                action={
-                  <Switch
-                    checked={Boolean((preferences?.data as any)?.notifications?.friend_acceptance ?? true)}
-                    onCheckedChange={async (checked) => {
-                      try {
-                        const client = new PreferencesApiClient(
-                          authenticationProviderInstance,
-                        );
-                        const payload: Partial<UserPreferencesDTO> = {
-                          data: {
-                            ...(preferences?.data ?? {}),
-                            notifications: {
-                              ...(preferences?.data?.notifications ?? {}),
-                              friend_acceptance: checked,
-                            },
-                          },
-                        };
-                        const saved = await client.updatePreferences(payload);
-                        setPreferences(saved);
-                      } catch (e) {
-                        console.error('Failed to save notifications', e);
-                      }
-                    }}
-                  />
-                }
-              />
-              <SettingsItem
-                icon={<Bell className="h-5 w-5" />}
-                title="Expense added"
+                title="Expense added to trip"
                 action={
                   <Switch
                     checked={Boolean((preferences?.data as any)?.notifications?.expense_added ?? true)}
@@ -365,7 +368,7 @@ export default function MainSettings() {
               />
               <SettingsItem
                 icon={<Bell className="h-5 w-5" />}
-                title="Packing list added"
+                title="Packing list updates"
                 action={
                   <Switch
                     checked={Boolean((preferences?.data as any)?.notifications?.packing_list_added ?? true)}
@@ -394,7 +397,7 @@ export default function MainSettings() {
               />
               <SettingsItem
                 icon={<Bell className="h-5 w-5" />}
-                title="Document added"
+                title="Document uploaded"
                 action={
                   <Switch
                     checked={Boolean((preferences?.data as any)?.notifications?.document_added ?? true)}
