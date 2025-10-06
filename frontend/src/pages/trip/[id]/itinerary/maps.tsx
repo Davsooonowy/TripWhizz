@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
 import { TripMapsApiClient, type TripMapPin, type TripMapSettings } from '@/lib/api/trips.ts';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useToast } from '@/components/ui/use-toast';
-import { UsersApiClient, type User } from '@/lib/api/users';
+import { Button } from '@/components/ui/button.tsx';
+import { Input } from '@/components/ui/input.tsx';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog.tsx';
+import { useToast } from '@/components/ui/use-toast.tsx';
+import { UsersApiClient, type User } from '@/lib/api/users.ts';
+import { Skeleton } from '@/components/ui/skeleton.tsx';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || import.meta.env.GOOGLE_MAPS_API_KEY;
 
@@ -249,17 +249,21 @@ export default function TripMapsPage() {
       )}
 
       <div className="w-full flex justify-center">
-        <div
-          id="trip-map"
-          style={{
-            width: '100%',
-            maxWidth: 1100,
-            height: '60vh',
-            borderRadius: 8,
-            overflow: 'hidden',
-            background: '#e5e7eb',
-          }}
-        />
+        {isLoading ? (
+          <Skeleton className="w-full max-w-[1100px] h-[60vh] rounded-lg" />
+        ) : (
+          <div
+            id="trip-map"
+            style={{
+              width: '100%',
+              maxWidth: 1100,
+              height: '60vh',
+              borderRadius: 8,
+              overflow: 'hidden',
+              background: '#e5e7eb',
+            }}
+          />
+        )}
       </div>
 
       {/* Pins list */}
@@ -397,5 +401,3 @@ function escapeHtml(input: string) {
     .replace(/\"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
-
-

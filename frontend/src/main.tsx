@@ -82,7 +82,7 @@ const TripExpensesSplitPage = React.lazy(
 const TripExpensesAddPage = React.lazy(
   () => import('@/pages/trip/[id]/expenses/add'),
 );
-const TripMapsPage = React.lazy(() => import('@/pages/trip/[id]/maps'));
+const TripMapsPage = React.lazy(() => import('@/pages/trip/[id]/itinerary/maps.tsx'));
 
 const protectedLoginLoader = async () => {
   if (!authenticationProviderInstance.isAuthenticated()) {
