@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
 import { TripMapsApiClient, type TripMapPin, type TripMapSettings } from '@/lib/api/trips.ts';
@@ -47,6 +47,8 @@ export default function TripMapsPage() {
   const [infoWindowById, setInfoWindowById] = useState<Record<number, any>>({});
   const [selectedPinId, setSelectedPinId] = useState<number | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const searchMarkerRef = useRef<any>(null);
+  const autocompleteRef = useRef<any>(null);
 
   // Load Google Maps script
   useEffect(() => {
@@ -100,6 +102,9 @@ export default function TripMapsPage() {
     const container = document.getElementById('trip-map');
     if (!container) return;
 
+    // Prevent double initialization (fix: "Map container is already initialized.")
+    if ((container as HTMLElement).dataset.tripwhizzMapInitialized === '1') return;
+
     const center = {
       lat: Number(settings.default_latitude ?? 0) || 0,
       lng: Number(settings.default_longitude ?? 0) || 0,
@@ -130,13 +135,14 @@ export default function TripMapsPage() {
 <div style="max-width:240px; font-family: Inter, system-ui, sans-serif; color:#111827;">
   <div style="font-weight:600; margin-bottom:4px; font-size:14px;">${escapeHtml(pin.title)}</div>
   ${pin.description ? `<div style="font-size:12px; line-height:1.4; color:#374151; margin-bottom:4px;">${escapeHtml(pin.description)}</div>` : ''}
-  ${pin.reason ? `<div style=\"font-size:12px; line-height:1.4; color:#6B7280; margin-bottom:6px;\"><em>${escapeHtml(pin.reason)}</em></div>` : ''}
-  <div style=\"font-size:11px; color:#6B7280;\">by ${escapeHtml(pin.created_by?.username || 'unknown')}</div>
-  <div style=\"margin-top:6px;\"><a href=\"https://www.google.com/maps?q=${encodeURIComponent(String(pin.latitude))},${encodeURIComponent(String(pin.longitude))}\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"font-size:12px; color:#2563EB; text-decoration:underline;\">Open in Google Maps</a></div>
+  ${pin.reason ? `<div style="font-size:12px; line-height:1.4; color:#6B7280; margin-bottom:6px;"><em>${escapeHtml(pin.reason)}</em></div>` : ''}
+  <div style="font-size:11px; color:#6B7280;">by ${escapeHtml(pin.created_by?.username || 'unknown')}</div>
+  <div style="margin-top:6px;"><a href="https://www.google.com/maps?q=${encodeURIComponent(String(pin.latitude))},${encodeURIComponent(String(pin.longitude))}" target="_blank" rel="noopener noreferrer" style="font-size:12px; color:#2563EB; text-decoration:underline;">Open in Google Maps</a></div>
 </div>`,
       });
       marker.addListener('click', () => {
-        Object.values(infoWindowById).forEach((iw) => iw?.close());
+        // close other info windows from this batch
+        Object.values(newInfoById).forEach((iw) => iw?.close());
         setSelectedPinId(pin.id);
         info.open({ anchor: marker, map });
       });
@@ -145,6 +151,9 @@ export default function TripMapsPage() {
     });
     setMarkerById(newMarkerById);
     setInfoWindowById(newInfoById);
+
+    // mark as initialized
+    try { (container as HTMLElement).dataset.tripwhizzMapInitialized = '1'; } catch (err) { /* ignore */ }
 
     // Map click to add pin or choose default
     map.addListener('click', (e: any) => {
@@ -157,6 +166,69 @@ export default function TripMapsPage() {
       }
     });
   }, [isGoogleLoaded, pins, settings, selectDefaultMode]);
+
+  // Initialize Places Autocomplete for search input when Google Maps is ready
+  useEffect(() => {
+    if (!isGoogleLoaded || !mapInstance) return;
+    const input = document.getElementById('trip-map-search') as HTMLInputElement | null;
+    if (!input || !window.google?.maps?.places) return;
+
+    // clean up existing autocomplete
+    if (autocompleteRef.current) {
+      try {
+        // try best-effort cleanup
+        (autocompleteRef.current as any).unbindAll?.();
+      } catch (err) {
+        console.warn('autocomplete cleanup failed', err);
+      }
+      autocompleteRef.current = null;
+    }
+
+    const autocomplete = new window.google.maps.places.Autocomplete(input, {
+      fields: ['geometry', 'name', 'formatted_address'],
+      types: ['geocode', 'establishment'],
+    });
+    autocompleteRef.current = autocomplete;
+
+    const listener = autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace();
+      if (!place || !place.geometry || !place.geometry.location) return;
+      const loc = place.geometry.location;
+      const lat = loc.lat();
+      const lng = loc.lng();
+
+      // center map and set zoom
+      try {
+        mapInstance.panTo({ lat, lng });
+        mapInstance.setZoom(15);
+      } catch (err) {
+        console.warn('map pan failed', err);
+      }
+
+      // place or move search marker
+      if (!searchMarkerRef.current && window.google?.maps) {
+        searchMarkerRef.current = new window.google.maps.Marker({
+          position: { lat, lng },
+          map: mapInstance,
+          title: place.name || 'Searched place',
+        });
+      } else if (searchMarkerRef.current) {
+        searchMarkerRef.current.setPosition({ lat, lng });
+        searchMarkerRef.current.setMap(mapInstance);
+        searchMarkerRef.current.setTitle(place.name || 'Searched place');
+      }
+    });
+
+    return () => {
+      if (listener) (listener as any).remove?.();
+      // do not remove input element
+      if (searchMarkerRef.current) {
+        try { searchMarkerRef.current.setMap(null); } catch (err) { console.warn(err); }
+        searchMarkerRef.current = null;
+      }
+      autocompleteRef.current = null;
+    };
+  }, [isGoogleLoaded, mapInstance]);
 
   const loadMore = useCallback(async () => {
     if (!tripId || !hasMore) return;
@@ -227,6 +299,7 @@ export default function TripMapsPage() {
 
   const canUseMap = !!GOOGLE_MAPS_API_KEY;
 
+  // Search input placed above the map
   return (
     <div className="flex flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
@@ -244,9 +317,16 @@ export default function TripMapsPage() {
         )}
       </div>
 
-      {!canUseMap && (
-        <div className="text-sm text-red-500">Google Maps API key missing. Set VITE_GOOGLE_MAPS_API_KEY or GOOGLE_MAPS_API_KEY in environment.</div>
-      )}
+      <div className="w-full flex justify-center">
+        <div className="w-full max-w-[1100px]">
+          <Input
+            id="trip-map-search"
+            placeholder={isGoogleLoaded ? 'Search places...' : 'Loading search...'}
+            disabled={!isGoogleLoaded}
+            className="mb-3"
+          />
+        </div>
+      </div>
 
       <div className="w-full flex justify-center">
         {isLoading ? (
@@ -398,6 +478,6 @@ function escapeHtml(input: string) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/\"/g, '&quot;')
+    .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
