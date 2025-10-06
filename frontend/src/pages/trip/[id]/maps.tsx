@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { UsersApiClient } from '@/lib/api/users';
+import { UsersApiClient, type User } from '@/lib/api/users';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || import.meta.env.GOOGLE_MAPS_API_KEY;
 
@@ -35,9 +35,11 @@ export default function TripMapsPage() {
   const [newPinTitle, setNewPinTitle] = useState('');
   const [newPinDescription, setNewPinDescription] = useState('');
   const [newPinReason, setNewPinReason] = useState('');
+  const [newPinCategory, setNewPinCategory] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string>('');
 
   // Keep map and marker references for interactions
   const [mapInstance, setMapInstance] = useState<any>(null);
@@ -71,7 +73,7 @@ export default function TripMapsPage() {
       try {
         setIsLoading(true);
         const [pinsRes, settingsRes, me] = await Promise.all([
-          mapsClient.getPins(Number(tripId), 1, 5),
+          mapsClient.getPins(Number(tripId), 1, 5, activeCategory || undefined),
           mapsClient.getSettings(Number(tripId)),
           apiClient.getActiveUser().catch(() => null),
         ]);
@@ -90,7 +92,7 @@ export default function TripMapsPage() {
       }
     };
     load();
-  }, [tripId, mapsClient, toast]);
+  }, [tripId, mapsClient, toast, activeCategory]);
 
   // Initialize map once Google is loaded
   useEffect(() => {
@@ -160,14 +162,14 @@ export default function TripMapsPage() {
     if (!tripId || !hasMore) return;
     try {
       const nextPage = page + 1;
-      const resp = await mapsClient.getPins(Number(tripId), nextPage, 5);
+      const resp = await mapsClient.getPins(Number(tripId), nextPage, 5, activeCategory || undefined);
       setPins((prev) => [...prev, ...resp.results]);
       setPage(nextPage);
       setHasMore(Boolean(resp.next));
     } catch (e: any) {
       toast({ title: 'Failed to load more pins', description: e.message, variant: 'destructive' });
     }
-  }, [tripId, hasMore, page, mapsClient, toast]);
+  }, [tripId, hasMore, page, mapsClient, toast, activeCategory]);
 
   const submitNewPin = useCallback(async () => {
     if (!tripId || !addingPinAt) return;
@@ -176,6 +178,7 @@ export default function TripMapsPage() {
         title: newPinTitle,
         description: newPinDescription,
         reason: newPinReason,
+        category: newPinCategory || undefined,
         latitude: addingPinAt.lat,
         longitude: addingPinAt.lng,
       } as any);
@@ -208,7 +211,7 @@ export default function TripMapsPage() {
     } catch (e: any) {
       toast({ title: 'Failed to add pin', description: e.message, variant: 'destructive' });
     }
-  }, [tripId, addingPinAt, newPinTitle, newPinDescription, newPinReason, mapsClient, toast, mapInstance]);
+  }, [tripId, addingPinAt, newPinTitle, newPinDescription, newPinReason, newPinCategory, mapsClient, toast, mapInstance]);
 
   const saveDefaultLocation = useCallback(async () => {
     if (!tripId) return;
@@ -262,7 +265,22 @@ export default function TripMapsPage() {
       {/* Pins list */}
       <div className="w-full flex justify-center">
         <div className="w-full" style={{ maxWidth: 1100 }}>
-          <h2 className="text-lg font-medium mb-2">Pins</h2>
+          <div className="flex items-center justify-between mb-2 gap-2">
+            <h2 className="text-lg font-medium">Pins</h2>
+            <div className="flex items-center gap-2">
+              <select
+                value={activeCategory}
+                className="border rounded px-2 py-1 text-sm dark:bg-gray-900 dark:border-gray-800"
+                onChange={(e) => setActiveCategory(e.target.value)}
+              >
+                <option value="">All categories</option>
+                <option value="food">Food</option>
+                <option value="sights">Sights</option>
+                <option value="lodging">Lodging</option>
+                <option value="activity">Activity</option>
+              </select>
+            </div>
+          </div>
           {isLoading ? (
             <div className="text-sm text-gray-500">Loading pins…</div>
           ) : pins.length === 0 ? (
@@ -344,8 +362,20 @@ export default function TripMapsPage() {
           </DialogHeader>
           <div className="grid gap-3">
             <Input placeholder="Title" value={newPinTitle} onChange={(e) => setNewPinTitle(e.target.value)} />
-            <Textarea placeholder="Description" value={newPinDescription} onChange={(e) => setNewPinDescription(e.target.value)} />
-            <Textarea placeholder="Why this place?" value={newPinReason} onChange={(e) => setNewPinReason(e.target.value)} />
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600 dark:text-gray-300">Category:</span>
+              <select
+                className="border rounded px-2 py-1 text-sm dark:bg-gray-900 dark:border-gray-800"
+                value={newPinCategory}
+                onChange={(e) => setNewPinCategory(e.target.value)}
+              >
+                <option value="">None</option>
+                <option value="food">Food</option>
+                <option value="sights">Sights</option>
+                <option value="lodging">Lodging</option>
+                <option value="activity">Activity</option>
+              </select>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setAddingPinAt(null)}>Cancel</Button>
@@ -361,11 +391,11 @@ export default function TripMapsPage() {
 function escapeHtml(input: string) {
   if (!input) return '';
   return input
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 

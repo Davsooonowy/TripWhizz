@@ -652,6 +652,7 @@ class TripMapPinSerializer(serializers.ModelSerializer):
             "created_by",
             "title",
             "description",
+            "category",
             "latitude",
             "longitude",
             "reason",

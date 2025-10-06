@@ -347,6 +347,7 @@ class TripMapPin(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="created_trip_pins")
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
+    category = models.CharField(max_length=50, blank=True, null=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6)
     longitude = models.DecimalField(max_digits=9, decimal_places=6)
     reason = models.TextField(blank=True, null=True)

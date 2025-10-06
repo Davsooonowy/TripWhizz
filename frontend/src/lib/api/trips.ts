@@ -252,6 +252,7 @@ export interface TripMapPin {
   created_by: TripOwner;
   title: string;
   description?: string;
+  category?: string;
   latitude: number;
   longitude: number;
   reason?: string;
@@ -273,10 +274,11 @@ export interface PaginatedResponse<T> {
 }
 
 export class TripMapsApiClient extends BaseApiClient {
-  async getPins(tripId: number, page?: number, pageSize?: number): Promise<PaginatedResponse<TripMapPin>> {
+  async getPins(tripId: number, page?: number, pageSize?: number, category?: string): Promise<PaginatedResponse<TripMapPin>> {
     const params = new URLSearchParams();
     if (page) params.set('page', String(page));
     if (pageSize) params.set('page_size', String(pageSize));
+    if (category) params.set('category', category);
     const query = params.toString() ? `?${params.toString()}` : '';
     const response = await fetch(`${TRIP_API_URL}/${tripId}/maps/pins/${query}`, {
       ...this._requestConfiguration(true),

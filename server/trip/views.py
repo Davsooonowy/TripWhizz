@@ -1243,6 +1243,9 @@ class TripMapPinListCreateView(GenericAPIView):
         if not trip:
             return Response({"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND)
         pins = TripMapPin.objects.filter(trip=trip).select_related("created_by").order_by("-created_at")
+        category = request.query_params.get("category")
+        if category:
+            pins = pins.filter(category=category)
         paginator = self.StandardPagination()
         page = paginator.paginate_queryset(pins, request, view=self)
         data = self.get_serializer(page, many=True).data
