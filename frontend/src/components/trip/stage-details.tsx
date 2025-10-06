@@ -1,10 +1,6 @@
 import { AddStageElement } from '@/components/trip/add-stage-element.tsx';
 import { Badge } from '@/components/ui/badge.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import { Input } from '@/components/ui/input.tsx';
-import { Textarea } from '@/components/ui/textarea.tsx';
-import { DatePicker } from '@/components/ui/date-picker';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog.tsx';
 import {
   Card,
   CardContent,
@@ -12,18 +8,31 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card.tsx';
+import { DatePicker } from '@/components/ui/date-picker';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog.tsx';
+import { Input } from '@/components/ui/input.tsx';
+import { Textarea } from '@/components/ui/textarea.tsx';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip.tsx';
+import { useToast } from '@/components/ui/use-toast';
+import {
+  ItineraryApiClient,
+  type ItineraryEventDto,
+} from '@/lib/api/itinerary';
 import { StageElement, StagesApiClient } from '@/lib/api/stages.ts';
 import { TripsApiClient } from '@/lib/api/trips.ts';
-import { ItineraryApiClient, type ItineraryEventDto } from '@/lib/api/itinerary';
 import { UsersApiClient } from '@/lib/api/users.ts';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
-import { useToast } from '@/components/ui/use-toast';
 
 import { useEffect, useState } from 'react';
 
@@ -120,7 +129,9 @@ export default function StageDetails() {
         setError(null);
 
         // determine owner
-        const usersApiClient = new UsersApiClient(authenticationProviderInstance);
+        const usersApiClient = new UsersApiClient(
+          authenticationProviderInstance,
+        );
         try {
           const me = await usersApiClient.getActiveUser();
           setIsOwner(!!tripDetails.owner && tripDetails.owner.id === me.id);
@@ -142,18 +153,24 @@ export default function StageDetails() {
       setWinner(null);
       return;
     }
-    const withScore = elements.filter((e) => typeof e.averageReaction === 'number');
+    const withScore = elements.filter(
+      (e) => typeof e.averageReaction === 'number',
+    );
     if (withScore.length === 0) {
       setWinner(null);
       return;
     }
-    const best = withScore.reduce((acc, cur) =>
-      (cur.averageReaction ?? 0) > (acc.averageReaction ?? 0) ? cur : acc,
-    withScore[0]);
+    const best = withScore.reduce(
+      (acc, cur) =>
+        (cur.averageReaction ?? 0) > (acc.averageReaction ?? 0) ? cur : acc,
+      withScore[0],
+    );
     setWinner(best);
   }, [elements]);
 
-  const hasDeadlinePassed = stageEndDate ? new Date(stageEndDate) < new Date() : false;
+  const hasDeadlinePassed = stageEndDate
+    ? new Date(stageEndDate) < new Date()
+    : false;
 
   const openWinnerDialog = () => {
     if (!winner) return;
@@ -180,7 +197,7 @@ export default function StageDetails() {
       const isoDate = new Date(eventDate);
       isoDate.setHours(0, 0, 0, 0);
       const payload: ItineraryEventDto = {
-        date: isoDate.toISOString().slice(0,10),
+        date: isoDate.toISOString().slice(0, 10),
         title: eventTitle || winner.name,
         description: eventDescription,
         start_minutes: Math.min(toMinutes(startTime), toMinutes(endTime) - 1),
@@ -188,10 +205,16 @@ export default function StageDetails() {
         color: '#10b981',
       };
       await api.createEvent(Number(tripId), payload);
-      toast({ title: 'Event added', description: 'Winning option added to Day Plans.' });
+      toast({
+        title: 'Event added',
+        description: 'Winning option added to Day Plans.',
+      });
       setShowWinnerModal(false);
     } catch (e) {
-      toast({ title: 'Failed to add event', description: 'Please try again later.' });
+      toast({
+        title: 'Failed to add event',
+        description: 'Please try again later.',
+      });
     }
   };
 
@@ -361,7 +384,9 @@ export default function StageDetails() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
               <div className="font-semibold">Voting concluded</div>
-              <div className="text-sm text-muted-foreground">Winner: {winner.name}. Add it to your Day Plans?</div>
+              <div className="text-sm text-muted-foreground">
+                Winner: {winner.name}. Add it to your Day Plans?
+              </div>
             </div>
             <Button onClick={openWinnerDialog}>Add to Day Plans</Button>
           </div>
@@ -496,7 +521,10 @@ export default function StageDetails() {
         <div className="p-4 bg-red-100 text-red-500 rounded-md">{error}</div>
       )}
 
-      <Dialog open={showWinnerModal} onOpenChange={(open) => (!open ? setShowWinnerModal(false) : null)}>
+      <Dialog
+        open={showWinnerModal}
+        onOpenChange={(open) => (!open ? setShowWinnerModal(false) : null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add winning option to Day Plans</DialogTitle>
@@ -531,7 +559,7 @@ export default function StageDetails() {
               date={eventDate ?? undefined}
               setDate={(d) => {
                 if (!d) return;
-                d.setHours(0,0,0,0);
+                d.setHours(0, 0, 0, 0);
                 setEventDate(d);
               }}
               className="w-full"
@@ -544,8 +572,19 @@ export default function StageDetails() {
             />
           </div>
           <DialogFooter className="flex flex-col md:flex-row gap-2 md:gap-2">
-            <Button className="w-full md:w-auto" variant="secondary" onClick={() => setShowWinnerModal(false)}>Cancel</Button>
-            <Button className="w-full md:w-auto" onClick={createEventFromWinner}>Add</Button>
+            <Button
+              className="w-full md:w-auto"
+              variant="secondary"
+              onClick={() => setShowWinnerModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="w-full md:w-auto"
+              onClick={createEventFromWinner}
+            >
+              Add
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

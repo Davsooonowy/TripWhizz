@@ -1,25 +1,42 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
-
-import { ExpensesApiClient, ExpenseDto, SplitMethod, SettlementDto } from '@/lib/api/expenses';
-import { TripsApiClient, TripParticipant } from '@/lib/api/trips';
-import { authenticationProviderInstance } from '@/lib/authentication-provider';
-
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
+import {
+  ExpenseDto,
+  ExpensesApiClient,
+  SettlementDto,
+  SplitMethod,
+} from '@/lib/api/expenses';
+import { TripParticipant, TripsApiClient } from '@/lib/api/trips';
+import { authenticationProviderInstance } from '@/lib/authentication-provider';
+
+import { useEffect, useMemo, useState } from 'react';
+
+import { useParams } from 'react-router-dom';
 
 export default function TripExpensesPage() {
   const { tripId } = useParams();
   const { toast } = useToast();
 
-  const api = useMemo(() => new ExpensesApiClient(authenticationProviderInstance), []);
-  const tripsApi = useMemo(() => new TripsApiClient(authenticationProviderInstance), []);
+  const api = useMemo(
+    () => new ExpensesApiClient(authenticationProviderInstance),
+    [],
+  );
+  const tripsApi = useMemo(
+    () => new TripsApiClient(authenticationProviderInstance),
+    [],
+  );
 
   const [participants, setParticipants] = useState<TripParticipant[]>([]);
   const [expenses, setExpenses] = useState<any[]>([]);
@@ -40,9 +57,15 @@ export default function TripExpensesPage() {
     (async () => {
       try {
         const trip = await tripsApi.getTripDetails(Number(tripId));
-        const people = (trip.participants || []).filter((p: TripParticipant) => p.invitation_status !== 'pending');
+        const people = (trip.participants || []).filter(
+          (p: TripParticipant) => p.invitation_status !== 'pending',
+        );
         setParticipants(people);
-        setForm((prev) => ({ ...prev, paid_by_id: people[0]?.id || 0, shares: people.map((p) => ({ user_id: p.id })) }));
+        setForm((prev) => ({
+          ...prev,
+          paid_by_id: people[0]?.id || 0,
+          shares: people.map((p) => ({ user_id: p.id })),
+        }));
 
         const [exp, bal, setl] = await Promise.all([
           api.getExpenses(Number(tripId)),
@@ -53,12 +76,20 @@ export default function TripExpensesPage() {
         setBalances(bal);
         setSettlements(setl);
       } catch (e: any) {
-        toast({ title: 'Błąd', description: e.message, variant: 'destructive' });
+        toast({
+          title: 'Błąd',
+          description: e.message,
+          variant: 'destructive',
+        });
       }
     })();
   }, [tripId]);
 
-  const updateShareValues = (method: SplitMethod, total: number, shares: any[]) => {
+  const updateShareValues = (
+    method: SplitMethod,
+    total: number,
+    shares: any[],
+  ) => {
     if (method === 'equal' && shares.length > 0) {
       const per = Math.round((total / shares.length) * 100) / 100;
       return shares.map((s) => ({ ...s, owed_amount: per }));
@@ -67,13 +98,21 @@ export default function TripExpensesPage() {
   };
 
   const onChangeMethod = (value: SplitMethod) => {
-    setForm((prev) => ({ ...prev, split_method: value, shares: updateShareValues(value, prev.amount, prev.shares) }));
+    setForm((prev) => ({
+      ...prev,
+      split_method: value,
+      shares: updateShareValues(value, prev.amount, prev.shares),
+    }));
   };
 
   const onCreateExpense = async () => {
     try {
       if (!tripId) return;
-      const payload: ExpenseDto = { ...form, amount: Number(form.amount), paid_by_id: Number(form.paid_by_id) };
+      const payload: ExpenseDto = {
+        ...form,
+        amount: Number(form.amount),
+        paid_by_id: Number(form.paid_by_id),
+      };
       const created = await api.createExpense(Number(tripId), payload);
       setExpenses((prev) => [created, ...prev]);
       toast({ title: 'Dodano wydatek' });
@@ -82,10 +121,18 @@ export default function TripExpensesPage() {
     }
   };
 
-  const onCreateSettlement = async (payerId: number, payeeId: number, amount: number) => {
+  const onCreateSettlement = async (
+    payerId: number,
+    payeeId: number,
+    amount: number,
+  ) => {
     try {
       if (!tripId) return;
-      const payload: SettlementDto = { payer_id: payerId, payee_id: payeeId, amount };
+      const payload: SettlementDto = {
+        payer_id: payerId,
+        payee_id: payeeId,
+        amount,
+      };
       const created = await api.createSettlement(Number(tripId), payload);
       setSettlements((prev) => [created, ...prev]);
       const bal = await api.getBalances(Number(tripId));
@@ -114,27 +161,52 @@ export default function TripExpensesPage() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <Label>Opis</Label>
-                  <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+                  <Input
+                    value={form.description}
+                    onChange={(e) =>
+                      setForm({ ...form, description: e.target.value })
+                    }
+                  />
                 </div>
                 <div>
                   <Label>Kwota</Label>
-                  <Input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })} />
+                  <Input
+                    type="number"
+                    value={form.amount}
+                    onChange={(e) =>
+                      setForm({ ...form, amount: Number(e.target.value) })
+                    }
+                  />
                 </div>
                 <div>
                   <Label>Płatnik</Label>
-                  <Select value={String(form.paid_by_id)} onValueChange={(v) => setForm({ ...form, paid_by_id: Number(v) })}>
-                    <SelectTrigger><SelectValue placeholder="Wybierz" /></SelectTrigger>
+                  <Select
+                    value={String(form.paid_by_id)}
+                    onValueChange={(v) =>
+                      setForm({ ...form, paid_by_id: Number(v) })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Wybierz" />
+                    </SelectTrigger>
                     <SelectContent>
                       {participants.map((p) => (
-                        <SelectItem key={p.id} value={String(p.id)}>{p.username}</SelectItem>
+                        <SelectItem key={p.id} value={String(p.id)}>
+                          {p.username}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
                   <Label>Metoda podziału</Label>
-                  <Select value={form.split_method} onValueChange={(v) => onChangeMethod(v as SplitMethod)}>
-                    <SelectTrigger><SelectValue placeholder="Wybierz" /></SelectTrigger>
+                  <Select
+                    value={form.split_method}
+                    onValueChange={(v) => onChangeMethod(v as SplitMethod)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Wybierz" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="equal">Po równo</SelectItem>
                       <SelectItem value="percentage">Procentowo</SelectItem>
@@ -152,34 +224,48 @@ export default function TripExpensesPage() {
                     <div key={p.id} className="flex items-center gap-2">
                       <span className="min-w-24">{p.username}</span>
                       {form.split_method === 'percentage' && (
-                        <Input type="number" placeholder="%" value={form.shares[idx]?.percentage ?? ''}
+                        <Input
+                          type="number"
+                          placeholder="%"
+                          value={form.shares[idx]?.percentage ?? ''}
                           onChange={(e) => {
                             const val = Number(e.target.value);
                             const next = [...form.shares];
                             next[idx] = { user_id: p.id, percentage: val };
                             setForm({ ...form, shares: next });
-                          }} />
+                          }}
+                        />
                       )}
                       {form.split_method === 'exact' && (
-                        <Input type="number" placeholder="kwota" value={form.shares[idx]?.owed_amount ?? ''}
+                        <Input
+                          type="number"
+                          placeholder="kwota"
+                          value={form.shares[idx]?.owed_amount ?? ''}
                           onChange={(e) => {
                             const val = Number(e.target.value);
                             const next = [...form.shares];
                             next[idx] = { user_id: p.id, owed_amount: val };
                             setForm({ ...form, shares: next });
-                          }} />
+                          }}
+                        />
                       )}
                       {form.split_method === 'shares' && (
-                        <Input type="number" placeholder="udziały" value={form.shares[idx]?.shares_count ?? ''}
+                        <Input
+                          type="number"
+                          placeholder="udziały"
+                          value={form.shares[idx]?.shares_count ?? ''}
                           onChange={(e) => {
                             const val = Number(e.target.value);
                             const next = [...form.shares];
                             next[idx] = { user_id: p.id, shares_count: val };
                             setForm({ ...form, shares: next });
-                          }} />
+                          }}
+                        />
                       )}
                       {form.split_method === 'equal' && (
-                        <span className="text-sm text-muted-foreground">po równo</span>
+                        <span className="text-sm text-muted-foreground">
+                          po równo
+                        </span>
                       )}
                     </div>
                   ))}
@@ -197,7 +283,9 @@ export default function TripExpensesPage() {
                 <CardContent className="py-4 flex items-center justify-between">
                   <div>
                     <div className="font-medium">{e.description}</div>
-                    <div className="text-sm text-muted-foreground">{e.amount} {e.currency} — zapłacił: {e.paid_by?.username}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {e.amount} {e.currency} — zapłacił: {e.paid_by?.username}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -212,9 +300,18 @@ export default function TripExpensesPage() {
             </CardHeader>
             <CardContent className="space-y-2">
               {balances.map((b) => (
-                <div key={b.user.id} className="flex items-center justify-between">
+                <div
+                  key={b.user.id}
+                  className="flex items-center justify-between"
+                >
                   <span>{b.user.username}</span>
-                  <span className={Number(b.balance) < 0 ? 'text-red-500' : 'text-green-600'}>{b.balance.toFixed(2)} PLN</span>
+                  <span
+                    className={
+                      Number(b.balance) < 0 ? 'text-red-500' : 'text-green-600'
+                    }
+                  >
+                    {b.balance.toFixed(2)} PLN
+                  </span>
                 </div>
               ))}
             </CardContent>
@@ -230,40 +327,81 @@ export default function TripExpensesPage() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <Label>Płaci</Label>
-                  <Select onValueChange={(v) => setForm((prev) => ({ ...prev, paid_by_id: Number(v) }))}>
-                    <SelectTrigger><SelectValue placeholder="Wybierz" /></SelectTrigger>
+                  <Select
+                    onValueChange={(v) =>
+                      setForm((prev) => ({ ...prev, paid_by_id: Number(v) }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Wybierz" />
+                    </SelectTrigger>
                     <SelectContent>
                       {participants.map((p) => (
-                        <SelectItem value={String(p.id)} key={p.id}>{p.username}</SelectItem>
+                        <SelectItem value={String(p.id)} key={p.id}>
+                          {p.username}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
                   <Label>Odbiera</Label>
-                  <Select onValueChange={(v) => setForm((prev) => ({ ...prev, shares: [{ user_id: Number(v) }] }))}>
-                    <SelectTrigger><SelectValue placeholder="Wybierz" /></SelectTrigger>
+                  <Select
+                    onValueChange={(v) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        shares: [{ user_id: Number(v) }],
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Wybierz" />
+                    </SelectTrigger>
                     <SelectContent>
                       {participants.map((p) => (
-                        <SelectItem value={String(p.id)} key={p.id}>{p.username}</SelectItem>
+                        <SelectItem value={String(p.id)} key={p.id}>
+                          {p.username}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
                   <Label>Kwota</Label>
-                  <Input type="number" onChange={(e) => setForm((prev) => ({ ...prev, amount: Number(e.target.value) }))} />
+                  <Input
+                    type="number"
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        amount: Number(e.target.value),
+                      }))
+                    }
+                  />
                 </div>
                 <div className="flex items-end">
-                  <Button onClick={() => onCreateSettlement(form.paid_by_id, form.shares[0]?.user_id || 0, Number(form.amount))}>Dodaj</Button>
+                  <Button
+                    onClick={() =>
+                      onCreateSettlement(
+                        form.paid_by_id,
+                        form.shares[0]?.user_id || 0,
+                        Number(form.amount),
+                      )
+                    }
+                  >
+                    Dodaj
+                  </Button>
                 </div>
               </div>
               <Separator />
               <div className="space-y-3">
                 {settlements.map((s) => (
                   <div key={s.id} className="flex items-center justify-between">
-                    <span>{s.payer?.username} → {s.payee?.username}</span>
-                    <span>{s.amount} {s.currency}</span>
+                    <span>
+                      {s.payer?.username} → {s.payee?.username}
+                    </span>
+                    <span>
+                      {s.amount} {s.currency}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -274,5 +412,3 @@ export default function TripExpensesPage() {
     </div>
   );
 }
-
-

@@ -26,30 +26,43 @@ export class ItineraryApiClient extends BaseApiClient {
   }
 
   async createEvent(tripId: number, data: ItineraryEventDto) {
-    const response = await fetch(`${ITINERARY_API_URL}/${tripId}/itinerary/events/`, {
-      ...this._requestConfiguration(true),
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    const response = await fetch(
+      `${ITINERARY_API_URL}/${tripId}/itinerary/events/`,
+      {
+        ...this._requestConfiguration(true),
+        method: 'POST',
+        body: JSON.stringify(data),
+      },
+    );
     if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
     return (await response.json()) as ItineraryEventDto;
   }
 
-  async updateEvent(tripId: number, eventId: number, data: Partial<ItineraryEventDto>) {
-    const response = await fetch(`${ITINERARY_API_URL}/${tripId}/itinerary/events/${eventId}/`, {
-      ...this._requestConfiguration(true),
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
+  async updateEvent(
+    tripId: number,
+    eventId: number,
+    data: Partial<ItineraryEventDto>,
+  ) {
+    const response = await fetch(
+      `${ITINERARY_API_URL}/${tripId}/itinerary/events/${eventId}/`,
+      {
+        ...this._requestConfiguration(true),
+        method: 'PUT',
+        body: JSON.stringify(data),
+      },
+    );
     if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
     return (await response.json()) as ItineraryEventDto;
   }
 
   async deleteEvent(tripId: number, eventId: number) {
-    const response = await fetch(`${ITINERARY_API_URL}/${tripId}/itinerary/events/${eventId}/`, {
-      ...this._requestConfiguration(true),
-      method: 'DELETE',
-    });
+    const response = await fetch(
+      `${ITINERARY_API_URL}/${tripId}/itinerary/events/${eventId}/`,
+      {
+        ...this._requestConfiguration(true),
+        method: 'DELETE',
+      },
+    );
     if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
     return true;
   }

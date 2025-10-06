@@ -274,21 +274,32 @@ export interface PaginatedResponse<T> {
 }
 
 export class TripMapsApiClient extends BaseApiClient {
-  async getPins(tripId: number, page?: number, pageSize?: number, category?: string): Promise<PaginatedResponse<TripMapPin>> {
+  async getPins(
+    tripId: number,
+    page?: number,
+    pageSize?: number,
+    category?: string,
+  ): Promise<PaginatedResponse<TripMapPin>> {
     const params = new URLSearchParams();
     if (page) params.set('page', String(page));
     if (pageSize) params.set('page_size', String(pageSize));
     if (category) params.set('category', category);
     const query = params.toString() ? `?${params.toString()}` : '';
-    const response = await fetch(`${TRIP_API_URL}/${tripId}/maps/pins/${query}`, {
-      ...this._requestConfiguration(true),
-      method: 'GET',
-    });
+    const response = await fetch(
+      `${TRIP_API_URL}/${tripId}/maps/pins/${query}`,
+      {
+        ...this._requestConfiguration(true),
+        method: 'GET',
+      },
+    );
     if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
     return await response.json();
   }
 
-  async createPin(tripId: number, data: Partial<TripMapPin>): Promise<TripMapPin> {
+  async createPin(
+    tripId: number,
+    data: Partial<TripMapPin>,
+  ): Promise<TripMapPin> {
     // sanitize payload for Decimal fields
     const payload: any = { ...data };
     if (payload.latitude !== undefined && payload.latitude !== null) {
@@ -306,7 +317,11 @@ export class TripMapsApiClient extends BaseApiClient {
     return await response.json();
   }
 
-  async updatePin(tripId: number, pinId: number, data: Partial<TripMapPin>): Promise<TripMapPin> {
+  async updatePin(
+    tripId: number,
+    pinId: number,
+    data: Partial<TripMapPin>,
+  ): Promise<TripMapPin> {
     const payload: any = { ...data };
     if (payload.latitude !== undefined && payload.latitude !== null) {
       payload.latitude = Number(payload.latitude).toFixed(6);
@@ -314,20 +329,26 @@ export class TripMapsApiClient extends BaseApiClient {
     if (payload.longitude !== undefined && payload.longitude !== null) {
       payload.longitude = Number(payload.longitude).toFixed(6);
     }
-    const response = await fetch(`${TRIP_API_URL}/${tripId}/maps/pins/${pinId}/`, {
-      ...this._requestConfiguration(true),
-      method: 'PUT',
-      body: JSON.stringify(payload),
-    });
+    const response = await fetch(
+      `${TRIP_API_URL}/${tripId}/maps/pins/${pinId}/`,
+      {
+        ...this._requestConfiguration(true),
+        method: 'PUT',
+        body: JSON.stringify(payload),
+      },
+    );
     if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
     return await response.json();
   }
 
   async deletePin(tripId: number, pinId: number): Promise<void> {
-    const response = await fetch(`${TRIP_API_URL}/${tripId}/maps/pins/${pinId}/`, {
-      ...this._requestConfiguration(true),
-      method: 'DELETE',
-    });
+    const response = await fetch(
+      `${TRIP_API_URL}/${tripId}/maps/pins/${pinId}/`,
+      {
+        ...this._requestConfiguration(true),
+        method: 'DELETE',
+      },
+    );
     if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
   }
 
@@ -340,13 +361,19 @@ export class TripMapsApiClient extends BaseApiClient {
     return await response.json();
   }
 
-  async updateSettings(tripId: number, data: Partial<TripMapSettings>): Promise<TripMapSettings> {
+  async updateSettings(
+    tripId: number,
+    data: Partial<TripMapSettings>,
+  ): Promise<TripMapSettings> {
     // strip undefined/null and format decimals
     const payload: any = {};
     if (data.default_latitude !== undefined && data.default_latitude !== null) {
       payload.default_latitude = Number(data.default_latitude).toFixed(6);
     }
-    if (data.default_longitude !== undefined && data.default_longitude !== null) {
+    if (
+      data.default_longitude !== undefined &&
+      data.default_longitude !== null
+    ) {
       payload.default_longitude = Number(data.default_longitude).toFixed(6);
     }
     if (data.default_zoom !== undefined && data.default_zoom !== null) {

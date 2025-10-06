@@ -55,7 +55,9 @@ export class PreferencesApiClient extends BaseApiClient {
     return (await response.json()) as UserPreferencesDTO;
   }
 
-  async updatePreferences(payload: Partial<UserPreferencesDTO>): Promise<UserPreferencesDTO> {
+  async updatePreferences(
+    payload: Partial<UserPreferencesDTO>,
+  ): Promise<UserPreferencesDTO> {
     const response = await fetch(PREFS_URL, {
       ...this._requestConfiguration(true),
       method: 'PUT',
@@ -67,5 +69,3 @@ export class PreferencesApiClient extends BaseApiClient {
     return (await response.json()) as UserPreferencesDTO;
   }
 }
-
-

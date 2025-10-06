@@ -1,9 +1,30 @@
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { useDarkMode } from '@/components/util/dark-mode-provider';
-import { PreferencesApiClient, type UserPreferencesDTO } from '@/lib/api/preferences';
+import {
+  PreferencesApiClient,
+  type UserPreferencesDTO,
+} from '@/lib/api/preferences';
 import { UsersApiClient } from '@/lib/api/users';
 import type { User as UserType } from '@/lib/api/users';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
@@ -27,31 +48,15 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@/components/ui/select';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
 
 export default function MainSettings() {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const navigate = useNavigate();
   const [user, setUser] = useState<UserType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [preferences, setPreferences] = useState<UserPreferencesDTO | null>(null);
+  const [preferences, setPreferences] = useState<UserPreferencesDTO | null>(
+    null,
+  );
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -181,7 +186,10 @@ export default function MainSettings() {
                 title="Appearance preset"
                 action={
                   <Select
-                    value={(preferences?.data as any)?.appearance?.preset ?? 'default'}
+                    value={
+                      (preferences?.data as any)?.appearance?.preset ??
+                      'default'
+                    }
                     onValueChange={async (value) => {
                       try {
                         const client = new PreferencesApiClient(
@@ -223,7 +231,9 @@ export default function MainSettings() {
                 title="Friend requests"
                 action={
                   <Switch
-                    checked={Boolean(preferences?.data?.notifications?.friend_request ?? true)}
+                    checked={Boolean(
+                      preferences?.data?.notifications?.friend_request ?? true,
+                    )}
                     onCheckedChange={async (checked) => {
                       try {
                         const client = new PreferencesApiClient(
@@ -252,7 +262,10 @@ export default function MainSettings() {
                 title="Friend request accepted"
                 action={
                   <Switch
-                    checked={Boolean((preferences?.data as any)?.notifications?.friend_acceptance ?? true)}
+                    checked={Boolean(
+                      (preferences?.data as any)?.notifications
+                        ?.friend_acceptance ?? true,
+                    )}
                     onCheckedChange={async (checked) => {
                       try {
                         const client = new PreferencesApiClient(
@@ -282,7 +295,9 @@ export default function MainSettings() {
                 title="Trip invitations"
                 action={
                   <Switch
-                    checked={Boolean(preferences?.data?.notifications?.trip_invite ?? true)}
+                    checked={Boolean(
+                      preferences?.data?.notifications?.trip_invite ?? true,
+                    )}
                     onCheckedChange={async (checked) => {
                       try {
                         const client = new PreferencesApiClient(
@@ -311,7 +326,9 @@ export default function MainSettings() {
                 title="Trip changes"
                 action={
                   <Switch
-                    checked={Boolean(preferences?.data?.notifications?.trip_update ?? true)}
+                    checked={Boolean(
+                      preferences?.data?.notifications?.trip_update ?? true,
+                    )}
                     onCheckedChange={async (checked) => {
                       try {
                         const client = new PreferencesApiClient(
@@ -342,7 +359,10 @@ export default function MainSettings() {
                 title="Expense added to trip"
                 action={
                   <Switch
-                    checked={Boolean((preferences?.data as any)?.notifications?.expense_added ?? true)}
+                    checked={Boolean(
+                      (preferences?.data as any)?.notifications
+                        ?.expense_added ?? true,
+                    )}
                     onCheckedChange={async (checked) => {
                       try {
                         const client = new PreferencesApiClient(
@@ -371,7 +391,10 @@ export default function MainSettings() {
                 title="Packing list updates"
                 action={
                   <Switch
-                    checked={Boolean((preferences?.data as any)?.notifications?.packing_list_added ?? true)}
+                    checked={Boolean(
+                      (preferences?.data as any)?.notifications
+                        ?.packing_list_added ?? true,
+                    )}
                     onCheckedChange={async (checked) => {
                       try {
                         const client = new PreferencesApiClient(
@@ -400,7 +423,10 @@ export default function MainSettings() {
                 title="Document uploaded"
                 action={
                   <Switch
-                    checked={Boolean((preferences?.data as any)?.notifications?.document_added ?? true)}
+                    checked={Boolean(
+                      (preferences?.data as any)?.notifications
+                        ?.document_added ?? true,
+                    )}
                     onCheckedChange={async (checked) => {
                       try {
                         const client = new PreferencesApiClient(
@@ -432,7 +458,9 @@ export default function MainSettings() {
                 title="Display avatar"
                 action={
                   <Switch
-                    checked={Boolean(preferences?.data?.privacy?.profile_visible ?? true)}
+                    checked={Boolean(
+                      preferences?.data?.privacy?.profile_visible ?? true,
+                    )}
                     onCheckedChange={async (checked) => {
                       try {
                         const client = new PreferencesApiClient(
@@ -535,8 +563,9 @@ export default function MainSettings() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Delete account?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete
-                        your account and remove your data from our servers.
+                        This action cannot be undone. This will permanently
+                        delete your account and remove your data from our
+                        servers.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

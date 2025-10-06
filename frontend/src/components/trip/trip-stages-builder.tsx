@@ -1,5 +1,6 @@
 'use client';
 
+import { stageCategories } from '@/components/trip/stage-constants';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -61,8 +62,6 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
-
-import { stageCategories } from '@/components/trip/stage-constants';
 
 const initialCustomCategories: Array<{
   id: string;

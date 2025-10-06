@@ -1,7 +1,10 @@
+import { useToast } from '@/components/ui/use-toast';
+import {
+  PreferencesApiClient,
+  type UserPreferencesDTO,
+} from '@/lib/api/preferences';
 import { type TripData, TripsApiClient } from '@/lib/api/trips';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
-import { PreferencesApiClient, type UserPreferencesDTO } from '@/lib/api/preferences';
-import { useToast } from '@/components/ui/use-toast';
 
 import type React from 'react';
 import { createContext, useContext, useEffect, useState } from 'react';
@@ -45,7 +48,10 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
       const fetchedTrips = await tripsApiClient.getTrips();
       // ensure preferences loaded for sorting
       let sorted = [...fetchedTrips];
-      const sortPref = (prefs?.data as any)?.trip_sort as 'name' | 'date' | undefined;
+      const sortPref = (prefs?.data as any)?.trip_sort as
+        | 'name'
+        | 'date'
+        | undefined;
       if (sortPref === 'name') {
         sorted.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
       } else if (sortPref === 'date') {
@@ -68,7 +74,11 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
             const details = await tripsApiClient.getTripDetails(foundTrip.id);
             setSelectedTrip({ ...foundTrip, ...details });
           } catch (err) {
-            toast({ title: 'Error', description: 'Failed to load trip details', variant: 'destructive' });
+            toast({
+              title: 'Error',
+              description: 'Failed to load trip details',
+              variant: 'destructive',
+            });
             setSelectedTrip(foundTrip);
           }
         } else if (fetchedTrips.length > 0) {
@@ -82,7 +92,11 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
               fetchedTrips[0].id?.toString() || '',
             );
           } catch (err) {
-            toast({ title: 'Error', description: 'Failed to load trip details', variant: 'destructive' });
+            toast({
+              title: 'Error',
+              description: 'Failed to load trip details',
+              variant: 'destructive',
+            });
             setSelectedTrip(fetchedTrips[0]);
           }
         }
@@ -97,7 +111,11 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
             fetchedTrips[0].id?.toString() || '',
           );
         } catch (err) {
-          toast({ title: 'Error', description: 'Failed to load trip details', variant: 'destructive' });
+          toast({
+            title: 'Error',
+            description: 'Failed to load trip details',
+            variant: 'destructive',
+          });
           setSelectedTrip(fetchedTrips[0]);
         }
       }
@@ -115,7 +133,11 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
         const p = await client.getPreferences();
         setPrefs(p);
       } catch {
-        toast({ title: 'Error', description: 'Failed to load preferences', variant: 'destructive' });
+        toast({
+          title: 'Error',
+          description: 'Failed to load preferences',
+          variant: 'destructive',
+        });
       }
       await fetchTrips();
     };
@@ -139,7 +161,11 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
         return prevTrip;
       });
     } catch (err) {
-      toast({ title: 'Error', description: 'Failed to load trip details', variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: 'Failed to load trip details',
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }

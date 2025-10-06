@@ -1,12 +1,10 @@
 import { EmptyContent } from '@/components/not-available/empty-content';
 import { ParticipantsList } from '@/components/trip/participants-list';
-import StageAddForm, { type StageFormData } from '@/components/trip/stage-add-form';
+import StageAddForm, {
+  type StageFormData,
+} from '@/components/trip/stage-add-form';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { DatePicker } from '@/components/ui/date-picker';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Card,
   CardContent,
@@ -14,15 +12,25 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { DatePicker } from '@/components/ui/date-picker';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Progress } from '@/components/ui/progress';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/components/ui/use-toast';
 import { useTripContext } from '@/components/util/trip-context';
 import { StagesApiClient } from '@/lib/api/stages.ts';
 import { type TripData, type TripStage, TripsApiClient } from '@/lib/api/trips';
 import { UsersApiClient } from '@/lib/api/users.ts';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/components/ui/use-toast';
 
 import type React from 'react';
 import { useEffect, useState } from 'react';
@@ -34,6 +42,7 @@ import {
   Calendar,
   Car,
   Clock,
+  Edit2,
   Map,
   Mountain,
   Palmtree,
@@ -43,13 +52,11 @@ import {
   Ship,
   Tent,
   Train,
-  Users,
-  Edit2,
   Trash2,
+  Users,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
- 
 
 const iconMap: Record<string, React.ElementType> = {
   plane: Plane,
@@ -96,7 +103,9 @@ export default function TripHome() {
         set_TripDetails(details);
         setStages(details.stages || []);
         try {
-          const user = await new UsersApiClient(authenticationProviderInstance).getActiveUser();
+          const user = await new UsersApiClient(
+            authenticationProviderInstance,
+          ).getActiveUser();
           setIsOwner(!!details.owner && details.owner.id === user.id);
         } catch {
           setIsOwner(false);
@@ -166,8 +175,12 @@ export default function TripHome() {
     setEditName(tripDetails.name || '');
     setEditDestination(tripDetails.destination || '');
     setEditDescription(tripDetails.description || '');
-    setEditStartDate(tripDetails.start_date ? new Date(tripDetails.start_date) : null);
-    setEditEndDate(tripDetails.end_date ? new Date(tripDetails.end_date) : null);
+    setEditStartDate(
+      tripDetails.start_date ? new Date(tripDetails.start_date) : null,
+    );
+    setEditEndDate(
+      tripDetails.end_date ? new Date(tripDetails.end_date) : null,
+    );
     setEditOpen(true);
   };
 
@@ -178,14 +191,21 @@ export default function TripHome() {
         name: editName,
         destination: editDestination,
         description: editDescription,
-        start_date: editStartDate ? editStartDate.toISOString().split('T')[0] : undefined,
-        end_date: editEndDate ? editEndDate.toISOString().split('T')[0] : undefined,
+        start_date: editStartDate
+          ? editStartDate.toISOString().split('T')[0]
+          : undefined,
+        end_date: editEndDate
+          ? editEndDate.toISOString().split('T')[0]
+          : undefined,
       });
       toast({ title: 'Trip updated' });
       setEditOpen(false);
       await refreshTrips();
     } catch (e) {
-      toast({ title: 'Failed to update trip', description: 'Try again later.' });
+      toast({
+        title: 'Failed to update trip',
+        description: 'Try again later.',
+      });
     }
   };
 
@@ -198,7 +218,10 @@ export default function TripHome() {
       await refreshTrips();
       navigate('/');
     } catch (e) {
-      toast({ title: 'Failed to delete trip', description: 'Try again later.' });
+      toast({
+        title: 'Failed to delete trip',
+        description: 'Try again later.',
+      });
     }
   };
 
@@ -254,13 +277,21 @@ export default function TripHome() {
             <div className="flex items-center gap-2">
               {isOwner && (
                 <>
-                  <Button variant="default" size="sm" onClick={() => setAddStageOpen(true)}>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => setAddStageOpen(true)}
+                  >
                     <Plus className="h-4 w-4 mr-2" /> Add Stage
                   </Button>
                   <Button variant="outline" size="sm" onClick={openEdit}>
                     <Edit2 className="h-4 w-4 mr-2" /> Edit
                   </Button>
-                  <Button variant="destructive" size="sm" onClick={() => setDeleteOpen(true)}>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setDeleteOpen(true)}
+                  >
                     <Trash2 className="h-4 w-4 mr-2" /> Delete
                   </Button>
                 </>
@@ -488,14 +519,25 @@ export default function TripHome() {
         tripOwner={selectedTrip?.owner}
       />
 
-      <Dialog open={editOpen} onOpenChange={(open) => (!open ? setEditOpen(false) : null)}>
+      <Dialog
+        open={editOpen}
+        onOpenChange={(open) => (!open ? setEditOpen(false) : null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit trip</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <Input placeholder="Trip name" value={editName} onChange={(e) => setEditName(e.target.value)} />
-            <Input placeholder="Destination" value={editDestination} onChange={(e) => setEditDestination(e.target.value)} />
+            <Input
+              placeholder="Trip name"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+            />
+            <Input
+              placeholder="Destination"
+              value={editDestination}
+              onChange={(e) => setEditDestination(e.target.value)}
+            />
             <div className="grid grid-cols-2 gap-3">
               <DatePicker
                 date={editStartDate ?? undefined}
@@ -508,29 +550,62 @@ export default function TripHome() {
                 className="w-full"
               />
             </div>
-            <Textarea placeholder="Description" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} className="min-h-[100px]" />
+            <Textarea
+              placeholder="Description"
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              className="min-h-[100px]"
+            />
           </div>
           <DialogFooter className="flex flex-col md:flex-row gap-2 md:gap-2">
-            <Button className="w-full md:w-auto" variant="secondary" onClick={() => setEditOpen(false)}>Cancel</Button>
-            <Button className="w-full md:w-auto" onClick={saveEdit}>Save</Button>
+            <Button
+              className="w-full md:w-auto"
+              variant="secondary"
+              onClick={() => setEditOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button className="w-full md:w-auto" onClick={saveEdit}>
+              Save
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={deleteOpen} onOpenChange={(open) => (!open ? setDeleteOpen(false) : null)}>
+      <Dialog
+        open={deleteOpen}
+        onOpenChange={(open) => (!open ? setDeleteOpen(false) : null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete trip</DialogTitle>
           </DialogHeader>
-          <div className="text-sm text-muted-foreground">This action is irreversible. Do you really want to delete this trip?</div>
+          <div className="text-sm text-muted-foreground">
+            This action is irreversible. Do you really want to delete this trip?
+          </div>
           <DialogFooter className="flex flex-col md:flex-row gap-2 md:gap-2">
-            <Button className="w-full md:w-auto" variant="secondary" onClick={() => setDeleteOpen(false)}>Cancel</Button>
-            <Button className="w-full md:w-auto" variant="destructive" onClick={confirmDelete}>Delete</Button>
+            <Button
+              className="w-full md:w-auto"
+              variant="secondary"
+              onClick={() => setDeleteOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="w-full md:w-auto"
+              variant="destructive"
+              onClick={confirmDelete}
+            >
+              Delete
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={addStageOpen} onOpenChange={(open) => (!open ? setAddStageOpen(false) : null)}>
+      <Dialog
+        open={addStageOpen}
+        onOpenChange={(open) => (!open ? setAddStageOpen(false) : null)}
+      >
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Add Stage</DialogTitle>
@@ -546,26 +621,38 @@ export default function TripHome() {
                     name: data.name,
                     category: data.category,
                     description: data.description || '',
-                    order: (stages ? stages.length : 0),
+                    order: stages ? stages.length : 0,
                     is_custom_category: data.category.startsWith('custom-'),
                     custom_category_color: null,
-                    start_date: data.dateRange?.from ? data.dateRange.from.toISOString() : null,
-                    end_date: data.dateRange?.to ? data.dateRange.to.toISOString() : null,
+                    start_date: data.dateRange?.from
+                      ? data.dateRange.from.toISOString()
+                      : null,
+                    end_date: data.dateRange?.to
+                      ? data.dateRange.to.toISOString()
+                      : null,
                   },
                 ];
-                await tripsApiClient.createStages(selectedTrip.id, stagesData as any);
+                await tripsApiClient.createStages(
+                  selectedTrip.id,
+                  stagesData as any,
+                );
                 toast({ title: 'Stage added' });
                 setAddStageOpen(false);
                 await refreshTrips();
               } catch (e) {
-                toast({ title: 'Failed to add stage', description: 'Try again later.' });
+                toast({
+                  title: 'Failed to add stage',
+                  description: 'Try again later.',
+                });
               } finally {
                 setAddingStage(false);
               }
             }}
           />
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setAddStageOpen(false)}>Close</Button>
+            <Button variant="secondary" onClick={() => setAddStageOpen(false)}>
+              Close
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -613,7 +700,9 @@ function StageItem({ stage }: StageItemProps) {
       try {
         const apiClient = new StagesApiClient(authenticationProviderInstance);
         const elements = await apiClient.getStageElements(Number(stage.id));
-        const unreacted = (elements as Array<any>).filter((el: any) => !el.userReaction);
+        const unreacted = (elements as Array<any>).filter(
+          (el: any) => !el.userReaction,
+        );
         setUnreactionedCount(unreacted.length);
         setDetailsError(null);
       } catch (error) {

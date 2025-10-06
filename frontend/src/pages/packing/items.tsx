@@ -58,7 +58,7 @@ export default function PackingItemsPage() {
       setIsLoadingItems(true);
       try {
         // Ensure a default private list exists
-        let lists = await api.listPackingLists(selectedTrip.id, 'private');
+        const lists = await api.listPackingLists(selectedTrip.id, 'private');
         let current = lists[0];
         if (!current) {
           current = await api.createPackingList(selectedTrip.id, {

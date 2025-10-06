@@ -18,11 +18,11 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar.tsx';
+import { useToast } from '@/components/ui/use-toast';
 import { getInitials } from '@/components/util/avatar-utils';
+import { PreferencesApiClient } from '@/lib/api/preferences';
 import { type User, UsersApiClient } from '@/lib/api/users.ts';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
-import { PreferencesApiClient } from '@/lib/api/preferences';
-import { useToast } from '@/components/ui/use-toast';
 
 import { useEffect, useState } from 'react';
 
@@ -44,16 +44,26 @@ export function NavUser() {
         const userData = await apiClient.getActiveUser();
         setUser(userData);
       } catch (error) {
-        toast({ title: 'Error', description: 'Failed to load user', variant: 'destructive' });
+        toast({
+          title: 'Error',
+          description: 'Failed to load user',
+          variant: 'destructive',
+        });
       }
     };
     const fetchPrefs = async () => {
       try {
-        const prefsClient = new PreferencesApiClient(authenticationProviderInstance);
+        const prefsClient = new PreferencesApiClient(
+          authenticationProviderInstance,
+        );
         const prefs = await prefsClient.getPreferences();
         setShowAvatar(prefs?.data?.privacy?.profile_visible !== false);
-      } catch(error) {
-        toast({ title: 'Error', description: 'Failed to load preferences', variant: 'destructive' });
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to load preferences',
+          variant: 'destructive',
+        });
       }
     };
 
