@@ -11,7 +11,6 @@ export type NotificationType =
   | 'trip_invitation_reminder'
   | 'packing_changes'
   | 'itinerary_changes';
-  // we will also use: 'expense_added', 'packing_list_added', 'document_added'
 
 export interface UserPreferencesDTO {
   id?: number;
@@ -28,8 +27,6 @@ export interface UserPreferencesDTO {
           document_added?: boolean;
         })
       | undefined;
-    // language removed
-    // default_map_view removed
     trip_sort?: 'name' | 'date';
     privacy?: {
       profile_visible?: boolean;

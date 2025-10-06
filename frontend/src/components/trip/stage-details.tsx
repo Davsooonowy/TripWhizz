@@ -113,7 +113,6 @@ export default function StageDetails() {
           setStageName(stage.name);
           // capture stage end date if present
           // supports either end_date or dateRange
-          // @ts-ignore
           if (stage.end_date) setStageEndDate(stage.end_date);
         } else {
           setStageName('Stage not found');

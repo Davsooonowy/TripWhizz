@@ -52,7 +52,9 @@ export function NavUser() {
         const prefsClient = new PreferencesApiClient(authenticationProviderInstance);
         const prefs = await prefsClient.getPreferences();
         setShowAvatar(prefs?.data?.privacy?.profile_visible !== false);
-      } catch {}
+      } catch(error) {
+        toast({ title: 'Error', description: 'Failed to load preferences', variant: 'destructive' });
+      }
     };
 
     fetchUser();

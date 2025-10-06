@@ -114,7 +114,9 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
         const client = new PreferencesApiClient(authenticationProviderInstance);
         const p = await client.getPreferences();
         setPrefs(p);
-      } catch {}
+      } catch {
+        toast({ title: 'Error', description: 'Failed to load preferences', variant: 'destructive' });
+      }
       await fetchTrips();
     };
     init();
