@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { useToast } from '@/components/ui/use-toast.tsx';
 import { UsersApiClient, type User } from '@/lib/api/users.ts';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
+import { Info } from 'lucide-react';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || import.meta.env.GOOGLE_MAPS_API_KEY;
 
@@ -40,8 +41,8 @@ export default function TripMapsPage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>('');
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
-  // Keep map and marker references for interactions
   const [mapInstance, setMapInstance] = useState<any>(null);
   const [markerById, setMarkerById] = useState<Record<number, any>>({});
   const [infoWindowById, setInfoWindowById] = useState<Record<number, any>>({});
@@ -50,7 +51,6 @@ export default function TripMapsPage() {
   const searchMarkerRef = useRef<any>(null);
   const autocompleteRef = useRef<any>(null);
 
-  // Load Google Maps script
   useEffect(() => {
     if (window.google?.maps) {
       setIsGoogleLoaded(true);
@@ -68,7 +68,6 @@ export default function TripMapsPage() {
     document.body.appendChild(script);
   }, []);
 
-  // Fetch initial data
   useEffect(() => {
     const load = async () => {
       if (!tripId) return;
@@ -96,13 +95,11 @@ export default function TripMapsPage() {
     load();
   }, [tripId, mapsClient, toast, activeCategory]);
 
-  // Initialize map once Google is loaded
   useEffect(() => {
     if (!isGoogleLoaded) return;
     const container = document.getElementById('trip-map');
     if (!container) return;
 
-    // Prevent double initialization (fix: "Map container is already initialized.")
     if ((container as HTMLElement).dataset.tripwhizzMapInitialized === '1') return;
 
     const center = {
@@ -123,11 +120,11 @@ export default function TripMapsPage() {
     const newMarkerById: Record<number, any> = {};
     const newInfoById: Record<number, any> = {};
 
-    // Add existing pins
     pins.forEach((pin) => {
       const marker = new window.google.maps.Marker({
         position: { lat: Number(pin.latitude), lng: Number(pin.longitude) },
         map,
+        draggable: currentUser ? pin.created_by?.id === currentUser.id : false,
         title: pin.title,
       });
       const info = new window.google.maps.InfoWindow({
@@ -141,21 +138,41 @@ export default function TripMapsPage() {
 </div>`,
       });
       marker.addListener('click', () => {
-        // close other info windows from this batch
         Object.values(newInfoById).forEach((iw) => iw?.close());
         setSelectedPinId(pin.id);
         info.open({ anchor: marker, map });
       });
+      if (currentUser && pin.created_by?.id === currentUser.id) {
+        marker.addListener('dragstart', () => {
+          try { map.setOptions({ draggable: false }); } catch { /* ignore */ }
+        });
+        marker.addListener('dragend', async (e: any) => {
+          const newLat = e.latLng.lat();
+          const newLng = e.latLng.lng();
+          const prevPos = { lat: Number(pin.latitude), lng: Number(pin.longitude) };
+          try {
+            const updated = await mapsClient.updatePin(Number(tripId), pin.id, {
+              latitude: newLat,
+              longitude: newLng,
+            });
+            setPins((prev) => prev.map((p) => (p.id === pin.id ? { ...p, latitude: updated.latitude, longitude: updated.longitude } : p)));
+            toast({ title: 'Pin moved', description: 'Location updated.' });
+          } catch (err: any) {
+            try { marker.setPosition(prevPos); } catch { /* ignore */ }
+            toast({ title: 'Failed to move pin', description: err?.message || 'Please try again.', variant: 'destructive' });
+          } finally {
+            try { map.setOptions({ draggable: true }); } catch { /* ignore */ }
+          }
+        });
+      }
       newMarkerById[pin.id] = marker;
       newInfoById[pin.id] = info;
     });
     setMarkerById(newMarkerById);
     setInfoWindowById(newInfoById);
 
-    // mark as initialized
     try { (container as HTMLElement).dataset.tripwhizzMapInitialized = '1'; } catch (err) { /* ignore */ }
 
-    // Map click to add pin or choose default
     map.addListener('click', (e: any) => {
       const lat = e.latLng.lat();
       const lng = e.latLng.lng();
@@ -167,16 +184,13 @@ export default function TripMapsPage() {
     });
   }, [isGoogleLoaded, pins, settings, selectDefaultMode]);
 
-  // Initialize Places Autocomplete for search input when Google Maps is ready
   useEffect(() => {
     if (!isGoogleLoaded || !mapInstance) return;
     const input = document.getElementById('trip-map-search') as HTMLInputElement | null;
     if (!input || !window.google?.maps?.places) return;
 
-    // clean up existing autocomplete
     if (autocompleteRef.current) {
       try {
-        // try best-effort cleanup
         (autocompleteRef.current as any).unbindAll?.();
       } catch (err) {
         console.warn('autocomplete cleanup failed', err);
@@ -197,7 +211,6 @@ export default function TripMapsPage() {
       const lat = loc.lat();
       const lng = loc.lng();
 
-      // center map and set zoom
       try {
         mapInstance.panTo({ lat, lng });
         mapInstance.setZoom(15);
@@ -205,7 +218,6 @@ export default function TripMapsPage() {
         console.warn('map pan failed', err);
       }
 
-      // Open add-pin dialog prefilled and set temporary pin position
       setNewPinTitle(place.name || '');
       setNewPinDescription(place.formatted_address || '');
       setAddingPinAt({ lat, lng });
@@ -213,17 +225,13 @@ export default function TripMapsPage() {
 
     return () => {
       if (listener) (listener as any).remove?.();
-      // do not remove input element
-      // leave temp marker cleanup to addingPinAt effect
       autocompleteRef.current = null;
     };
   }, [isGoogleLoaded, mapInstance]);
 
-  // When addingPinAt is set, show a draggable temporary marker on the map
   useEffect(() => {
     if (!mapInstance) return;
 
-    // remove existing temp marker if any
     if (!addingPinAt) {
       if (searchMarkerRef.current) {
         try { searchMarkerRef.current.setMap(null); } catch (err) { console.warn(err); }
@@ -234,7 +242,6 @@ export default function TripMapsPage() {
 
     const { lat, lng } = addingPinAt;
 
-    // create or move temporary draggable marker
     if (!searchMarkerRef.current && window.google?.maps) {
       searchMarkerRef.current = new window.google.maps.Marker({
         position: { lat, lng },
@@ -242,7 +249,6 @@ export default function TripMapsPage() {
         draggable: true,
         title: newPinTitle || 'New pin',
       });
-      // update addingPinAt when user drags the temp marker
       searchMarkerRef.current.addListener('dragend', (e: any) => {
         const pLat = e.latLng.lat();
         const pLng = e.latLng.lng();
@@ -254,11 +260,7 @@ export default function TripMapsPage() {
       searchMarkerRef.current.setTitle(newPinTitle || 'New pin');
     }
 
-    // ensure dialog opens when addingPinAt is set
-    // Dialog open is controlled by !!addingPinAt
-
     return () => {
-      // cleanup handled above when addingPinAt becomes null
     };
   }, [addingPinAt, mapInstance, newPinTitle]);
 
@@ -288,7 +290,6 @@ export default function TripMapsPage() {
       } as any);
       setPins((prev) => [created, ...prev]);
       setAddingPinAt(null);
-      // remove temporary marker after submitting
       if (searchMarkerRef.current) {
         try { searchMarkerRef.current.setMap(null); } catch (err) { console.warn(err); }
         searchMarkerRef.current = null;
@@ -297,7 +298,6 @@ export default function TripMapsPage() {
       setNewPinDescription('');
       setNewPinReason('');
       toast({ title: 'Pin added' });
-      // drop a marker immediately on the current map
       if (mapInstance && window.google?.maps) {
         const marker = new window.google.maps.Marker({
           position: { lat: Number(created.latitude), lng: Number(created.longitude) },
@@ -334,11 +334,21 @@ export default function TripMapsPage() {
     }
   }, [tripId, settings, mapsClient, toast]);
 
-  // Search input placed above the map
   return (
     <div className="flex flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Trip Map</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-xl font-semibold">Trip Map</h1>
+          <button
+            type="button"
+            onClick={() => setIsHelpOpen(true)}
+            className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+            aria-label="How it works"
+            title="How it works"
+          >
+            <Info className="h-5 w-5" />
+          </button>
+        </div>
         {selectDefaultMode ? (
           <div className="flex items-center gap-2">
             <span className="text-sm">Click on the map to choose default center</span>
@@ -381,7 +391,6 @@ export default function TripMapsPage() {
         )}
       </div>
 
-      {/* Pins list */}
       <div className="w-full flex justify-center">
         <div className="w-full" style={{ maxWidth: 1100 }}>
           <div className="flex items-center justify-between mb-2 gap-2">
@@ -502,11 +511,44 @@ export default function TripMapsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Help / How it works */}
+      <Dialog open={isHelpOpen} onOpenChange={setIsHelpOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>How the Trip Map works</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm text-gray-700 dark:text-gray-200">
+            <p>
+              Use the search box to find places. Selecting a result will position a temporary marker and open the add pin dialog.
+            </p>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>
+                Click anywhere on the map to place a new pin. Fill in details and press "Add pin".
+              </li>
+              <li>
+                You can drag pins that you created to fine-tune their location. The new position is saved automatically on drop.
+              </li>
+              <li>
+                Use the category filter or the list to focus a pin. Clicking a pin in the list centers the map and opens its details.
+              </li>
+              <li>
+                Owners can set the default map center: click "Set default center", then click on the map and "Save default".
+              </li>
+            </ul>
+            <p>
+              Tip: Use "Open in Google Maps" for quick directions to a pin.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setIsHelpOpen(false)}>Got it</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-// Basic HTML escaping for InfoWindow content
 function escapeHtml(input: string) {
   if (!input) return '';
   return input
