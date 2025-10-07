@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("user_account", "0008_userpreferences_timestamps"),
+        ("user_account", "0007_userpreferences"),
     ]
 
     operations = [
@@ -25,15 +25,5 @@ class Migration(migrations.Migration):
                 ],
                 max_length=20,
             ),
-        ),
-        migrations.AlterField(
-            model_name="userpreferences",
-            name="created_at",
-            field=models.DateTimeField(auto_now_add=True),
-        ),
-        migrations.AlterField(
-            model_name="userpreferences",
-            name="updated_at",
-            field=models.DateTimeField(auto_now=True),
         ),
     ]

@@ -34,6 +34,7 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,6 +53,7 @@ export default function MainSettings() {
   const [user, setUser] = useState<UserType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [preferences, setPreferences] = useState<UserPreferencesDTO | null>(null);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -218,212 +220,225 @@ export default function MainSettings() {
             </SettingsSection>
 
             <SettingsSection title="Notifications" delay={0.35}>
-              <SettingsItem
-                icon={<Bell className="h-5 w-5" />}
-                title="Friend requests"
-                action={
-                  <Switch
-                    checked={Boolean(preferences?.data?.notifications?.friend_request ?? true)}
-                    onCheckedChange={async (checked) => {
-                      try {
-                        const client = new PreferencesApiClient(
-                          authenticationProviderInstance,
-                        );
-                        const payload: Partial<UserPreferencesDTO> = {
-                          data: {
-                            ...(preferences?.data ?? {}),
-                            notifications: {
-                              ...(preferences?.data?.notifications ?? {}),
-                              friend_request: checked,
-                            },
-                          },
-                        };
-                        const saved = await client.updatePreferences(payload);
-                        setPreferences(saved);
-                      } catch (e) {
-                        console.error('Failed to save notifications', e);
-                      }
-                    }}
+              <Collapsible open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+                <CollapsibleTrigger asChild>
+                  <div className="flex items-center justify-between py-3.5 px-4 cursor-pointer hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center">
+                      <div className="text-primary mr-3"><Bell className="h-5 w-5" /></div>
+                      <div>
+                        <p className="font-medium">Notification settings</p>
+                      </div>
+                    </div>
+                    <ChevronRight className={`h-5 w-5 text-muted-foreground/70 transition-transform ${notificationsOpen ? 'rotate-90' : ''}`} />
+                  </div>
+                </CollapsibleTrigger>
+                <Separator />
+                <CollapsibleContent>
+                  <SettingsItem
+                    icon={<Bell className="h-5 w-5" />}
+                    title="Friend requests"
+                    action={
+                      <Switch
+                        checked={Boolean(preferences?.data?.notifications?.friend_request ?? true)}
+                        onCheckedChange={async (checked) => {
+                          try {
+                            const client = new PreferencesApiClient(
+                              authenticationProviderInstance,
+                            );
+                            const payload: Partial<UserPreferencesDTO> = {
+                              data: {
+                                ...(preferences?.data ?? {}),
+                                notifications: {
+                                  ...(preferences?.data?.notifications ?? {}),
+                                  friend_request: checked,
+                                },
+                              },
+                            };
+                            const saved = await client.updatePreferences(payload);
+                            setPreferences(saved);
+                          } catch (e) {
+                            console.error('Failed to save notifications', e);
+                          }
+                        }}
+                      />
+                    }
                   />
-                }
-              />
-              <SettingsItem
-                icon={<Bell className="h-5 w-5" />}
-                title="Friend request accepted"
-                action={
-                  <Switch
-                    checked={Boolean((preferences?.data as any)?.notifications?.friend_acceptance ?? true)}
-                    onCheckedChange={async (checked) => {
-                      try {
-                        const client = new PreferencesApiClient(
-                          authenticationProviderInstance,
-                        );
-                        const payload: Partial<UserPreferencesDTO> = {
-                          data: {
-                            ...(preferences?.data ?? {}),
-                            notifications: {
-                              ...(preferences?.data?.notifications ?? {}),
-                              friend_acceptance: checked,
-                            },
-                          },
-                        };
-                        const saved = await client.updatePreferences(payload);
-                        setPreferences(saved);
-                      } catch (e) {
-                        console.error('Failed to save notifications', e);
-                      }
-                    }}
+                  <SettingsItem
+                    icon={<Bell className="h-5 w-5" />}
+                    title="Friend request accepted"
+                    action={
+                      <Switch
+                        checked={Boolean((preferences?.data as any)?.notifications?.friend_acceptance ?? true)}
+                        onCheckedChange={async (checked) => {
+                          try {
+                            const client = new PreferencesApiClient(
+                              authenticationProviderInstance,
+                            );
+                            const payload: Partial<UserPreferencesDTO> = {
+                              data: {
+                                ...(preferences?.data ?? {}),
+                                notifications: {
+                                  ...(preferences?.data?.notifications ?? {}),
+                                  friend_acceptance: checked,
+                                },
+                              },
+                            };
+                            const saved = await client.updatePreferences(payload);
+                            setPreferences(saved);
+                          } catch (e) {
+                            console.error('Failed to save notifications', e);
+                          }
+                        }}
+                      />
+                    }
                   />
-                }
-              />
-
-              <SettingsItem
-                icon={<Bell className="h-5 w-5" />}
-                title="Trip invitations"
-                action={
-                  <Switch
-                    checked={Boolean(preferences?.data?.notifications?.trip_invite ?? true)}
-                    onCheckedChange={async (checked) => {
-                      try {
-                        const client = new PreferencesApiClient(
-                          authenticationProviderInstance,
-                        );
-                        const payload: Partial<UserPreferencesDTO> = {
-                          data: {
-                            ...(preferences?.data ?? {}),
-                            notifications: {
-                              ...(preferences?.data?.notifications ?? {}),
-                              trip_invite: checked,
-                            },
-                          },
-                        };
-                        const saved = await client.updatePreferences(payload);
-                        setPreferences(saved);
-                      } catch (e) {
-                        console.error('Failed to save notifications', e);
-                      }
-                    }}
+                  <SettingsItem
+                    icon={<Bell className="h-5 w-5" />}
+                    title="Trip invitations"
+                    action={
+                      <Switch
+                        checked={Boolean(preferences?.data?.notifications?.trip_invite ?? true)}
+                        onCheckedChange={async (checked) => {
+                          try {
+                            const client = new PreferencesApiClient(
+                              authenticationProviderInstance,
+                            );
+                            const payload: Partial<UserPreferencesDTO> = {
+                              data: {
+                                ...(preferences?.data ?? {}),
+                                notifications: {
+                                  ...(preferences?.data?.notifications ?? {}),
+                                  trip_invite: checked,
+                                },
+                              },
+                            };
+                            const saved = await client.updatePreferences(payload);
+                            setPreferences(saved);
+                          } catch (e) {
+                            console.error('Failed to save notifications', e);
+                          }
+                        }}
+                      />
+                    }
                   />
-                }
-              />
-              <SettingsItem
-                icon={<Bell className="h-5 w-5" />}
-                title="Trip changes"
-                action={
-                  <Switch
-                    checked={Boolean(preferences?.data?.notifications?.trip_update ?? true)}
-                    onCheckedChange={async (checked) => {
-                      try {
-                        const client = new PreferencesApiClient(
-                          authenticationProviderInstance,
-                        );
-                        const payload: Partial<UserPreferencesDTO> = {
-                          data: {
-                            ...(preferences?.data ?? {}),
-                            notifications: {
-                              ...(preferences?.data?.notifications ?? {}),
-                              trip_update: checked,
-                            },
-                          },
-                        };
-                        const saved = await client.updatePreferences(payload);
-                        setPreferences(saved);
-                      } catch (e) {
-                        console.error('Failed to save notifications', e);
-                      }
-                    }}
+                  <SettingsItem
+                    icon={<Bell className="h-5 w-5" />}
+                    title="Trip changes"
+                    action={
+                      <Switch
+                        checked={Boolean(preferences?.data?.notifications?.trip_update ?? true)}
+                        onCheckedChange={async (checked) => {
+                          try {
+                            const client = new PreferencesApiClient(
+                              authenticationProviderInstance,
+                            );
+                            const payload: Partial<UserPreferencesDTO> = {
+                              data: {
+                                ...(preferences?.data ?? {}),
+                                notifications: {
+                                  ...(preferences?.data?.notifications ?? {}),
+                                  trip_update: checked,
+                                },
+                              },
+                            };
+                            const saved = await client.updatePreferences(payload);
+                            setPreferences(saved);
+                          } catch (e) {
+                            console.error('Failed to save notifications', e);
+                          }
+                        }}
+                      />
+                    }
                   />
-                }
-              />
-
-              {/* Collaboration */}
-              <SettingsItem
-                icon={<Bell className="h-5 w-5" />}
-                title="Expense added to trip"
-                action={
-                  <Switch
-                    checked={Boolean((preferences?.data as any)?.notifications?.expense_added ?? true)}
-                    onCheckedChange={async (checked) => {
-                      try {
-                        const client = new PreferencesApiClient(
-                          authenticationProviderInstance,
-                        );
-                        const payload: Partial<UserPreferencesDTO> = {
-                          data: {
-                            ...(preferences?.data ?? {}),
-                            notifications: {
-                              ...(preferences?.data?.notifications ?? {}),
-                              expense_added: checked,
-                            },
-                          },
-                        };
-                        const saved = await client.updatePreferences(payload);
-                        setPreferences(saved);
-                      } catch (e) {
-                        console.error('Failed to save notifications', e);
-                      }
-                    }}
+                  <SettingsItem
+                    icon={<Bell className="h-5 w-5" />}
+                    title="Expense added to trip"
+                    action={
+                      <Switch
+                        checked={Boolean((preferences?.data as any)?.notifications?.expense_added ?? true)}
+                        onCheckedChange={async (checked) => {
+                          try {
+                            const client = new PreferencesApiClient(
+                              authenticationProviderInstance,
+                            );
+                            const payload: Partial<UserPreferencesDTO> = {
+                              data: {
+                                ...(preferences?.data ?? {}),
+                                notifications: {
+                                  ...(preferences?.data?.notifications ?? {}),
+                                  expense_added: checked,
+                                },
+                              },
+                            };
+                            const saved = await client.updatePreferences(payload);
+                            setPreferences(saved);
+                          } catch (e) {
+                            console.error('Failed to save notifications', e);
+                          }
+                        }}
+                      />
+                    }
                   />
-                }
-              />
-              <SettingsItem
-                icon={<Bell className="h-5 w-5" />}
-                title="Packing list updates"
-                action={
-                  <Switch
-                    checked={Boolean((preferences?.data as any)?.notifications?.packing_list_added ?? true)}
-                    onCheckedChange={async (checked) => {
-                      try {
-                        const client = new PreferencesApiClient(
-                          authenticationProviderInstance,
-                        );
-                        const payload: Partial<UserPreferencesDTO> = {
-                          data: {
-                            ...(preferences?.data ?? {}),
-                            notifications: {
-                              ...(preferences?.data?.notifications ?? {}),
-                              packing_list_added: checked,
-                            },
-                          },
-                        };
-                        const saved = await client.updatePreferences(payload);
-                        setPreferences(saved);
-                      } catch (e) {
-                        console.error('Failed to save notifications', e);
-                      }
-                    }}
+                  <SettingsItem
+                    icon={<Bell className="h-5 w-5" />}
+                    title="Packing list updates"
+                    action={
+                      <Switch
+                        checked={Boolean((preferences?.data as any)?.notifications?.packing_list_added ?? true)}
+                        onCheckedChange={async (checked) => {
+                          try {
+                            const client = new PreferencesApiClient(
+                              authenticationProviderInstance,
+                            );
+                            const payload: Partial<UserPreferencesDTO> = {
+                              data: {
+                                ...(preferences?.data ?? {}),
+                                notifications: {
+                                  ...(preferences?.data?.notifications ?? {}),
+                                  packing_list_added: checked,
+                                },
+                              },
+                            };
+                            const saved = await client.updatePreferences(payload);
+                            setPreferences(saved);
+                          } catch (e) {
+                            console.error('Failed to save notifications', e);
+                          }
+                        }}
+                      />
+                    }
                   />
-                }
-              />
-              <SettingsItem
-                icon={<Bell className="h-5 w-5" />}
-                title="Document uploaded"
-                action={
-                  <Switch
-                    checked={Boolean((preferences?.data as any)?.notifications?.document_added ?? true)}
-                    onCheckedChange={async (checked) => {
-                      try {
-                        const client = new PreferencesApiClient(
-                          authenticationProviderInstance,
-                        );
-                        const payload: Partial<UserPreferencesDTO> = {
-                          data: {
-                            ...(preferences?.data ?? {}),
-                            notifications: {
-                              ...(preferences?.data?.notifications ?? {}),
-                              document_added: checked,
-                            },
-                          },
-                        };
-                        const saved = await client.updatePreferences(payload);
-                        setPreferences(saved);
-                      } catch (e) {
-                        console.error('Failed to save notifications', e);
-                      }
-                    }}
+                  <SettingsItem
+                    icon={<Bell className="h-5 w-5" />}
+                    title="Document uploaded"
+                    action={
+                      <Switch
+                        checked={Boolean((preferences?.data as any)?.notifications?.document_added ?? true)}
+                        onCheckedChange={async (checked) => {
+                          try {
+                            const client = new PreferencesApiClient(
+                              authenticationProviderInstance,
+                            );
+                            const payload: Partial<UserPreferencesDTO> = {
+                              data: {
+                                ...(preferences?.data ?? {}),
+                                notifications: {
+                                  ...(preferences?.data?.notifications ?? {}),
+                                  document_added: checked,
+                                },
+                              },
+                            };
+                            const saved = await client.updatePreferences(payload);
+                            setPreferences(saved);
+                          } catch (e) {
+                            console.error('Failed to save notifications', e);
+                          }
+                        }}
+                      />
+                    }
                   />
-                }
-              />
+                </CollapsibleContent>
+              </Collapsible>
             </SettingsSection>
 
             <SettingsSection title="Privacy" delay={0.4}>
