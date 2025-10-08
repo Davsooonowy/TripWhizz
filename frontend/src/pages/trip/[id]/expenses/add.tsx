@@ -1,24 +1,36 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
-
-import { ExpensesApiClient, ExpenseDto, SplitMethod } from '@/lib/api/expenses';
-import { TripsApiClient, TripParticipant } from '@/lib/api/trips';
-import { authenticationProviderInstance } from '@/lib/authentication-provider';
-
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
+import { ExpenseDto, ExpensesApiClient, SplitMethod } from '@/lib/api/expenses';
+import { TripParticipant, TripsApiClient } from '@/lib/api/trips';
+import { authenticationProviderInstance } from '@/lib/authentication-provider';
+
+import { useEffect, useMemo, useState } from 'react';
+
+import { useParams } from 'react-router-dom';
 
 export default function TripExpensesAddPage() {
   const { tripId } = useParams();
   const { toast } = useToast();
 
-  const api = useMemo(() => new ExpensesApiClient(authenticationProviderInstance), []);
-  const tripsApi = useMemo(() => new TripsApiClient(authenticationProviderInstance), []);
+  const api = useMemo(
+    () => new ExpensesApiClient(authenticationProviderInstance),
+    [],
+  );
+  const tripsApi = useMemo(
+    () => new TripsApiClient(authenticationProviderInstance),
+    [],
+  );
 
   const [participants, setParticipants] = useState<TripParticipant[]>([]);
   const [form, setForm] = useState<ExpenseDto>({
@@ -35,18 +47,33 @@ export default function TripExpensesAddPage() {
     (async () => {
       try {
         const trip = await tripsApi.getTripDetails(Number(tripId));
-        const people = (trip.participants || []).filter((p: TripParticipant) => p.invitation_status !== 'pending');
+        const people = (trip.participants || []).filter(
+          (p: TripParticipant) => p.invitation_status !== 'pending',
+        );
         setParticipants(people);
         const baseShares = people.map((p) => ({ user_id: p.id }));
         const equalShares = updateShareValues('equal', 0, baseShares);
-        setForm((prev) => ({ ...prev, paid_by_id: people[0]?.id || 0, split_method: 'equal', shares: equalShares }));
+        setForm((prev) => ({
+          ...prev,
+          paid_by_id: people[0]?.id || 0,
+          split_method: 'equal',
+          shares: equalShares,
+        }));
       } catch (e: any) {
-        toast({ title: 'Error', description: e.message, variant: 'destructive' });
+        toast({
+          title: 'Error',
+          description: e.message,
+          variant: 'destructive',
+        });
       }
     })();
   }, [tripId]);
 
-  const updateShareValues = (method: SplitMethod, total: number, shares: any[]) => {
+  const updateShareValues = (
+    method: SplitMethod,
+    total: number,
+    shares: any[],
+  ) => {
     if (method === 'equal' && shares.length > 0) {
       const per = Math.round((total / shares.length) * 100) / 100;
       return shares.map((s) => ({ ...s, owed_amount: per }));
@@ -55,7 +82,11 @@ export default function TripExpensesAddPage() {
   };
 
   const onChangeMethod = (value: SplitMethod) => {
-    setForm((prev) => ({ ...prev, split_method: value, shares: updateShareValues(value, prev.amount, prev.shares) }));
+    setForm((prev) => ({
+      ...prev,
+      split_method: value,
+      shares: updateShareValues(value, prev.amount, prev.shares),
+    }));
   };
 
   const onCreateExpense = async () => {
@@ -63,42 +94,86 @@ export default function TripExpensesAddPage() {
       if (!tripId) return;
       // Client-side validation to avoid 400
       if (!form.description.trim()) {
-        toast({ title: 'Validation', description: 'Description is required.', variant: 'destructive' });
+        toast({
+          title: 'Validation',
+          description: 'Description is required.',
+          variant: 'destructive',
+        });
         return;
       }
       if (!form.paid_by_id) {
-        toast({ title: 'Validation', description: 'Select a payer.', variant: 'destructive' });
+        toast({
+          title: 'Validation',
+          description: 'Select a payer.',
+          variant: 'destructive',
+        });
         return;
       }
       if (!form.amount || Number(form.amount) <= 0) {
-        toast({ title: 'Validation', description: 'Amount must be greater than zero.', variant: 'destructive' });
+        toast({
+          title: 'Validation',
+          description: 'Amount must be greater than zero.',
+          variant: 'destructive',
+        });
         return;
       }
       if (!form.shares || form.shares.length === 0) {
-        toast({ title: 'Validation', description: 'Assign shares to at least one participant.', variant: 'destructive' });
+        toast({
+          title: 'Validation',
+          description: 'Assign shares to at least one participant.',
+          variant: 'destructive',
+        });
         return;
       }
       if (form.split_method === 'percentage') {
-        const total = form.shares.reduce((acc, s: any) => acc + Number(s.percentage || 0), 0);
+        const total = form.shares.reduce(
+          (acc, s: any) => acc + Number(s.percentage || 0),
+          0,
+        );
         if (Math.round(total * 100) / 100 !== 100) {
-          toast({ title: 'Validation', description: 'Percentages must sum to 100%.', variant: 'destructive' });
+          toast({
+            title: 'Validation',
+            description: 'Percentages must sum to 100%.',
+            variant: 'destructive',
+          });
           return;
         }
       } else if (form.split_method === 'exact') {
-        const total = form.shares.reduce((acc, s: any) => acc + Number(s.owed_amount || 0), 0);
-        if (Math.round(total * 100) / 100 !== Math.round(Number(form.amount) * 100) / 100) {
-          toast({ title: 'Validation', description: 'Exact amounts must sum to the total amount.', variant: 'destructive' });
+        const total = form.shares.reduce(
+          (acc, s: any) => acc + Number(s.owed_amount || 0),
+          0,
+        );
+        if (
+          Math.round(total * 100) / 100 !==
+          Math.round(Number(form.amount) * 100) / 100
+        ) {
+          toast({
+            title: 'Validation',
+            description: 'Exact amounts must sum to the total amount.',
+            variant: 'destructive',
+          });
           return;
         }
       } else if (form.split_method === 'shares') {
-        const totalShares = form.shares.reduce((acc, s: any) => acc + Number(s.shares_count || 0), 0);
+        const totalShares = form.shares.reduce(
+          (acc, s: any) => acc + Number(s.shares_count || 0),
+          0,
+        );
         if (totalShares <= 0) {
-          toast({ title: 'Validation', description: 'Total shares must be greater than 0.', variant: 'destructive' });
+          toast({
+            title: 'Validation',
+            description: 'Total shares must be greater than 0.',
+            variant: 'destructive',
+          });
           return;
         }
       }
 
-      const payload: ExpenseDto = { ...form, amount: Number(form.amount), paid_by_id: Number(form.paid_by_id) };
+      const payload: ExpenseDto = {
+        ...form,
+        amount: Number(form.amount),
+        paid_by_id: Number(form.paid_by_id),
+      };
       const created = await api.createExpense(Number(tripId), payload);
       setForm((prev) => ({ ...prev, description: '', amount: 0 }));
       toast({ title: 'Expense added' });
@@ -118,27 +193,52 @@ export default function TripExpensesAddPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <Label>Description</Label>
-              <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+              <Input
+                value={form.description}
+                onChange={(e) =>
+                  setForm({ ...form, description: e.target.value })
+                }
+              />
             </div>
             <div>
               <Label>Amount</Label>
-              <Input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })} />
+              <Input
+                type="number"
+                value={form.amount}
+                onChange={(e) =>
+                  setForm({ ...form, amount: Number(e.target.value) })
+                }
+              />
             </div>
             <div>
               <Label>Payer</Label>
-              <Select value={String(form.paid_by_id)} onValueChange={(v) => setForm({ ...form, paid_by_id: Number(v) })}>
-                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+              <Select
+                value={String(form.paid_by_id)}
+                onValueChange={(v) =>
+                  setForm({ ...form, paid_by_id: Number(v) })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
                 <SelectContent>
                   {participants.map((p) => (
-                    <SelectItem key={p.id} value={String(p.id)}>{p.username}</SelectItem>
+                    <SelectItem key={p.id} value={String(p.id)}>
+                      {p.username}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div>
               <Label>Split Method</Label>
-              <Select value={form.split_method} onValueChange={(v) => onChangeMethod(v as SplitMethod)}>
-                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+              <Select
+                value={form.split_method}
+                onValueChange={(v) => onChangeMethod(v as SplitMethod)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="equal">Equal</SelectItem>
                   <SelectItem value="percentage">Percentage</SelectItem>
@@ -156,34 +256,48 @@ export default function TripExpensesAddPage() {
                 <div key={p.id} className="flex items-center gap-3">
                   <span className="min-w-40">{p.username}</span>
                   {form.split_method === 'percentage' && (
-                    <Input type="number" placeholder="%" value={form.shares[idx]?.percentage ?? ''}
+                    <Input
+                      type="number"
+                      placeholder="%"
+                      value={form.shares[idx]?.percentage ?? ''}
                       onChange={(e) => {
                         const val = Number(e.target.value);
                         const next = [...form.shares];
                         next[idx] = { user_id: p.id, percentage: val };
                         setForm({ ...form, shares: next });
-                      }} />
+                      }}
+                    />
                   )}
                   {form.split_method === 'exact' && (
-                    <Input type="number" placeholder="amount" value={form.shares[idx]?.owed_amount ?? ''}
+                    <Input
+                      type="number"
+                      placeholder="amount"
+                      value={form.shares[idx]?.owed_amount ?? ''}
                       onChange={(e) => {
                         const val = Number(e.target.value);
                         const next = [...form.shares];
                         next[idx] = { user_id: p.id, owed_amount: val };
                         setForm({ ...form, shares: next });
-                      }} />
+                      }}
+                    />
                   )}
                   {form.split_method === 'shares' && (
-                    <Input type="number" placeholder="shares" value={form.shares[idx]?.shares_count ?? ''}
+                    <Input
+                      type="number"
+                      placeholder="shares"
+                      value={form.shares[idx]?.shares_count ?? ''}
                       onChange={(e) => {
                         const val = Number(e.target.value);
                         const next = [...form.shares];
                         next[idx] = { user_id: p.id, shares_count: val };
                         setForm({ ...form, shares: next });
-                      }} />
+                      }}
+                    />
                   )}
                   {form.split_method === 'equal' && (
-                    <span className="text-sm text-muted-foreground">equal split</span>
+                    <span className="text-sm text-muted-foreground">
+                      equal split
+                    </span>
                   )}
                 </div>
               ))}
@@ -197,5 +311,3 @@ export default function TripExpensesAddPage() {
     </div>
   );
 }
-
-

@@ -39,4 +39,9 @@ urlpatterns = [
 	# Itinerary events
 	path('trip/<int:pk>/itinerary/events/', views.ItineraryEventListCreateView.as_view(), name='trip-itinerary-events'),
 	path('trip/<int:pk>/itinerary/events/<int:event_id>/', views.ItineraryEventDetailView.as_view(), name='trip-itinerary-event-detail'),
+
+	# Map pins and settings
+	path('trip/<int:pk>/maps/pins/', views.TripMapPinListCreateView.as_view(), name='trip-map-pins'),
+	path('trip/<int:pk>/maps/pins/<int:pin_id>/', views.TripMapPinDetailView.as_view(), name='trip-map-pin-detail'),
+	path('trip/<int:pk>/maps/settings/', views.TripMapSettingsView.as_view(), name='trip-map-settings'),
 ]

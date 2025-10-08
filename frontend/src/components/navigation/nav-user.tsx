@@ -18,7 +18,9 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar.tsx';
+import { useToast } from '@/components/ui/use-toast';
 import { getInitials } from '@/components/util/avatar-utils';
+import { PreferencesApiClient } from '@/lib/api/preferences';
 import { type User, UsersApiClient } from '@/lib/api/users.ts';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
 
@@ -31,7 +33,9 @@ import { Link } from 'react-router-dom';
 export function NavUser() {
   const { isMobile } = useSidebar();
   const [user, setUser] = useState<User | null>(null);
+  const [showAvatar, setShowAvatar] = useState(true);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -40,11 +44,31 @@ export function NavUser() {
         const userData = await apiClient.getActiveUser();
         setUser(userData);
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load user',
+          variant: 'destructive',
+        });
+      }
+    };
+    const fetchPrefs = async () => {
+      try {
+        const prefsClient = new PreferencesApiClient(
+          authenticationProviderInstance,
+        );
+        const prefs = await prefsClient.getPreferences();
+        setShowAvatar(prefs?.data?.privacy?.profile_visible !== false);
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to load preferences',
+          variant: 'destructive',
+        });
       }
     };
 
     fetchUser();
+    fetchPrefs();
   }, []);
 
   const handleLogout = () => {
@@ -72,10 +96,12 @@ export function NavUser() {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage
-                  src={user.avatar_url || undefined}
-                  alt={user.first_name || user.username}
-                />
+                {showAvatar && (
+                  <AvatarImage
+                    src={user.avatar_url || undefined}
+                    alt={user.first_name || user.username}
+                  />
+                )}
                 <AvatarFallback className="rounded-lg bg-primary/10 text-primary">
                   {userInitials}
                 </AvatarFallback>
@@ -99,10 +125,12 @@ export function NavUser() {
                 className="flex items-center gap-2 px-1 py-1.5 text-left text-sm"
               >
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage
-                    src={user.avatar_url || undefined}
-                    alt={user.username}
-                  />
+                  {showAvatar && (
+                    <AvatarImage
+                      src={user.avatar_url || undefined}
+                      alt={user.username}
+                    />
+                  )}
                   <AvatarFallback className="rounded-lg bg-primary/10 text-primary">
                     {userInitials}
                   </AvatarFallback>

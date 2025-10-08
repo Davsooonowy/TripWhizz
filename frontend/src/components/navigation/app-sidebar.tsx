@@ -55,9 +55,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           },
           {
             title: 'Maps',
-            url: selectedTrip
-              ? `/trip/${selectedTrip.id}/maps`
-              : '/maps',
+            url: selectedTrip ? `/trip/${selectedTrip.id}/maps` : '/maps',
           },
         ],
       },

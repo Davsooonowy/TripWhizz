@@ -1,3 +1,8 @@
+import { useToast } from '@/components/ui/use-toast';
+import {
+  PreferencesApiClient,
+  type UserPreferencesDTO,
+} from '@/lib/api/preferences';
 import { type TripData, TripsApiClient } from '@/lib/api/trips';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
 
@@ -32,6 +37,8 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [prefs, setPrefs] = useState<UserPreferencesDTO | null>(null);
+  const { toast } = useToast();
 
   const fetchTrips = async () => {
     setIsLoading(true);
@@ -39,7 +46,22 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       const tripsApiClient = new TripsApiClient(authenticationProviderInstance);
       const fetchedTrips = await tripsApiClient.getTrips();
-      setTrips(fetchedTrips);
+      // ensure preferences loaded for sorting
+      let sorted = [...fetchedTrips];
+      const sortPref = (prefs?.data as any)?.trip_sort as
+        | 'name'
+        | 'date'
+        | undefined;
+      if (sortPref === 'name') {
+        sorted.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      } else if (sortPref === 'date') {
+        sorted.sort((a, b) => {
+          const aDate = a.start_date || a.created_at || '';
+          const bDate = b.start_date || b.created_at || '';
+          return new Date(aDate).getTime() - new Date(bDate).getTime();
+        });
+      }
+      setTrips(sorted);
 
       const storedTripId = localStorage.getItem('selectedTripId');
 
@@ -52,7 +74,11 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
             const details = await tripsApiClient.getTripDetails(foundTrip.id);
             setSelectedTrip({ ...foundTrip, ...details });
           } catch (err) {
-            console.error('Error fetching stored trip details:', err);
+            toast({
+              title: 'Error',
+              description: 'Failed to load trip details',
+              variant: 'destructive',
+            });
             setSelectedTrip(foundTrip);
           }
         } else if (fetchedTrips.length > 0) {
@@ -66,7 +92,11 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
               fetchedTrips[0].id?.toString() || '',
             );
           } catch (err) {
-            console.error('Error fetching first trip details:', err);
+            toast({
+              title: 'Error',
+              description: 'Failed to load trip details',
+              variant: 'destructive',
+            });
             setSelectedTrip(fetchedTrips[0]);
           }
         }
@@ -81,7 +111,11 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
             fetchedTrips[0].id?.toString() || '',
           );
         } catch (err) {
-          console.error('Error fetching first trip details:', err);
+          toast({
+            title: 'Error',
+            description: 'Failed to load trip details',
+            variant: 'destructive',
+          });
           setSelectedTrip(fetchedTrips[0]);
         }
       }
@@ -93,7 +127,21 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   useEffect(() => {
-    fetchTrips();
+    const init = async () => {
+      try {
+        const client = new PreferencesApiClient(authenticationProviderInstance);
+        const p = await client.getPreferences();
+        setPrefs(p);
+      } catch {
+        toast({
+          title: 'Error',
+          description: 'Failed to load preferences',
+          variant: 'destructive',
+        });
+      }
+      await fetchTrips();
+    };
+    init();
   }, []);
 
   const handleSetSelectedTrip = async (trip: TripData) => {
@@ -113,7 +161,11 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
         return prevTrip;
       });
     } catch (err) {
-      console.error('Error fetching trip details:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to load trip details',
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }

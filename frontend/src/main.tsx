@@ -82,6 +82,9 @@ const TripExpensesSplitPage = React.lazy(
 const TripExpensesAddPage = React.lazy(
   () => import('@/pages/trip/[id]/expenses/add'),
 );
+const TripMapsPage = React.lazy(
+  () => import('@/pages/trip/[id]/itinerary/maps.tsx'),
+);
 
 const protectedLoginLoader = async () => {
   if (!authenticationProviderInstance.isAuthenticated()) {
@@ -164,9 +167,16 @@ const router = createBrowserRouter([
         element: <DocumentUploadPage />,
       },
       { path: '/trip/:tripId/expenses', element: <TripExpensesOverviewPage /> },
-      { path: '/trip/:tripId/expenses/overview', element: <TripExpensesOverviewPage /> },
-      { path: '/trip/:tripId/expenses/split', element: <TripExpensesSplitPage /> },
+      {
+        path: '/trip/:tripId/expenses/overview',
+        element: <TripExpensesOverviewPage />,
+      },
+      {
+        path: '/trip/:tripId/expenses/split',
+        element: <TripExpensesSplitPage />,
+      },
       { path: '/trip/:tripId/expenses/add', element: <TripExpensesAddPage /> },
+      { path: '/trip/:tripId/maps', element: <TripMapsPage /> },
       {
         path: '/trip/new',
         element: <TripTypePage />,

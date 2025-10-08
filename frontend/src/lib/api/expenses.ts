@@ -1,3 +1,4 @@
+import { toast } from '@/components/ui/use-toast';
 import { BaseApiClient } from '@/lib/api/base.ts';
 import { API_URL } from '@/lib/config.ts';
 
@@ -44,7 +45,13 @@ export class ExpensesApiClient extends BaseApiClient {
       const data = await res.json();
       if (data?.detail) msg = data.detail;
       else if (typeof data === 'object') msg = JSON.stringify(data);
-    } catch {}
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Failed to load expenses',
+        variant: 'destructive',
+      });
+    }
     throw new Error(msg);
   }
 
@@ -65,23 +72,42 @@ export class ExpensesApiClient extends BaseApiClient {
     return this.handle<any>(response);
   }
 
-  async updateExpense(tripId: number, expenseId: number, partial: Partial<ExpenseDto>): Promise<any> {
-    const response = await fetch(`${TRIP_API_URL}/${tripId}/expenses/${expenseId}/`, {
-      ...this._requestConfiguration(true),
-      method: 'PUT',
-      body: JSON.stringify(partial),
-    });
+  async updateExpense(
+    tripId: number,
+    expenseId: number,
+    partial: Partial<ExpenseDto>,
+  ): Promise<any> {
+    const response = await fetch(
+      `${TRIP_API_URL}/${tripId}/expenses/${expenseId}/`,
+      {
+        ...this._requestConfiguration(true),
+        method: 'PUT',
+        body: JSON.stringify(partial),
+      },
+    );
     return this.handle<any>(response);
   }
 
   async deleteExpense(tripId: number, expenseId: number) {
-    const response = await fetch(`${TRIP_API_URL}/${tripId}/expenses/${expenseId}/`, {
-      ...this._requestConfiguration(true),
-      method: 'DELETE',
-    });
+    const response = await fetch(
+      `${TRIP_API_URL}/${tripId}/expenses/${expenseId}/`,
+      {
+        ...this._requestConfiguration(true),
+        method: 'DELETE',
+      },
+    );
     if (!response.ok) {
       let msg = `HTTP ${response.status}`;
-      try { const data = await response.json(); msg = data?.detail || msg; } catch {}
+      try {
+        const data = await response.json();
+        msg = data?.detail || msg;
+      } catch {
+        toast({
+          title: 'Error',
+          description: 'Failed to delete expense',
+          variant: 'destructive',
+        });
+      }
       throw new Error(msg);
     }
     return true;
@@ -103,7 +129,10 @@ export class ExpensesApiClient extends BaseApiClient {
     return this.handle<any[]>(response);
   }
 
-  async createSettlement(tripId: number, settlement: SettlementDto): Promise<any> {
+  async createSettlement(
+    tripId: number,
+    settlement: SettlementDto,
+  ): Promise<any> {
     const response = await fetch(`${TRIP_API_URL}/${tripId}/settlements/`, {
       ...this._requestConfiguration(true),
       method: 'POST',
@@ -112,5 +141,3 @@ export class ExpensesApiClient extends BaseApiClient {
     return this.handle<any>(response);
   }
 }
-
-

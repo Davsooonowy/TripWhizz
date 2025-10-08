@@ -20,6 +20,10 @@ import {
   type Notification,
   NotificationsApiClient,
 } from '@/lib/api/notifications';
+import {
+  PreferencesApiClient,
+  type UserPreferencesDTO,
+} from '@/lib/api/preferences';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
 
 import type React from 'react';
@@ -37,6 +41,7 @@ export function NotificationDropdown() {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const [prefs, setPrefs] = useState<UserPreferencesDTO | null>(null);
 
   const [invitationDialog, setInvitationDialog] = useState<{
     open: boolean;
@@ -74,11 +79,29 @@ export function NotificationDropdown() {
         const countData = await notificationsApiClient.getUnreadCount();
         setUnreadCount(countData.count);
       } catch (error) {
-        console.error('Error fetching notification count:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch notification count',
+          variant: 'destructive',
+        });
+      }
+    };
+    const fetchPrefs = async () => {
+      try {
+        const client = new PreferencesApiClient(authenticationProviderInstance);
+        const p = await client.getPreferences();
+        setPrefs(p);
+      } catch {
+        toast({
+          title: 'Error',
+          description: 'Failed to load preferences',
+          variant: 'destructive',
+        });
       }
     };
 
     fetchUnreadCount();
+    fetchPrefs();
     const interval = setInterval(fetchUnreadCount, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -99,7 +122,11 @@ export function NotificationDropdown() {
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to mark as read',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -247,59 +274,89 @@ export function NotificationDropdown() {
           ) : notifications.length > 0 ? (
             <ScrollArea className="max-h-80">
               <DropdownMenuGroup>
-                {notifications.slice(0, 5).map((notification) => {
-                  return (
-                    <DropdownMenuItem
-                      key={notification.id}
-                      className={`p-3 cursor-pointer ${!notification.is_read ? 'bg-muted/50' : ''}`}
-                      onClick={(e) => handleNotificationClick(notification, e)}
-                    >
-                      <div className="flex items-start gap-3 w-full">
-                        {notification.sender ? (
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage
-                              src={notification.sender.avatar_url || undefined}
-                            />
-                            <AvatarFallback>
-                              {getInitials(
-                                notification.sender.first_name &&
-                                  notification.sender.last_name
-                                  ? `${notification.sender.first_name} ${notification.sender.last_name}`
-                                  : notification.sender.username,
+                {notifications
+                  .filter((n) => {
+                    const cfg = (prefs?.data?.notifications || {}) as any;
+                    if (
+                      n.notification_type === 'friend_accept' &&
+                      cfg.friend_acceptance === false
+                    )
+                      return false;
+                    if (
+                      n.notification_type === 'expense_update' &&
+                      cfg.expense_added === false
+                    )
+                      return false;
+                    if (
+                      n.notification_type === 'trip_invite' &&
+                      cfg.trip_invite === false
+                    )
+                      return false;
+                    if (
+                      n.notification_type === 'trip_update' &&
+                      cfg.trip_update === false
+                    )
+                      return false;
+                    return true;
+                  })
+                  .slice(0, 5)
+                  .map((notification) => {
+                    return (
+                      <DropdownMenuItem
+                        key={notification.id}
+                        className={`p-3 cursor-pointer ${!notification.is_read ? 'bg-muted/50' : ''}`}
+                        onClick={(e) =>
+                          handleNotificationClick(notification, e)
+                        }
+                      >
+                        <div className="flex items-start gap-3 w-full">
+                          {notification.sender ? (
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage
+                                src={
+                                  notification.sender.avatar_url || undefined
+                                }
+                              />
+                              <AvatarFallback>
+                                {getInitials(
+                                  notification.sender.first_name &&
+                                    notification.sender.last_name
+                                    ? `${notification.sender.first_name} ${notification.sender.last_name}`
+                                    : notification.sender.username,
+                                )}
+                              </AvatarFallback>
+                            </Avatar>
+                          ) : (
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                              {getNotificationIcon(
+                                notification.notification_type,
                               )}
-                            </AvatarFallback>
-                          </Avatar>
-                        ) : (
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                            {getNotificationIcon(
-                              notification.notification_type,
-                            )}
+                            </div>
+                          )}
+                          <div className="flex-1 space-y-1">
+                            <p className="text-sm font-medium leading-none">
+                              {notification.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {notification.message}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatDistanceToNow(
+                                new Date(notification.created_at),
+                                { addSuffix: true },
+                              )}
+                            </p>
                           </div>
-                        )}
-                        <div className="flex-1 space-y-1">
-                          <p className="text-sm font-medium leading-none">
-                            {notification.title}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {notification.message}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(
-                              new Date(notification.created_at),
-                              { addSuffix: true },
-                            )}
-                          </p>
+                          {!notification.is_read && (
+                            <div
+                              className="h-2 w-2 rounded-full bg-primary"
+                              aria-hidden="true"
+                            />
+                          )}
                         </div>
-                        {!notification.is_read && (
-                          <div
-                            className="h-2 w-2 rounded-full bg-primary"
-                            aria-hidden="true"
-                          />
-                        )}
-                      </div>
-                    </DropdownMenuItem>
-                  );
-                })}
+                      </DropdownMenuItem>
+                    );
+                  })}
                 {notifications.length > 5 && (
                   <DropdownMenuItem
                     asChild

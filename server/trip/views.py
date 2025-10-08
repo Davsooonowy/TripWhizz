@@ -3,12 +3,13 @@ from django.db.models import Avg, Q, Count, Case, When, IntegerField, F
 from django.shortcuts import get_object_or_404
 from rest_framework import status, permissions
 from rest_framework.generics import GenericAPIView
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
-from .models import Trip, Stage, StageElement, StageElementReaction, TripInvitation, PackingList, PackingItem, DocumentCategory, Document, DocumentComment, Expense, Settlement, ItineraryEvent
+from .models import Trip, Stage, StageElement, StageElementReaction, TripInvitation, PackingList, PackingItem, DocumentCategory, Document, DocumentComment, Expense, Settlement, ItineraryEvent, TripMapPin, TripMapSettings
 from .serializers import (
 	TripSerializer,
 	TripListSerializer,
@@ -26,8 +27,11 @@ from .serializers import (
     ExpenseSerializer,
     SettlementSerializer,
     ItineraryEventSerializer,
+    TripMapPinSerializer,
+    TripMapSettingsSerializer,
 )
 from user_account.models import Notification
+from user_account.models import UserPreferences as AccountUserPreferences
 from user_account.utils import send_trip_invitation_email
 
 User = get_user_model()
@@ -742,6 +746,24 @@ class PackingItemView(GenericAPIView):
 			user = User.objects.filter(pk=assigned_to_id).first()
 			item.assigned_to = user
 		item.save()
+		if packing_list.list_type == 'shared':
+			for participant in trip.participants.all():
+				if participant != request.user:
+					try:
+						prefs = participant.preferences
+						cfg = (prefs.data or {}).get('notifications', {})
+						if cfg.get('packing_list_added') is False:
+							continue
+					except AccountUserPreferences.DoesNotExist:
+						pass
+					Notification.objects.create(
+						recipient=participant,
+						sender=request.user,
+						notification_type='packing_added',
+						title='New packing item',
+						message=f'{request.user.username} added "{item.name}" to {packing_list.name}',
+						related_object_id=item.id,
+					)
 		return Response(self.get_serializer(item).data, status=status.HTTP_201_CREATED)
 
 
@@ -880,8 +902,21 @@ class DocumentView(APIView):
                 # Notify trip participants about new shared document
                 for participant in trip.participants.all():
                     if participant != request.user:
-                        # You can implement notification creation here
-                        pass
+                        try:
+                            prefs = participant.preferences
+                            cfg = (prefs.data or {}).get('notifications', {})
+                            if cfg.get('document_added') is False:
+                                continue
+                        except AccountUserPreferences.DoesNotExist:
+                            pass
+                        Notification.objects.create(
+                            recipient=participant,
+                            sender=request.user,
+                            notification_type='document_added',
+                            title='New document uploaded',
+                            message=f'{request.user.username} uploaded "{document.title}"',
+                            related_object_id=document.id,
+                        )
             
             response_serializer = DocumentSerializer(document, context={'request': request})
             return Response(response_serializer.data, status=status.HTTP_201_CREATED)
@@ -1042,6 +1077,23 @@ class ExpenseListCreateView(GenericAPIView):
         serializer = self.get_serializer(data=request.data, context={"request": request, "trip": trip})
         if serializer.is_valid():
             expense = serializer.save()
+            for participant in trip.participants.all():
+                if participant != request.user:
+                    try:
+                        prefs = participant.preferences
+                        cfg = (prefs.data or {}).get('notifications', {})
+                        if cfg.get('expense_added') is False:
+                            continue
+                    except AccountUserPreferences.DoesNotExist:
+                        pass
+                    Notification.objects.create(
+                        recipient=participant,
+                        sender=request.user,
+                        notification_type='expense_update',
+                        title='New expense added',
+                        message=f'{request.user.username} added an expense: {expense.description} ({expense.amount} {expense.currency})',
+                        related_object_id=expense.id,
+                    )
             return Response(self.get_serializer(expense).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1216,3 +1268,112 @@ class ItineraryEventDetailView(GenericAPIView):
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         event.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TripMapPinListCreateView(GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = TripMapPinSerializer
+
+    class StandardPagination(PageNumberPagination):
+        page_size = 5
+        page_size_query_param = "page_size"
+        max_page_size = 15
+
+    def get_trip(self, request, pk):
+        try:
+            return Trip.objects.filter(
+                Q(pk=pk) & (Q(owner=request.user) | Q(participants=request.user))
+            ).distinct().get()
+        except Trip.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        trip = self.get_trip(request, pk)
+        if not trip:
+            return Response({"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND)
+        pins = TripMapPin.objects.filter(trip=trip).select_related("created_by").order_by("-created_at")
+        category = request.query_params.get("category")
+        if category:
+            pins = pins.filter(category=category)
+        paginator = self.StandardPagination()
+        page = paginator.paginate_queryset(pins, request, view=self)
+        data = self.get_serializer(page, many=True).data
+        return paginator.get_paginated_response(data)
+
+    def post(self, request, pk):
+        trip = self.get_trip(request, pk)
+        if not trip:
+            return Response({"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            pin = serializer.save(trip=trip, created_by=request.user)
+            return Response(self.get_serializer(pin).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TripMapPinDetailView(GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = TripMapPinSerializer
+
+    def get_objects(self, request, pk, pin_id):
+        trip = Trip.objects.filter(Q(pk=pk) & (Q(owner=request.user) | Q(participants=request.user))).distinct().first()
+        if not trip:
+            return None, None
+        pin = TripMapPin.objects.filter(pk=pin_id, trip=trip).first()
+        return trip, pin
+
+    def put(self, request, pk, pin_id):
+        trip, pin = self.get_objects(request, pk, pin_id)
+        if not pin:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        # Only the creator can update a pin
+        if request.user != pin.created_by:
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+        serializer = self.get_serializer(pin, data=request.data, partial=True)
+        if serializer.is_valid():
+            pin = serializer.save()
+            return Response(self.get_serializer(pin).data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, pin_id):
+        trip, pin = self.get_objects(request, pk, pin_id)
+        if not pin:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        # Only the creator can delete a pin
+        if request.user != pin.created_by:
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+        pin.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TripMapSettingsView(GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = TripMapSettingsSerializer
+
+    def get_trip(self, request, pk):
+        try:
+            return Trip.objects.filter(
+                Q(pk=pk) & (Q(owner=request.user) | Q(participants=request.user))
+            ).distinct().get()
+        except Trip.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        trip = self.get_trip(request, pk)
+        if not trip:
+            return Response({"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND)
+        settings_obj, _ = TripMapSettings.objects.get_or_create(trip=trip)
+        return Response(self.get_serializer(settings_obj).data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk):
+        trip = self.get_trip(request, pk)
+        if not trip:
+            return Response({"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND)
+        if request.user != trip.owner and not trip.participants.filter(id=request.user.id).exists():
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+        settings_obj, _ = TripMapSettings.objects.get_or_create(trip=trip)
+        serializer = self.get_serializer(settings_obj, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

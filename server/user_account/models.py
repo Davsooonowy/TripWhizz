@@ -71,6 +71,8 @@ class Notification(models.Model):
         ('trip_invite', 'Trip Invitation'),
         ('trip_update', 'Trip Update'),
         ('expense_update', 'Expense Update'),
+        ('document_added', 'Document Added'),
+        ('packing_added', 'Packing Item Added'),
     ]
 
     recipient = models.ForeignKey(Profile, related_name='notifications', on_delete=models.CASCADE)
@@ -89,3 +91,13 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.notification_type} for {self.recipient.username} from {self.sender.username if self.sender else 'System'}"
+
+
+class UserPreferences(models.Model):
+    user = models.OneToOneField(Profile, related_name="preferences", on_delete=models.CASCADE)
+    data = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Preferences for {self.user.username}"

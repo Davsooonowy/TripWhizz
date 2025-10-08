@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from .models import Trip, Stage, StageElement, TripInvitation, PackingList, PackingItem, DocumentCategory, Document, DocumentComment, Expense, ExpenseShare, Settlement, ItineraryEvent
+from .models import Trip, Stage, StageElement, TripInvitation, PackingList, PackingItem, DocumentCategory, Document, DocumentComment, Expense, ExpenseShare, Settlement, ItineraryEvent, TripMapPin, TripMapSettings
 
 User = get_user_model()
 
@@ -639,3 +639,34 @@ class ItineraryEventSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "trip", "created_by", "created_at", "updated_at"]
+
+
+class TripMapPinSerializer(serializers.ModelSerializer):
+    created_by = UserBasicSerializer(read_only=True)
+
+    class Meta:
+        model = TripMapPin
+        fields = [
+            "id",
+            "trip",
+            "created_by",
+            "title",
+            "description",
+            "category",
+            "latitude",
+            "longitude",
+            "reason",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "trip", "created_by", "created_at", "updated_at"]
+
+
+class TripMapSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TripMapSettings
+        fields = [
+            "default_latitude",
+            "default_longitude",
+            "default_zoom",
+        ]

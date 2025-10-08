@@ -6,6 +6,10 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/components/ui/use-toast';
 import { NotificationsApiClient } from '@/lib/api/notifications';
+import {
+  PreferencesApiClient,
+  type UserPreferencesDTO,
+} from '@/lib/api/preferences';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
 
 import * as React from 'react';
@@ -37,9 +41,23 @@ export default function NotificationsView() {
     React.useState<Notification | null>(null);
   const [invitationDialogOpen, setInvitationDialogOpen] = React.useState(false);
   const { toast } = useToast();
+  const [prefs, setPrefs] = React.useState<UserPreferencesDTO | null>(null);
 
   React.useEffect(() => {
     fetchNotifications();
+    (async () => {
+      try {
+        const client = new PreferencesApiClient(authenticationProviderInstance);
+        const p = await client.getPreferences();
+        setPrefs(p);
+      } catch {
+        toast({
+          title: 'Error',
+          description: 'Failed to load preferences',
+          variant: 'destructive',
+        });
+      }
+    })();
   }, []);
 
   const fetchNotifications = async () => {
@@ -48,7 +66,26 @@ export default function NotificationsView() {
         authenticationProviderInstance,
       );
       const data = await notificationsApiClient.getNotifications();
-      setNotifications(data);
+      // Apply client-side filtering based on preferences
+      const filtered = data.filter((n: any) => {
+        const cfg = prefs?.data?.notifications || ({} as any);
+        if (
+          n.notification_type === 'friend_accept' &&
+          cfg.friend_acceptance === false
+        )
+          return false;
+        if (
+          n.notification_type === 'expense_update' &&
+          cfg.expense_added === false
+        )
+          return false;
+        if (n.notification_type === 'trip_invite' && cfg.trip_invite === false)
+          return false;
+        if (n.notification_type === 'trip_update' && cfg.trip_update === false)
+          return false;
+        return true;
+      });
+      setNotifications(filtered);
     } catch (error) {
       toast({
         title: 'Error',
