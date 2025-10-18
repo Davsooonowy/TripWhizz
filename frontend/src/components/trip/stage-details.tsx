@@ -1,4 +1,5 @@
 import { AddStageElement } from '@/components/trip/add-stage-element.tsx';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import {
@@ -75,7 +76,7 @@ export default function StageDetails() {
 
         setElements(fetchedElements);
         setUnreactionedElements(
-          fetchedElements.filter((element) => !element.userReaction),
+          fetchedElements.filter((element: StageElement) => !element.userReaction),
         );
       } catch {
         setError('Error loading stage elements. Please try again.');
@@ -218,7 +219,7 @@ export default function StageDetails() {
     }
   };
 
-  const handleReaction = async (id: number, reaction: 'like' | 'dislike') => {
+  const handleReaction = async (id: number, reaction: number) => {
     try {
       const apiClient = new StagesApiClient(authenticationProviderInstance);
       const response = await apiClient.reactToStageElement(id, reaction);
@@ -229,8 +230,7 @@ export default function StageDetails() {
             ? {
                 ...element,
                 averageReaction: response.averageReaction,
-                userReaction:
-                  element.userReaction === reaction ? null : reaction,
+                userReaction: element.userReaction === reaction ? null : reaction,
               }
             : element,
         ),
@@ -258,12 +258,10 @@ export default function StageDetails() {
         stage: Number(stageId),
       });
 
-      setElements((prevElements) => [
+      setElements((prevElements: StageElement[]) => [
         ...prevElements,
         {
           ...createdElement,
-          likes: 0,
-          dislikes: 0,
           userReaction: null,
         },
       ]);
@@ -349,7 +347,7 @@ export default function StageDetails() {
               Left to be graded: {remaining}
             </p>
             <div className="flex justify-center gap-2">
-              {[1, 2, 3, 4, 5].map((value) => (
+              {[1, 2, 3, 4, 5].map((value: number) => (
                 <Button
                   key={value}
                   variant={
@@ -357,8 +355,9 @@ export default function StageDetails() {
                       ? 'default'
                       : 'outline'
                   }
-                  onClick={() => handleReaction(currentElement.id, value)}
+                  onClick={() => handleReaction(currentElement.id!, value)}
                   className="w-10 h-10 p-0 rounded-full"
+                  disabled={hasDeadlinePassed}
                 >
                   {value}
                 </Button>
@@ -393,7 +392,19 @@ export default function StageDetails() {
         </div>
       )}
 
-      <Button className="mb-4" onClick={() => setIsAddModalOpen(true)}>
+      {hasDeadlinePassed && (
+        <Alert className="mb-4">
+          <AlertDescription>
+            Voting for this stage has concluded. Adding new elements is disabled.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <Button
+        className="mb-4"
+        onClick={() => setIsAddModalOpen(true)}
+        disabled={hasDeadlinePassed}
+      >
         Add New Element
       </Button>
 
@@ -464,7 +475,7 @@ export default function StageDetails() {
                   </TooltipProvider>
                 </div>
                 <div className="flex justify-center gap-2 mt-4">
-                  {[1, 2, 3, 4, 5].map((value) => (
+                  {[1, 2, 3, 4, 5].map((value: number) => (
                     <Button
                       key={value}
                       variant={
@@ -472,8 +483,9 @@ export default function StageDetails() {
                       }
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleReaction(element.id, value);
+                        handleReaction(element.id!, value);
                       }}
+                      disabled={hasDeadlinePassed}
                     >
                       {value}
                     </Button>
@@ -513,7 +525,7 @@ export default function StageDetails() {
           isOpen={isEditModalOpen}
           onClose={closeEditModal}
           onEdit={handleEditStageElement}
-          element={selectedItem}
+          element={selectedItem as StageElement}
         />
       )}
 

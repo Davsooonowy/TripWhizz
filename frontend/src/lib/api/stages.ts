@@ -11,6 +11,12 @@ export interface StageElement {
   image?: string;
   stage: number;
   averageReaction?: number;
+  userReaction?: number | null;
+  reactions?: Array<{
+    userId: number;
+    userName: string;
+    reaction: number;
+  }>;
 }
 
 export class StagesApiClient extends BaseApiClient {
