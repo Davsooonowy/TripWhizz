@@ -124,6 +124,7 @@ export default function CreateTripForm({ tripType }: CreateTripFormProps) {
   const [errors, setErrors] = useState({
     name: '',
     destination: '',
+    dateRange: '',
   });
 
   const [openTagsPopover, setOpenTagsPopover] = useState(false);
@@ -177,7 +178,11 @@ export default function CreateTripForm({ tripType }: CreateTripFormProps) {
 
   const validateForm = () => {
     let isValid = true;
-    const newErrors = { name: '', destination: '' };
+    const newErrors = { name: '', destination: '', dateRange: '' } as {
+      name: string;
+      destination: string;
+      dateRange: string;
+    };
 
     if (!formData.name.trim()) {
       newErrors.name = 'Trip name is required';
@@ -186,6 +191,14 @@ export default function CreateTripForm({ tripType }: CreateTripFormProps) {
 
     if (!formData.destination.trim()) {
       newErrors.destination = 'Destination is required';
+      isValid = false;
+    }
+
+    if (!formData.dateRange.from || !formData.dateRange.to) {
+      newErrors.dateRange = 'Trip dates are required';
+      isValid = false;
+    } else if (formData.dateRange.from > formData.dateRange.to) {
+      newErrors.dateRange = 'Start date must be before end date';
       isValid = false;
     }
 
@@ -314,7 +327,11 @@ export default function CreateTripForm({ tripType }: CreateTripFormProps) {
                     <DatePickerWithRange
                       date={formData.dateRange}
                       setDate={handleDateChange}
+                      className={errors.dateRange ? 'border-red-500' : ''}
                     />
+                    {errors.dateRange && (
+                      <p className="text-red-500 text-sm">{errors.dateRange}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
