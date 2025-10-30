@@ -54,6 +54,10 @@ export default function InviteFriends({ tripType }: InviteFriendsProps) {
   const [friends, setFriends] = useState<User[]>([]);
   const [recentContacts, setRecentContacts] = useState<User[]>([]);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [successMessage, setSuccessMessage] = useState({
+    title: '',
+    description: '',
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -390,8 +394,25 @@ export default function InviteFriends({ tripType }: InviteFriendsProps) {
                 Back
               </Button>
               <Button
-                onClick={handleSubmit}
-                disabled={isSubmitting || selectedFriends.length === 0}
+                onClick={() => {
+                  // If there are selected friends, send invites via existing handler.
+                  if (selectedFriends.length > 0) {
+                    handleSubmit();
+                  } else {
+                    // No friends selected: proceed without sending invites.
+                    toast({
+                      title: 'Trip created',
+                      description:
+                        'You can invite friends later from the trip dashboard.',
+                    });
+                    setSuccessMessage({
+                      title: 'Trip Created Successfully!',
+                      description: `Your trip to ${tripData.destination || 'your destination'} has been created. You can invite friends later from the trip dashboard.`,
+                    });
+                    setShowSuccessDialog(true);
+                  }
+                }}
+                disabled={isSubmitting}
               >
                 {isSubmitting ? (
                   <>
@@ -415,11 +436,18 @@ export default function InviteFriends({ tripType }: InviteFriendsProps) {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       ></path>
                     </svg>
-                    Sending Invites...
+                    {selectedFriends.length > 0 ? 'Sending Invites...' : 'Creating Trip...'}
                   </>
                 ) : (
                   <>
-                    Send Invitations ({selectedFriends.length})
+                    {selectedFriends.length > 0 ? (
+                      `Send Invitations (${selectedFriends.length})`
+                    ) : (
+                      <span className="inline-flex items-center gap-2">
+                        <span className="text-sm">Invite later</span>
+                        <span className="text-xs text-muted-foreground">(optional)</span>
+                      </span>
+                    )}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </>
                 )}
@@ -438,11 +466,9 @@ export default function InviteFriends({ tripType }: InviteFriendsProps) {
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Invitations Sent Successfully!</DialogTitle>
+            <DialogTitle>{successMessage.title}</DialogTitle>
             <DialogDescription>
-              Your friends have been invited to join your trip to{' '}
-              {tripData.destination || 'your destination'}. They will receive
-              email notifications and can accept the invitations in the app.
+              {successMessage.description}
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-center py-6">
