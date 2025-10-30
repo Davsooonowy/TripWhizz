@@ -13,10 +13,26 @@ function Calendar({
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
+  // Disallow selecting dates in the past by default.
+  // Create a matcher for dates before today (keep today's date selectable).
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  // Extract any provided `disabled` matcher(s) so we can merge ours without
+  // accidentally being overridden by spreading `...props` later.
+  const { disabled, ...restProps } = props as any
+
+  const combinedDisabled: CalendarProps['disabled'] = Array.isArray(disabled)
+    ? [{ before: today }, ...disabled]
+    : disabled
+    ? ([{ before: today }, disabled] as any)
+    : [{ before: today }]
+
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
+      disabled={combinedDisabled}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
@@ -65,7 +81,7 @@ function Calendar({
           <ChevronRight className={cn("h-4 w-4", className)} {...props} />
         ),
       }}
-      {...props}
+      {...restProps}
     />
   )
 }

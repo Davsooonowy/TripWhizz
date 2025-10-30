@@ -345,11 +345,10 @@ export default function TripHome() {
                         <span>
                           {' '}
                           •{' '}
-                          {new Date(
+                          {formatTripDateRange(
                             tripDetails.start_date,
-                          ).toLocaleDateString()}{' '}
-                          -{' '}
-                          {new Date(tripDetails.end_date).toLocaleDateString()}
+                            tripDetails.end_date,
+                          )}
                         </span>
                       )}
                     </CardDescription>
@@ -374,7 +373,10 @@ export default function TripHome() {
                     label="Trip Dates"
                     value={
                       tripDetails?.start_date && tripDetails?.end_date
-                        ? `${new Date(tripDetails.start_date).toLocaleDateString()} - ${new Date(tripDetails.end_date).toLocaleDateString()}`
+                        ? formatTripDateRange(
+                            tripDetails.start_date,
+                            tripDetails.end_date,
+                          )
                         : 'Not set'
                     }
                   />
@@ -404,21 +406,6 @@ export default function TripHome() {
                     value={stages.length.toString()}
                   />
                 </motion.div>
-
-                {tripDetails?.start_date && tripDetails?.end_date && (
-                  <motion.div
-                    className="space-y-2 mb-6"
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: '100%' }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
-                  >
-                    <div className="flex justify-between text-sm">
-                      <span>Trip Progress</span>
-                      <span>{tripProgress}%</span>
-                    </div>
-                    <Progress value={tripProgress} className="h-2" />
-                  </motion.div>
-                )}
 
                 <motion.div
                   className="mb-6"
@@ -806,3 +793,23 @@ function Alert({ variant, title, description, className }: AlertProps) {
     </div>
   );
 }
+
+// Add helper function near top of file (inside component)
+function formatTripDateRange(startDate: string, endDate: string) {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  const options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  };
+
+  if (start.getFullYear() === end.getFullYear()) {
+    // Same year, show only month and day
+    options.year = undefined;
+  }
+
+  return `${start.toLocaleDateString(undefined, options)} - ${end.toLocaleDateString(undefined, options)}`;
+}
+
