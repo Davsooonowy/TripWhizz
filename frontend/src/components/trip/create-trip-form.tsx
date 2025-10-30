@@ -205,6 +205,8 @@ export default function CreateTripForm({ tripType }: CreateTripFormProps) {
         name: formData.name,
         destination: formData.destination,
         description: formData.description || '',
+        start_date: formData.dateRange.from,
+        end_date: formData.dateRange.to,
         trip_type: formData.tripType,
         icon: tripIcons[formData.selectedIcon].name.toLowerCase(),
         icon_color: iconColors[formData.selectedColor].value,
@@ -307,15 +309,13 @@ export default function CreateTripForm({ tripType }: CreateTripFormProps) {
                     </div>
                   </div>
 
-                  {tripType === 'public' && (
-                    <div className="space-y-2">
-                      <Label className="text-base">Trip Dates</Label>
-                      <DatePickerWithRange
-                        date={formData.dateRange}
-                        setDate={handleDateChange}
-                      />
-                    </div>
-                  )}
+                  <div className="space-y-2">
+                    <Label className="text-base">Trip Dates</Label>
+                    <DatePickerWithRange
+                      date={formData.dateRange}
+                      setDate={handleDateChange}
+                    />
+                  </div>
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -556,12 +556,14 @@ export default function CreateTripForm({ tripType }: CreateTripFormProps) {
                           {formData.name || 'Your Trip'}
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          {formData.destination || 'Destination'} •
-                          {tripType === 'public' &&
-                          formData.dateRange.from &&
-                          formData.dateRange.to
-                            ? ` ${formData.dateRange.from.toLocaleDateString()} - ${formData.dateRange.to.toLocaleDateString()}`
-                            : ' Private Trip'}
+                          {formData.destination || 'Destination'} •{' '}
+                          {formData.dateRange.from && formData.dateRange.to ? (
+                            `${formData.dateRange.from.toLocaleDateString()} - ${formData.dateRange.to.toLocaleDateString()}`
+                          ) : tripType === 'private' ? (
+                            'Private Trip'
+                          ) : (
+                            'Dates not set'
+                          )}
                         </p>
                       </div>
                     </div>
