@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { DatePickerWithRange } from '@/components/ui/date-range-picker';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Dialog,
   DialogContent,
@@ -826,11 +826,14 @@ export default function TripStagesBuilder({
 
               <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="stage-date">Date Range (Optional)</Label>
-                  <DatePickerWithRange
-                    date={newStage.dateRange}
-                    setDate={(dateRange) =>
-                      handleNewStageChange('dateRange', dateRange)
+                  <Label htmlFor="stage-deadline">Deadline (Optional)</Label>
+                  <DatePicker
+                    date={newStage.dateRange?.from}
+                    setDate={(d) =>
+                      handleNewStageChange('dateRange', {
+                        from: d,
+                        to: undefined,
+                      })
                     }
                   />
                 </div>
@@ -1008,13 +1011,13 @@ export default function TripStagesBuilder({
                                       </Select>
                                     </div>
 
-                                    <DatePickerWithRange
-                                      date={stage.dateRange}
-                                      setDate={(dateRange) =>
+                                    <DatePicker
+                                      date={stage.dateRange?.from}
+                                      setDate={(d) =>
                                         handleEditStageChange(
                                           stage.id,
                                           'dateRange',
-                                          dateRange,
+                                          { from: d, to: undefined },
                                         )
                                       }
                                     />
@@ -1041,19 +1044,12 @@ export default function TripStagesBuilder({
                                       <span className="truncate">
                                         {category.name}
                                       </span>
-                                      {stage.dateRange?.from &&
-                                      stage.dateRange?.to ? (
+                                      {stage.dateRange?.from ? (
                                         <>
-                                          {new Date(
-                                            stage.dateRange.from,
-                                          ).toLocaleDateString()}{' '}
-                                          -{' '}
-                                          {new Date(
-                                            stage.dateRange.to,
-                                          ).toLocaleDateString()}
+                                          Deadline: {new Date(stage.dateRange.from).toLocaleDateString()}
                                         </>
                                       ) : (
-                                        'No date range'
+                                        'No deadline'
                                       )}
                                     </div>
                                     {stage.description && (
@@ -1121,8 +1117,26 @@ export default function TripStagesBuilder({
                 Back
               </Button>
               <Button
-                onClick={handleSubmit}
-                disabled={stages.length === 0 || isSubmitting}
+                onClick={() => {
+                  if (stages.length > 0) {
+                    handleSubmit();
+                  } else {
+                    // Allow users to continue without stages
+                    toast({
+                      title: 'No stages added',
+                      description: 'You can add stages later from the trip dashboard.',
+                    });
+
+                    const tripId = location.state?.tripId;
+                    navigate(`/trip/new/${tripType}/invite`, {
+                      state: {
+                        tripData: location.state?.tripData,
+                        tripId: tripId,
+                      },
+                    });
+                  }
+                }}
+                disabled={isSubmitting}
               >
                 {isSubmitting ? (
                   <>
@@ -1150,9 +1164,7 @@ export default function TripStagesBuilder({
                   </>
                 ) : (
                   <>
-                    {stages.length === 0
-                      ? 'Add stages to continue'
-                      : 'Save Trip Plan'}
+                    {stages.length === 0 ? 'Add stages later' : 'Save Trip Plan'}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </>
                 )}
