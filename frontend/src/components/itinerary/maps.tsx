@@ -12,12 +12,17 @@ import { useToast } from '@/components/ui/use-toast.tsx';
 import {
   type TripMapPin,
   type TripMapSettings,
+  type MapSpawnPoint,
   TripMapsApiClient,
 } from '@/lib/api/trips.ts';
 import { type User, UsersApiClient } from '@/lib/api/users.ts';
+import {
+  ItineraryApiClient,
+  type ItineraryEventDto,
+} from '@/lib/api/itinerary.ts';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
 
-import React, {
+import {
   useCallback,
   useEffect,
   useMemo,
@@ -45,11 +50,24 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
     [],
   );
   const apiClient = new UsersApiClient(authenticationProviderInstance);
+  const itineraryClient = useMemo(
+    () => new ItineraryApiClient(authenticationProviderInstance),
+    [],
+  );
 
   const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
   const [pins, setPins] = useState<TripMapPin[]>([]);
   const [settings, setSettings] = useState<TripMapSettings>({});
+  const [spawnPoints, setSpawnPoints] = useState<MapSpawnPoint[]>([]);
   const [selectDefaultMode, setSelectDefaultMode] = useState(false);
+  const [manageSpawnPoints, setManageSpawnPoints] = useState(false);
+  const [addingSpawnPointAt, setAddingSpawnPointAt] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [newSpawnPointName, setNewSpawnPointName] = useState('');
+  const [events, setEvents] = useState<ItineraryEventDto[]>([]);
+  const [newPinEventId, setNewPinEventId] = useState<number | null>(null);
   const [addingPinAt, setAddingPinAt] = useState<{
     lat: number;
     lng: number;
@@ -94,9 +112,11 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
       if (!tripId) return;
       try {
         setIsLoading(true);
-        const [pinsRes, settingsRes, me] = await Promise.all([
+        const [pinsRes, settingsRes, spawnPointsRes, eventsRes, me] = await Promise.all([
           mapsClient.getPins(Number(tripId), 1, 5, activeCategory || undefined),
           mapsClient.getSettings(Number(tripId)),
+          mapsClient.getSpawnPoints(Number(tripId)).catch(() => []),
+          itineraryClient.listEvents(Number(tripId)).catch(() => []),
           apiClient.getActiveUser().catch(() => null),
         ]);
         setPins(pinsRes.results);
@@ -104,8 +124,13 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
         setHasMore(Boolean(pinsRes.next));
         if (me) setCurrentUser(me);
         setSettings(settingsRes || {});
+        setSpawnPoints(spawnPointsRes || []);
+        setEvents(eventsRes || []);
+        // Check if we need to use default center (backward compatibility)
         if (!settingsRes?.default_latitude || !settingsRes?.default_longitude) {
-          setSelectDefaultMode(true);
+          if (spawnPointsRes.length === 0) {
+            setSelectDefaultMode(true);
+          }
         }
       } catch (e: any) {
         toast({
@@ -128,11 +153,23 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
     if ((container as HTMLElement).dataset.tripwhizzMapInitialized === '1')
       return;
 
-    const center = {
-      lat: Number(settings.default_latitude ?? 0) || 0,
-      lng: Number(settings.default_longitude ?? 0) || 0,
-    };
-    const zoom = Number(settings.default_zoom ?? 3) || 3;
+    // Use first spawn point if available, otherwise fall back to default center
+    let center = { lat: 0, lng: 0 };
+    let zoom = 3;
+    
+    if (spawnPoints.length > 0) {
+      center = {
+        lat: Number(spawnPoints[0].latitude),
+        lng: Number(spawnPoints[0].longitude),
+      };
+      zoom = Number(spawnPoints[0].zoom) || 12;
+    } else if (settings.default_latitude && settings.default_longitude) {
+      center = {
+        lat: Number(settings.default_latitude),
+        lng: Number(settings.default_longitude),
+      };
+      zoom = Number(settings.default_zoom ?? 3) || 3;
+    }
 
     const map = new window.google.maps.Map(container, {
       center,
@@ -153,8 +190,11 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
         draggable: currentUser ? pin.created_by?.id === currentUser.id : false,
         title: pin.title,
       });
+      const eventInfo = pin.itinerary_event_title 
+        ? `<div style="font-size:11px; color:#10B981; margin-top:4px; padding:4px 6px; background:#ECFDF5; border-radius:4px;">Event: ${escapeHtml(pin.itinerary_event_title)}</div>`
+        : '';
       const info = new window.google.maps.InfoWindow({
-        content: `\n<div style="max-width:240px; font-family: Inter, system-ui, sans-serif; color:#111827;">\n  <div style="font-weight:600; margin-bottom:4px; font-size:14px;">${escapeHtml(pin.title)}</div>\n  ${pin.description ? `<div style="font-size:12px; line-height:1.4; color:#374151; margin-bottom:4px;">${escapeHtml(pin.description)}</div>` : ''}\n  ${pin.reason ? `<div style="font-size:12px; line-height:1.4; color:#6B7280; margin-bottom:6px;"><em>${escapeHtml(pin.reason)}</em></div>` : ''}\n  <div style="font-size:11px; color:#6B7280;">by ${escapeHtml(pin.created_by?.username || 'unknown')}</div>\n  <div style="margin-top:6px;"><a href="https://www.google.com/maps?q=${encodeURIComponent(String(pin.latitude))},${encodeURIComponent(String(pin.longitude))}" target="_blank" rel="noopener noreferrer" style="font-size:12px; color:#2563EB; text-decoration:underline;">Open in Google Maps</a></div>\n</div>`,
+        content: `\n<div style="max-width:240px; font-family: Inter, system-ui, sans-serif; color:#111827;">\n  <div style="font-weight:600; margin-bottom:4px; font-size:14px;">${escapeHtml(pin.title)}</div>\n  ${pin.description ? `<div style="font-size:12px; line-height:1.4; color:#374151; margin-bottom:4px;">${escapeHtml(pin.description)}</div>` : ''}\n  ${pin.reason ? `<div style="font-size:12px; line-height:1.4; color:#6B7280; margin-bottom:6px;"><em>${escapeHtml(pin.reason)}</em></div>` : ''}\n  ${eventInfo}\n  <div style="font-size:11px; color:#6B7280; margin-top:6px;">by ${escapeHtml(pin.created_by?.username || 'unknown')}</div>\n  <div style="margin-top:6px;"><a href="https://www.google.com/maps?q=${encodeURIComponent(String(pin.latitude))},${encodeURIComponent(String(pin.longitude))}" target="_blank" rel="noopener noreferrer" style="font-size:12px; color:#2563EB; text-decoration:underline;">Open in Google Maps</a></div>\n</div>`,
       });
       marker.addListener('click', () => {
         Object.values(newInfoById).forEach((iw) => iw?.close());
@@ -235,6 +275,8 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
           default_longitude: lng,
           default_zoom: 8,
         }));
+      } else if (manageSpawnPoints) {
+        setAddingSpawnPointAt({ lat, lng });
       } else {
         setAddingPinAt({ lat, lng });
       }
@@ -243,7 +285,9 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
     isGoogleLoaded,
     pins,
     settings,
+    spawnPoints,
     selectDefaultMode,
+    manageSpawnPoints,
     currentUser,
     mapsClient,
     tripId,
@@ -366,6 +410,7 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
         category: newPinCategory || undefined,
         latitude: addingPinAt.lat,
         longitude: addingPinAt.lng,
+        itinerary_event: newPinEventId || undefined,
       } as any);
       setPins((prev) => [created, ...prev]);
       setAddingPinAt(null);
@@ -380,6 +425,7 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
       setNewPinTitle('');
       setNewPinDescription('');
       setNewPinReason('');
+      setNewPinEventId(null);
       toast({ title: 'Pin added' });
       if (mapInstance && window.google?.maps) {
         const marker = new window.google.maps.Marker({
@@ -413,6 +459,7 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
     newPinDescription,
     newPinReason,
     newPinCategory,
+    newPinEventId,
     mapsClient,
     toast,
     mapInstance,
@@ -449,24 +496,43 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
             <Info className="h-5 w-5" />
           </button>
         </div>
-        {selectDefaultMode ? (
-          <div className="flex items-center gap-2">
-            <span className="text-sm">
-              Click on the map to choose default center
-            </span>
-            <Button
-              variant="secondary"
-              onClick={() => setSelectDefaultMode(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={saveDefaultLocation}>Save default</Button>
-          </div>
-        ) : (
-          <Button variant="outline" onClick={() => setSelectDefaultMode(true)}>
-            Set default center
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {selectDefaultMode ? (
+            <>
+              <span className="text-sm">
+                Click on the map to choose default center
+              </span>
+              <Button
+                variant="secondary"
+                onClick={() => setSelectDefaultMode(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={saveDefaultLocation}>Save default</Button>
+            </>
+          ) : manageSpawnPoints ? (
+            <>
+              <span className="text-sm">
+                Manage starting points - click map to add, or click existing to edit
+              </span>
+              <Button
+                variant="secondary"
+                onClick={() => setManageSpawnPoints(false)}
+              >
+                Done
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" onClick={() => setSelectDefaultMode(true)}>
+                Set default center
+              </Button>
+              <Button variant="outline" onClick={() => setManageSpawnPoints(true)}>
+                Manage starting points
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="w-full flex justify-center">
@@ -562,6 +628,11 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
                             {pin.description}
                           </div>
                         )}
+                        {pin.itinerary_event_title && (
+                          <div className="text-[11px] text-green-600 dark:text-green-400 mt-1">
+                            Event: {pin.itinerary_event_title}
+                          </div>
+                        )}
                         <div className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
                           by {pin.created_by?.username || 'unknown'}
                         </div>
@@ -651,6 +722,25 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
                 <option value="activity">Activity</option>
               </select>
             </div>
+            {events.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
+                  Link to Event:
+                </span>
+                <select
+                  className="border rounded px-2 py-1 text-sm dark:bg-gray-900 dark:border-gray-800 flex-1"
+                  value={newPinEventId || ''}
+                  onChange={(e) => setNewPinEventId(e.target.value ? Number(e.target.value) : null)}
+                >
+                  <option value="">None</option>
+                  {events.map((ev) => (
+                    <option key={ev.id} value={ev.id}>
+                      {ev.title} ({ev.date})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setAddingPinAt(null)}>
@@ -699,6 +789,129 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Spawn Point Creation Dialog */}
+      <Dialog
+        open={!!addingSpawnPointAt}
+        onOpenChange={(open) => !open && setAddingSpawnPointAt(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Starting Point</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <Input
+              placeholder="Name (e.g., Hotel, Airport, Downtown)"
+              value={newSpawnPointName}
+              onChange={(e) => setNewSpawnPointName(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setAddingSpawnPointAt(null);
+                setNewSpawnPointName('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!tripId || !addingSpawnPointAt || !newSpawnPointName.trim()) return;
+                try {
+                  const created = await mapsClient.createSpawnPoint(Number(tripId), {
+                    name: newSpawnPointName,
+                    latitude: addingSpawnPointAt.lat,
+                    longitude: addingSpawnPointAt.lng,
+                    zoom: 12,
+                    order: spawnPoints.length,
+                  });
+                  setSpawnPoints((prev) => [...prev, created]);
+                  setAddingSpawnPointAt(null);
+                  setNewSpawnPointName('');
+                  toast({ title: 'Starting point added' });
+                } catch (e: any) {
+                  toast({
+                    title: 'Failed to add starting point',
+                    description: e.message,
+                    variant: 'destructive',
+                  });
+                }
+              }}
+              disabled={!newSpawnPointName.trim()}
+            >
+              Add starting point
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Spawn Points Management */}
+      {(spawnPoints.length > 0 || manageSpawnPoints) && (
+        <div className="w-full flex justify-center">
+          <div className="w-full" style={{ maxWidth: 1100 }}>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-lg font-medium">Starting Points</h2>
+            </div>
+            <ul className="divide-y divide-gray-200 rounded-md border border-gray-200 dark:divide-gray-800 dark:border-gray-800">
+              {spawnPoints.length === 0 ? (
+                <li className="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">
+                  No starting points yet. Click "Manage starting points" and then click on the map to add one.
+                </li>
+              ) : (
+                spawnPoints.map((sp) => (
+                <li
+                  key={sp.id}
+                  className="p-3 hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer"
+                  onClick={() => {
+                    if (mapInstance) {
+                      mapInstance.panTo({
+                        lat: Number(sp.latitude),
+                        lng: Number(sp.longitude),
+                      });
+                      mapInstance.setZoom(sp.zoom || 12);
+                    }
+                  }}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1 h-2 w-2 rounded-full bg-green-500" />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {sp.name}
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
+                        {Number(sp.latitude).toFixed(6)}, {Number(sp.longitude).toFixed(6)}
+                      </div>
+                    </div>
+                    {manageSpawnPoints && (
+                      <button
+                        className="text-red-600 dark:text-red-400 hover:underline text-xs"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          try {
+                            await mapsClient.deleteSpawnPoint(Number(tripId), sp.id);
+                            setSpawnPoints((prev) => prev.filter((s) => s.id !== sp.id));
+                            toast({ title: 'Starting point deleted' });
+                          } catch (err: any) {
+                            toast({
+                              title: 'Failed to delete starting point',
+                              description: err.message,
+                              variant: 'destructive',
+                            });
+                          }
+                        }}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                </li>
+              )))}
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
