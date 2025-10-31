@@ -23,6 +23,7 @@ import {
   DocumentFilters,
 } from '@/lib/api/documents';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
+import { DOCUMENT_FILE_TYPE_OPTIONS } from '@/lib/data/documents-static-data';
 
 import * as React from 'react';
 import { useEffect, useState } from 'react';
@@ -331,12 +332,11 @@ export default function TripDocumentsPage() {
                 <SelectValue placeholder="All file types" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All file types</SelectItem>
-                <SelectItem value="pdf">PDF</SelectItem>
-                <SelectItem value="image">Images</SelectItem>
-                <SelectItem value="text">Text</SelectItem>
-                <SelectItem value="markdown">Markdown</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                {DOCUMENT_FILE_TYPE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

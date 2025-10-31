@@ -14,6 +14,7 @@ import { useTripContext } from '@/components/util/trip-context';
 import { DocumentsApiClient } from '@/lib/api/documents';
 import { DocumentCategory } from '@/lib/api/documents';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
+import { ALLOWED_DOCUMENT_EXTENSIONS, MAX_DOCUMENT_SIZE_MB, DOCUMENT_VISIBILITY_OPTIONS } from '@/lib/data/documents-static-data';
 
 import * as React from 'react';
 import { useEffect, useState } from 'react';
@@ -76,17 +77,14 @@ export default function DocumentUploadPage() {
   };
 
   const handleFileSelect = (file: File) => {
-    // Validate file size (50MB max)
-    const maxSize = 50 * 1024 * 1024;
+    const maxSize = MAX_DOCUMENT_SIZE_MB * 1024 * 1024;
     if (file.size > maxSize) {
-      setErrors((prev) => ({ ...prev, file: 'File size must be under 50MB' }));
+      setErrors((prev) => ({ ...prev, file: `File size must be under ${MAX_DOCUMENT_SIZE_MB}MB` }));
       return;
     }
 
-    // Validate file type
-    const allowedTypes = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'txt', 'md'];
     const fileExtension = file.name.split('.').pop()?.toLowerCase();
-    if (!fileExtension || !allowedTypes.includes(fileExtension)) {
+    if (!fileExtension || !ALLOWED_DOCUMENT_EXTENSIONS.includes(fileExtension)) {
       setErrors((prev) => ({ ...prev, file: 'File type not supported' }));
       return;
     }
@@ -306,7 +304,7 @@ export default function DocumentUploadPage() {
                 <input
                   id="file"
                   type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.gif,.txt,.md"
+                  accept={'.' + ALLOWED_DOCUMENT_EXTENSIONS.join(',.')}
                   onChange={(e) =>
                     e.target.files?.[0] && handleFileSelect(e.target.files[0])
                   }
@@ -363,12 +361,11 @@ export default function DocumentUploadPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="shared">
-                  Shared - Visible to all trip members
-                </SelectItem>
-                <SelectItem value="private">
-                  Private - Only visible to you
-                </SelectItem>
+                {DOCUMENT_VISIBILITY_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

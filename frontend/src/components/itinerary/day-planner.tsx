@@ -20,6 +20,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { ChevronLeft, ChevronRight, MapPin, ExternalLink } from 'lucide-react';
+import {TripMapsApiClient} from "@/lib/api/trips.ts";
 
 type DayPlanEvent = {
   id?: number;
@@ -51,16 +52,16 @@ export default function DayPlanner({ tripId }: { tripId?: string }) {
   const navigate = useNavigate();
   const resolvedTripId = tripId ? Number(tripId) : selectedTrip?.id;
   const apiClient = new ItineraryApiClient(authenticationProviderInstance);
-  const mapsClient = useMemo(
-    () => new TripMapsApiClient(authenticationProviderInstance),
-    [],
-  );
-  const [selectedDate, setSelectedDate] = useState<string>(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d.toISOString().slice(0, 10);
-  });
-  const [events, setEvents] = useState<DayPlanEvent[]>([]);
+    useMemo(
+        () => new TripMapsApiClient(authenticationProviderInstance),
+        [],
+    );
+    const [selectedDate, setSelectedDate] = useState<string>(() => {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        return d.toISOString().slice(0, 10);
+    });
+    const [events, setEvents] = useState<DayPlanEvent[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [createTitle, setCreateTitle] = useState('');
   const [createRange, setCreateRange] = useState<{

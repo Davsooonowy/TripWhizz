@@ -21,6 +21,7 @@ import {
   type ItineraryEventDto,
 } from '@/lib/api/itinerary.ts';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
+import { MAP_PIN_CATEGORIES } from '@/lib/data/maps-static-data';
 
 import {
   useCallback,
@@ -479,7 +480,7 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
         </div>
         <div className="flex items-center gap-2">
           {spawnPoints.length > 0 && (
-            <select
+              <select
               className="border rounded px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-800 min-w-[200px]"
               value={selectedSpawnPoint || (spawnPoints.length > 0 ? spawnPoints[0].id : '')}
               onChange={(e) => {
@@ -558,10 +559,9 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
                 onChange={(e) => setActiveCategory(e.target.value)}
               >
                 <option value="">All categories</option>
-                <option value="food">Food</option>
-                <option value="sights">Sights</option>
-                <option value="lodging">Lodging</option>
-                <option value="activity">Activity</option>
+                {MAP_PIN_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>{c[0].toUpperCase() + c.slice(1)}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -697,10 +697,9 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
                 onChange={(e) => setNewPinCategory(e.target.value)}
               >
                 <option value="">None</option>
-                <option value="food">Food</option>
-                <option value="sights">Sights</option>
-                <option value="lodging">Lodging</option>
-                <option value="activity">Activity</option>
+                {MAP_PIN_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>{c[0].toUpperCase() + c.slice(1)}</option>
+                ))}
               </select>
             </div>
             {events.length > 0 && (
