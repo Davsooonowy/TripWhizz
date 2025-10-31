@@ -3,57 +3,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
-import { PackingApiClient, PACKING_CATEGORIES } from '@/lib/api/packing';
+import { PRESET_TEMPLATES } from '@/lib/data/packing-templates';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
 
 import * as React from 'react';
 
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import {PACKING_CATEGORIES, PackingApiClient} from "@/lib/api/packing.ts";
 
 type TemplateItem = { name: string; category?: string; quantity?: number };
 type TemplateDef = { key: string; name: string; items: TemplateItem[] };
-
-const PRESET_TEMPLATES: TemplateDef[] = [
-	{
-		key: 'beach_basic',
-		name: 'Beach Weekend',
-		items: [
-			{ name: 'Swimsuit', category: 'Clothing', quantity: 1 },
-			{ name: 'Towel', category: 'Clothing', quantity: 1 },
-			{ name: 'Sunscreen', category: 'Toiletries', quantity: 1 },
-			{ name: 'Sunglasses', category: 'Accessories', quantity: 1 },
-			{ name: 'Flip-flops', category: 'Clothing', quantity: 1 },
-			{ name: 'Hat', category: 'Accessories', quantity: 1 },
-			{ name: 'Water bottle', category: 'Food', quantity: 1 },
-		],
-	},
-	{
-		key: 'city_break',
-		name: 'City Break',
-		items: [
-			{ name: 'Comfortable shoes', category: 'Clothing', quantity: 1 },
-			{ name: 'Jacket', category: 'Clothing', quantity: 1 },
-			{ name: 'Phone charger', category: 'Electronics', quantity: 1 },
-			{ name: 'Power bank', category: 'Electronics', quantity: 1 },
-			{ name: 'Toothbrush', category: 'Toiletries', quantity: 1 },
-			{ name: 'Passport/ID', category: 'Documents', quantity: 1 },
-		],
-	},
-	{
-		key: 'hiking_day',
-		name: 'Hiking Day Trip',
-		items: [
-			{ name: 'Hiking boots', category: 'Clothing', quantity: 1 },
-			{ name: 'Rain jacket', category: 'Clothing', quantity: 1 },
-			{ name: 'Backpack', category: 'Gear', quantity: 1 },
-			{ name: 'Snacks', category: 'Food', quantity: 2 },
-			{ name: 'Water bottle', category: 'Food', quantity: 2 },
-			{ name: 'First aid kit', category: 'Gear', quantity: 1 },
-			{ name: 'Map/Offline maps', category: 'Electronics', quantity: 1 },
-		],
-	},
-];
 
 const GLOBAL_TEMPLATES_KEY = 'TW_PACKING_TEMPLATES_GLOBAL';
 
