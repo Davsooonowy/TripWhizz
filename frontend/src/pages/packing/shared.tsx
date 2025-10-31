@@ -14,6 +14,7 @@ import {
 import { type TripParticipant, TripsApiClient } from '@/lib/api/trips';
 import { UsersApiClient } from '@/lib/api/users';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
+import { PACKING_CATEGORIES } from '@/lib/data/packing-static-data';
 
 import { useEffect, useMemo, useState } from 'react';
 
@@ -28,15 +29,6 @@ interface LocalNewItem {
   assigned_to_id?: number | null;
 }
 
-const defaultCategories = [
-  'Clothing',
-  'Electronics',
-  'Toiletries',
-  'Documents',
-  'Entertainment',
-  'Other',
-];
-
 export default function SharedPackingPage() {
   const { selectedTrip, trips, isLoading } = useTripContext();
   const [list, setList] = useState<PackingList | null>(null);
@@ -49,7 +41,7 @@ export default function SharedPackingPage() {
 
   const [newItem, setNewItem] = useState<LocalNewItem>({
     name: '',
-    category: 'Clothing',
+    category: PACKING_CATEGORIES[0] || 'Clothing',
     quantity: 1,
     notes: '',
     assigned_to_id: undefined,
@@ -72,7 +64,8 @@ export default function SharedPackingPage() {
     try {
       const user = await usersApi.getActiveUser();
       setCurrentUserId(user.id);
-    } catch (error) {
+    } catch (e) {
+      console.debug('fetchUserId error', e);
       toast({
         title: 'Error',
         description: 'Failed to fetch active user',
@@ -152,7 +145,7 @@ export default function SharedPackingPage() {
     if (!newItem.name.trim()) return;
     setIsBusy(true);
     try {
-      const created = await api.createItem(selectedTrip.id, list.id, {
+      const created = await api.createItem(selectedTrip.id!, list.id!, {
         name: newItem.name.trim(),
         description: newItem.notes?.trim() || undefined,
         category: newItem.category,
@@ -163,7 +156,7 @@ export default function SharedPackingPage() {
       setItems((prev) => [created, ...prev]);
       setNewItem({
         name: '',
-        category: 'Clothing',
+        category: PACKING_CATEGORIES[0] || 'Clothing',
         quantity: 1,
         notes: '',
         assigned_to_id: undefined,
@@ -185,7 +178,7 @@ export default function SharedPackingPage() {
       ),
     );
     try {
-      await api.togglePacked(selectedTrip.id, list.id, id);
+      await api.togglePacked(selectedTrip.id!, list.id!, id);
     } catch {
       setItems((prev) =>
         prev.map((it) =>
@@ -199,7 +192,7 @@ export default function SharedPackingPage() {
     const snapshot = items;
     setItems((prev) => prev.filter((it) => it.id !== id));
     try {
-      await api.deleteItem(selectedTrip.id, list.id, id);
+      await api.deleteItem(selectedTrip.id!, list.id!, id);
     } catch {
       setItems(snapshot);
     }
@@ -209,8 +202,8 @@ export default function SharedPackingPage() {
     setIsBusy(true);
     try {
       const updatedItem = await api.updateItem(
-        selectedTrip.id,
-        list.id,
+        selectedTrip.id!,
+        list.id!,
         itemId,
         {
           assigned_to_id: participantId,
@@ -310,7 +303,7 @@ export default function SharedPackingPage() {
                   setNewItem((s) => ({ ...s, category: e.target.value }))
                 }
               >
-                {defaultCategories.map((c) => (
+                {PACKING_CATEGORIES.map((c) => (
                   <option key={c} value={c}>
                     {c}
                   </option>

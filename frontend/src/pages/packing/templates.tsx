@@ -3,14 +3,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
-import { PRESET_TEMPLATES } from '@/lib/data/packing-templates';
+import { PRESET_TEMPLATES, PACKING_CATEGORIES } from '@/lib/data/packing-static-data';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
 
 import * as React from 'react';
 
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import {PACKING_CATEGORIES, PackingApiClient} from "@/lib/api/packing.ts";
+import { PackingApiClient } from '@/lib/api/packing';
 
 type TemplateItem = { name: string; category?: string; quantity?: number };
 type TemplateDef = { key: string; name: string; items: TemplateItem[] };
@@ -30,7 +30,7 @@ export default function PackingTemplatesPage() {
 	const [draftName, setDraftName] = React.useState('My Template');
 	const [draftItems, setDraftItems] = React.useState<TemplateItem[]>([]);
 	const [newItemName, setNewItemName] = React.useState('');
-	const [newItemCategory, setNewItemCategory] = React.useState<string | undefined>(PACKING_CATEGORIES[0]?.label || 'Clothing');
+		const [newItemCategory, setNewItemCategory] = React.useState<string | undefined>(PACKING_CATEGORIES[0] || 'Clothing');
 	const [newItemQty, setNewItemQty] = React.useState<number>(1);
 
 	React.useEffect(() => {
@@ -47,7 +47,9 @@ export default function PackingTemplatesPage() {
 					});
 				}
 				setCurrentListId(list.id);
-			} catch {}
+			} catch (e) {
+				console.debug('init error', e);
+			}
 		};
 		init();
 	}, [api, selectedTrip]);
@@ -56,7 +58,9 @@ export default function PackingTemplatesPage() {
 		try {
 			const raw = localStorage.getItem(GLOBAL_TEMPLATES_KEY);
 			if (raw) setUserTemplates(JSON.parse(raw));
-		} catch {}
+		} catch (e) {
+			console.debug('failed to load user templates from localStorage', e);
+		}
 	}, []);
 
 	const persistUserTemplates = (list: TemplateDef[]) => {
@@ -256,8 +260,8 @@ export default function PackingTemplatesPage() {
 								onChange={(e) => setNewItemCategory(e.target.value)}
 							>
 								{PACKING_CATEGORIES.map((c) => (
-									<option key={c.value} value={c.label}>
-										{c.label}
+									<option key={c} value={c}>
+										{c}
 									</option>
 								))}
 							</select>

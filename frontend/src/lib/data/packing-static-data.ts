@@ -56,7 +56,6 @@ export const PRESET_TEMPLATES: TemplateDef[] = [
     ],
   },
 
-  // Additional useful presets
   {
     key: 'camping_basic',
     name: 'Camping Trip',

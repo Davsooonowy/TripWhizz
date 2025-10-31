@@ -1,4 +1,3 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +10,7 @@ import {
   type PackingList,
 } from '@/lib/api/packing';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
+import { PACKING_CATEGORIES } from '@/lib/data/packing-static-data';
 
 import * as React from 'react';
 import { useEffect, useState } from 'react';
@@ -25,15 +25,6 @@ interface LocalNewItem {
   notes?: string;
 }
 
-const defaultCategories = [
-  'Clothing',
-  'Electronics',
-  'Toiletries',
-  'Documents',
-  'Entertainment',
-  'Other',
-];
-
 export default function PackingItemsPage() {
   const { selectedTrip, trips, isLoading } = useTripContext();
   const [list, setList] = useState<PackingList | null>(null);
@@ -42,7 +33,7 @@ export default function PackingItemsPage() {
 
   const [newItem, setNewItem] = useState<LocalNewItem>({
     name: '',
-    category: 'Clothing',
+    category: PACKING_CATEGORIES[0] || 'Clothing',
     quantity: 1,
     notes: '',
   });
@@ -131,7 +122,7 @@ export default function PackingItemsPage() {
         quantity: newItem.quantity,
       });
       setItems((prev) => [created, ...prev]);
-      setNewItem({ name: '', category: 'Clothing', quantity: 1, notes: '' });
+      setNewItem({ name: '', category: PACKING_CATEGORIES[0] || 'Clothing', quantity: 1, notes: '' });
     } finally {
       setIsLoadingItems(false);
     }
@@ -179,17 +170,6 @@ export default function PackingItemsPage() {
 
   const packedCount = items.filter((item) => item.is_packed).length;
   const totalCount = items.length;
-
-  const getUserInitials = (user: {
-    first_name?: string;
-    last_name?: string;
-    username: string;
-  }) => {
-    if (user.first_name && user.last_name) {
-      return `${user.first_name[0]}${user.last_name[0]}`.toUpperCase();
-    }
-    return user.username.substring(0, 2).toUpperCase();
-  };
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
@@ -258,7 +238,7 @@ export default function PackingItemsPage() {
                   setNewItem((s) => ({ ...s, category: e.target.value }))
                 }
               >
-                {defaultCategories.map((category) => (
+                {PACKING_CATEGORIES.map((category) => (
                   <option key={category} value={category}>
                     {category}
                   </option>
@@ -369,7 +349,7 @@ export default function PackingItemsPage() {
               trip
             </p>
             <Button
-              onClick={() => setNewItem((s) => ({ ...s, name: 'Passport' }))}
+              onClick={() => setNewItem((s) => ({ ...s, name: 'Passport', category: PACKING_CATEGORIES[0] || 'Clothing' }))}
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Your First Item
