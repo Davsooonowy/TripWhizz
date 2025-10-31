@@ -22,7 +22,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { useTripContext } from '@/components/util/trip-context';
@@ -146,23 +145,6 @@ export default function TripHome() {
     return diffDays;
   };
 
-  const calculateTripProgress = () => {
-    if (!tripDetails?.start_date || !tripDetails?.end_date) return 0;
-
-    const startDate = new Date(tripDetails.start_date);
-    const endDate = new Date(tripDetails.end_date);
-    const today = new Date();
-
-    if (today < startDate) return 0;
-
-    if (today > endDate) return 100;
-
-    const totalDuration = endDate.getTime() - startDate.getTime();
-    const elapsed = today.getTime() - startDate.getTime();
-
-    return Math.round((elapsed / totalDuration) * 100);
-  };
-
   const getTripIcon = () => {
     if (!tripDetails?.icon) return Plane;
     return iconMap[tripDetails.icon.toLowerCase()] || Plane;
@@ -258,7 +240,6 @@ export default function TripHome() {
   }
 
   const daysUntilTrip = calculateDaysUntilTrip();
-  const tripProgress = calculateTripProgress();
   const participants = tripDetails?.participants || [];
 
   return (
@@ -478,19 +459,6 @@ export default function TripHome() {
                     ))}
                   </motion.div>
                 )}
-
-                <motion.div
-                  className="text-center text-sm text-muted-foreground bg-muted/30 p-4 rounded-lg"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.6 }}
-                  whileHover={{ scale: 1.01 }}
-                >
-                  <p>
-                    More trip planning features coming soon! Stay tuned for
-                    itinerary management, expense tracking, and more.
-                  </p>
-                </motion.div>
               </CardContent>
             </Card>
           </motion.div>
