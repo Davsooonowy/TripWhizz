@@ -30,7 +30,7 @@ import {
   useState,
 } from 'react';
 
-import { Info } from 'lucide-react';
+import { Info, ChevronDown, ChevronUp } from 'lucide-react';
 
 const GOOGLE_MAPS_API_KEY =
   import.meta.env.VITE_GOOGLE_MAPS_API_KEY ||
@@ -61,6 +61,7 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
   const [spawnPoints, setSpawnPoints] = useState<MapSpawnPoint[]>([]);
   const [savingNewLocationView, setSavingNewLocationView] = useState(false);
   const [newLocationViewName, setNewLocationViewName] = useState('');
+  const [showLocationViewsList, setShowLocationViewsList] = useState(false);
   const [events, setEvents] = useState<ItineraryEventDto[]>([]);
   const [newPinEventId, setNewPinEventId] = useState<number | null>(null);
   const [selectedSpawnPoint, setSelectedSpawnPoint] = useState<number | null>(null);
@@ -842,92 +843,104 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
         </DialogContent>
       </Dialog>
 
-      {/* Location Views List with Delete Option */}
+      {/* Location Views List with Delete Option - Collapsible */}
       {spawnPoints.length > 0 && (
         <div className="w-full flex justify-center">
           <div className="w-full" style={{ maxWidth: 1100 }}>
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-lg font-medium">Location Views</h2>
-              <span className="text-xs text-muted-foreground">
-                {spawnPoints.length} {spawnPoints.length === 1 ? 'view' : 'views'} saved
-              </span>
-            </div>
-            <ul className="divide-y divide-gray-200 rounded-md border border-gray-200 dark:divide-gray-800 dark:border-gray-800">
-              {spawnPoints.map((sp) => (
-                <li
-                  key={sp.id}
-                  className="p-3 hover:bg-gray-50 dark:hover:bg-gray-900"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="mt-1 h-2 w-2 rounded-full bg-green-500" />
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {sp.name}
-                        </div>
-                        <div className="text-xs text-gray-600 dark:text-gray-400">
-                          {Number(sp.latitude).toFixed(6)}, {Number(sp.longitude).toFixed(6)} • Zoom: {sp.zoom}
+            <button
+              onClick={() => setShowLocationViewsList(!showLocationViewsList)}
+              className="flex items-center justify-between w-full p-2 rounded-md border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                {showLocationViewsList ? (
+                  <ChevronUp className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                )}
+                <span className="text-sm font-medium">Location Views</span>
+                <span className="text-xs text-muted-foreground">
+                  ({spawnPoints.length} {spawnPoints.length === 1 ? 'view' : 'views'})
+                </span>
+              </div>
+            </button>
+            {showLocationViewsList && (
+              <ul className="divide-y divide-gray-200 rounded-md border border-gray-200 dark:divide-gray-800 dark:border-gray-800 mt-2">
+                {spawnPoints.map((sp) => (
+                  <li
+                    key={sp.id}
+                    className="p-3 hover:bg-gray-50 dark:hover:bg-gray-900"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="mt-1 h-2 w-2 rounded-full bg-green-500" />
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {sp.name}
+                          </div>
+                          <div className="text-xs text-gray-600 dark:text-gray-400">
+                            {Number(sp.latitude).toFixed(6)}, {Number(sp.longitude).toFixed(6)} • Zoom: {sp.zoom}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          if (mapInstance) {
-                            mapInstance.panTo({
-                              lat: Number(sp.latitude),
-                              lng: Number(sp.longitude),
-                            });
-                            mapInstance.setZoom(sp.zoom || 12);
-                            setSelectedSpawnPoint(sp.id);
-                          }
-                        }}
-                      >
-                        Go to
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={async () => {
-                          if (!confirm(`Delete location view "${sp.name}"?`)) return;
-                          try {
-                            await mapsClient.deleteSpawnPoint(Number(tripId), sp.id);
-                            setSpawnPoints((prev) => {
-                              const filtered = prev.filter((s) => s.id !== sp.id);
-                              // If deleted spawn point was selected, select first remaining or null
-                              if (selectedSpawnPoint === sp.id) {
-                                setSelectedSpawnPoint(filtered.length > 0 ? filtered[0].id : null);
-                                // Center map on first remaining or default
-                                if (filtered.length > 0 && mapInstance) {
-                                  const first = filtered[0];
-                                  mapInstance.panTo({
-                                    lat: Number(first.latitude),
-                                    lng: Number(first.longitude),
-                                  });
-                                  mapInstance.setZoom(first.zoom || 12);
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (mapInstance) {
+                              mapInstance.panTo({
+                                lat: Number(sp.latitude),
+                                lng: Number(sp.longitude),
+                              });
+                              mapInstance.setZoom(sp.zoom || 12);
+                              setSelectedSpawnPoint(sp.id);
+                            }
+                          }}
+                        >
+                          Go to
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={async () => {
+                            if (!confirm(`Delete location view "${sp.name}"?`)) return;
+                            try {
+                              await mapsClient.deleteSpawnPoint(Number(tripId), sp.id);
+                              setSpawnPoints((prev) => {
+                                const filtered = prev.filter((s) => s.id !== sp.id);
+                                // If deleted spawn point was selected, select first remaining or null
+                                if (selectedSpawnPoint === sp.id) {
+                                  setSelectedSpawnPoint(filtered.length > 0 ? filtered[0].id : null);
+                                  // Center map on first remaining or default
+                                  if (filtered.length > 0 && mapInstance) {
+                                    const first = filtered[0];
+                                    mapInstance.panTo({
+                                      lat: Number(first.latitude),
+                                      lng: Number(first.longitude),
+                                    });
+                                    mapInstance.setZoom(first.zoom || 12);
+                                  }
                                 }
-                              }
-                              return filtered;
-                            });
-                            toast({ title: 'Location view deleted' });
-                          } catch (err: any) {
-                            toast({
-                              title: 'Failed to delete location view',
-                              description: err.message,
-                              variant: 'destructive',
-                            });
-                          }
-                        }}
-                      >
-                        Delete
-                      </Button>
+                                return filtered;
+                              });
+                              toast({ title: 'Location view deleted' });
+                            } catch (err: any) {
+                              toast({
+                                title: 'Failed to delete location view',
+                                description: err.message,
+                                variant: 'destructive',
+                              });
+                            }
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       )}
