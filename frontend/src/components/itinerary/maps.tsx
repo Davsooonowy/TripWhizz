@@ -59,15 +59,12 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
   const [pins, setPins] = useState<TripMapPin[]>([]);
   const [settings, setSettings] = useState<TripMapSettings>({});
   const [spawnPoints, setSpawnPoints] = useState<MapSpawnPoint[]>([]);
-  const [selectDefaultMode, setSelectDefaultMode] = useState(false);
   const [manageSpawnPoints, setManageSpawnPoints] = useState(false);
-  const [addingSpawnPointAt, setAddingSpawnPointAt] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
-  const [newSpawnPointName, setNewSpawnPointName] = useState('');
+  const [savingNewLocationView, setSavingNewLocationView] = useState(false);
+  const [newLocationViewName, setNewLocationViewName] = useState('');
   const [events, setEvents] = useState<ItineraryEventDto[]>([]);
   const [newPinEventId, setNewPinEventId] = useState<number | null>(null);
+  const [selectedSpawnPoint, setSelectedSpawnPoint] = useState<number | null>(null);
   const [addingPinAt, setAddingPinAt] = useState<{
     lat: number;
     lng: number;
@@ -126,11 +123,9 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
         setSettings(settingsRes || {});
         setSpawnPoints(spawnPointsRes || []);
         setEvents(eventsRes || []);
-        // Check if we need to use default center (backward compatibility)
-        if (!settingsRes?.default_latitude || !settingsRes?.default_longitude) {
-          if (spawnPointsRes.length === 0) {
-            setSelectDefaultMode(true);
-          }
+        // Set selected spawn point to first one if available
+        if (spawnPointsRes.length > 0) {
+          setSelectedSpawnPoint(spawnPointsRes[0].id);
         }
       } catch (e: any) {
         toast({
@@ -153,16 +148,24 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
     if ((container as HTMLElement).dataset.tripwhizzMapInitialized === '1')
       return;
 
-    // Use first spawn point if available, otherwise fall back to default center
+    // Use selected spawn point, first spawn point, or default center
     let center = { lat: 0, lng: 0 };
     let zoom = 3;
     
-    if (spawnPoints.length > 0) {
+    let spawnPointToUse: MapSpawnPoint | null = null;
+    if (selectedSpawnPoint) {
+      spawnPointToUse = spawnPoints.find(sp => sp.id === selectedSpawnPoint) || null;
+    }
+    if (!spawnPointToUse && spawnPoints.length > 0) {
+      spawnPointToUse = spawnPoints[0];
+    }
+    
+    if (spawnPointToUse) {
       center = {
-        lat: Number(spawnPoints[0].latitude),
-        lng: Number(spawnPoints[0].longitude),
+        lat: Number(spawnPointToUse.latitude),
+        lng: Number(spawnPointToUse.longitude),
       };
-      zoom = Number(spawnPoints[0].zoom) || 12;
+      zoom = Number(spawnPointToUse.zoom) || 12;
     } else if (settings.default_latitude && settings.default_longitude) {
       center = {
         lat: Number(settings.default_latitude),
@@ -268,16 +271,7 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
     map.addListener('click', (e: any) => {
       const lat = e.latLng.lat();
       const lng = e.latLng.lng();
-      if (selectDefaultMode) {
-        setSettings((prev) => ({
-          ...prev,
-          default_latitude: lat,
-          default_longitude: lng,
-          default_zoom: 8,
-        }));
-      } else if (manageSpawnPoints) {
-        setAddingSpawnPointAt({ lat, lng });
-      } else {
+      if (!manageSpawnPoints) {
         setAddingPinAt({ lat, lng });
       }
     });
@@ -286,7 +280,7 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
     pins,
     settings,
     spawnPoints,
-    selectDefaultMode,
+    selectedSpawnPoint,
     manageSpawnPoints,
     currentUser,
     mapsClient,
@@ -465,21 +459,6 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
     mapInstance,
   ]);
 
-  const saveDefaultLocation = useCallback(async () => {
-    if (!tripId) return;
-    try {
-      const updated = await mapsClient.updateSettings(Number(tripId), settings);
-      setSettings(updated);
-      setSelectDefaultMode(false);
-      toast({ title: 'Default map location saved' });
-    } catch (e: any) {
-      toast({
-        title: 'Failed to save default location',
-        description: e.message,
-        variant: 'destructive',
-      });
-    }
-  }, [tripId, settings, mapsClient, toast]);
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -497,24 +476,42 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
           </button>
         </div>
         <div className="flex items-center gap-2">
-          {selectDefaultMode ? (
+          {manageSpawnPoints ? (
             <>
-              <span className="text-sm">
-                Click on the map to choose default center
-              </span>
-              <Button
-                variant="secondary"
-                onClick={() => setSelectDefaultMode(false)}
+              <select
+                className="border rounded px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-800 min-w-[200px]"
+                value={selectedSpawnPoint || ''}
+                onChange={(e) => {
+                  const spId = e.target.value ? Number(e.target.value) : null;
+                  setSelectedSpawnPoint(spId);
+                  if (spId && mapInstance) {
+                    const sp = spawnPoints.find(s => s.id === spId);
+                    if (sp) {
+                      mapInstance.panTo({
+                        lat: Number(sp.latitude),
+                        lng: Number(sp.longitude),
+                      });
+                      mapInstance.setZoom(sp.zoom || 12);
+                    }
+                  }
+                }}
               >
-                Cancel
+                <option value="">Select view location...</option>
+                {spawnPoints.map((sp) => (
+                  <option key={sp.id} value={sp.id}>
+                    {sp.name}
+                  </option>
+                ))}
+              </select>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSavingNewLocationView(true);
+                  setNewLocationViewName('');
+                }}
+              >
+                Save new
               </Button>
-              <Button onClick={saveDefaultLocation}>Save default</Button>
-            </>
-          ) : manageSpawnPoints ? (
-            <>
-              <span className="text-sm">
-                Manage starting points - click map to add, or click existing to edit
-              </span>
               <Button
                 variant="secondary"
                 onClick={() => setManageSpawnPoints(false)}
@@ -523,28 +520,25 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
               </Button>
             </>
           ) : (
-            <>
-              <Button variant="outline" onClick={() => setSelectDefaultMode(true)}>
-                Set default center
-              </Button>
-              <Button variant="outline" onClick={() => setManageSpawnPoints(true)}>
-                Manage starting points
-              </Button>
-            </>
+            <Button variant="outline" onClick={() => setManageSpawnPoints(true)}>
+              Manage view locations
+            </Button>
           )}
         </div>
       </div>
 
       <div className="w-full flex justify-center">
         <div className="w-full max-w-[1100px]">
-          <Input
-            id="trip-map-search"
-            placeholder={
-              isGoogleLoaded ? 'Search places...' : 'Loading search...'
-            }
-            disabled={!isGoogleLoaded}
-            className="mb-3"
-          />
+          <div className="flex gap-3 mb-3">
+            <Input
+              id="trip-map-search"
+              placeholder={
+                isGoogleLoaded ? 'Search places...' : 'Loading search...'
+              }
+              disabled={!isGoogleLoaded}
+              className="flex-1"
+            />
+          </div>
         </div>
       </div>
 
@@ -790,128 +784,78 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
         </DialogContent>
       </Dialog>
 
-      {/* Spawn Point Creation Dialog */}
+      {/* Save New Location View Dialog */}
       <Dialog
-        open={!!addingSpawnPointAt}
-        onOpenChange={(open) => !open && setAddingSpawnPointAt(null)}
+        open={savingNewLocationView}
+        onOpenChange={(open) => !open && setSavingNewLocationView(false)}
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Starting Point</DialogTitle>
+            <DialogTitle>Save Current View as Location</DialogTitle>
           </DialogHeader>
           <div className="grid gap-3">
             <Input
-              placeholder="Name (e.g., Hotel, Airport, Downtown)"
-              value={newSpawnPointName}
-              onChange={(e) => setNewSpawnPointName(e.target.value)}
+              placeholder="Location name (e.g., Paris, Rome, Tokyo)"
+              value={newLocationViewName}
+              onChange={(e) => setNewLocationViewName(e.target.value)}
             />
+            <p className="text-xs text-muted-foreground">
+              Save the current map view (center and zoom) as a named location view.
+            </p>
           </div>
           <DialogFooter>
             <Button
               variant="secondary"
               onClick={() => {
-                setAddingSpawnPointAt(null);
-                setNewSpawnPointName('');
+                setSavingNewLocationView(false);
+                setNewLocationViewName('');
               }}
             >
               Cancel
             </Button>
             <Button
               onClick={async () => {
-                if (!tripId || !addingSpawnPointAt || !newSpawnPointName.trim()) return;
+                if (!tripId || !mapInstance || !newLocationViewName.trim()) return;
                 try {
+                  const center = mapInstance.getCenter();
+                  const zoom = mapInstance.getZoom();
+                  
+                  if (!center) {
+                    toast({
+                      title: 'Failed to get map position',
+                      variant: 'destructive',
+                    });
+                    return;
+                  }
+                  
                   const created = await mapsClient.createSpawnPoint(Number(tripId), {
-                    name: newSpawnPointName,
-                    latitude: addingSpawnPointAt.lat,
-                    longitude: addingSpawnPointAt.lng,
-                    zoom: 12,
+                    name: newLocationViewName,
+                    latitude: center.lat(),
+                    longitude: center.lng(),
+                    zoom: zoom || 12,
                     order: spawnPoints.length,
                   });
                   setSpawnPoints((prev) => [...prev, created]);
-                  setAddingSpawnPointAt(null);
-                  setNewSpawnPointName('');
-                  toast({ title: 'Starting point added' });
+                  setSelectedSpawnPoint(created.id);
+                  setSavingNewLocationView(false);
+                  setNewLocationViewName('');
+                  toast({ title: 'View location saved' });
                 } catch (e: any) {
                   toast({
-                    title: 'Failed to add starting point',
+                    title: 'Failed to save view location',
                     description: e.message,
                     variant: 'destructive',
                   });
                 }
               }}
-              disabled={!newSpawnPointName.trim()}
+              disabled={!newLocationViewName.trim()}
             >
-              Add starting point
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Spawn Points Management */}
-      {(spawnPoints.length > 0 || manageSpawnPoints) && (
-        <div className="w-full flex justify-center">
-          <div className="w-full" style={{ maxWidth: 1100 }}>
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-lg font-medium">Starting Points</h2>
-            </div>
-            <ul className="divide-y divide-gray-200 rounded-md border border-gray-200 dark:divide-gray-800 dark:border-gray-800">
-              {spawnPoints.length === 0 ? (
-                <li className="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">
-                  No starting points yet. Click "Manage starting points" and then click on the map to add one.
-                </li>
-              ) : (
-                spawnPoints.map((sp) => (
-                <li
-                  key={sp.id}
-                  className="p-3 hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer"
-                  onClick={() => {
-                    if (mapInstance) {
-                      mapInstance.panTo({
-                        lat: Number(sp.latitude),
-                        lng: Number(sp.longitude),
-                      });
-                      mapInstance.setZoom(sp.zoom || 12);
-                    }
-                  }}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="mt-1 h-2 w-2 rounded-full bg-green-500" />
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {sp.name}
-                      </div>
-                      <div className="text-xs text-gray-600 dark:text-gray-400">
-                        {Number(sp.latitude).toFixed(6)}, {Number(sp.longitude).toFixed(6)}
-                      </div>
-                    </div>
-                    {manageSpawnPoints && (
-                      <button
-                        className="text-red-600 dark:text-red-400 hover:underline text-xs"
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          try {
-                            await mapsClient.deleteSpawnPoint(Number(tripId), sp.id);
-                            setSpawnPoints((prev) => prev.filter((s) => s.id !== sp.id));
-                            toast({ title: 'Starting point deleted' });
-                          } catch (err: any) {
-                            toast({
-                              title: 'Failed to delete starting point',
-                              description: err.message,
-                              variant: 'destructive',
-                            });
-                          }
-                        }}
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </div>
-                </li>
-              )))}
-            </ul>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
