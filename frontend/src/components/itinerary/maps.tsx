@@ -123,7 +123,7 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
         setSettings(settingsRes || {});
         setSpawnPoints(spawnPointsRes || []);
         setEvents(eventsRes || []);
-        // Set selected spawn point to first one if available
+        // Automatically select and apply the first location view if available
         if (spawnPointsRes.length > 0) {
           setSelectedSpawnPoint(spawnPointsRes[0].id);
         }
@@ -156,8 +156,13 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
     if (selectedSpawnPoint) {
       spawnPointToUse = spawnPoints.find(sp => sp.id === selectedSpawnPoint) || null;
     }
+    // If no selected but we have spawn points, use the first one
     if (!spawnPointToUse && spawnPoints.length > 0) {
       spawnPointToUse = spawnPoints[0];
+      // Also set it as selected for the dropdown
+      if (spawnPoints[0].id) {
+        setSelectedSpawnPoint(spawnPoints[0].id);
+      }
     }
     
     if (spawnPointToUse) {
