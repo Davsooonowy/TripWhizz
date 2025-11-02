@@ -51,10 +51,6 @@ export default function DayPlanner({ tripId }: { tripId?: string }) {
   const navigate = useNavigate();
   const resolvedTripId = tripId ? Number(tripId) : selectedTrip?.id;
   const apiClient = new ItineraryApiClient(authenticationProviderInstance);
-  const mapsClient = useMemo(
-    () => new TripMapsApiClient(authenticationProviderInstance),
-    [],
-  );
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
