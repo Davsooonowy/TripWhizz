@@ -75,7 +75,7 @@ export default function StageDetails() {
 
         setElements(fetchedElements);
         setUnreactionedElements(
-          fetchedElements.filter((element) => !element.userReaction),
+          fetchedElements.filter((element: StageElement) => !element.userReaction),
         );
       } catch {
         setError('Error loading stage elements. Please try again.');
@@ -218,7 +218,7 @@ export default function StageDetails() {
     }
   };
 
-  const handleReaction = async (id: number, reaction: 'like' | 'dislike') => {
+  const handleReaction = async (id: number, reaction: number) => {
     try {
       const apiClient = new StagesApiClient(authenticationProviderInstance);
       const response = await apiClient.reactToStageElement(id, reaction);
@@ -357,7 +357,7 @@ export default function StageDetails() {
                       ? 'default'
                       : 'outline'
                   }
-                  onClick={() => handleReaction(currentElement.id, value)}
+                  onClick={() => currentElement.id && handleReaction(currentElement.id, value)}
                   className="w-10 h-10 p-0 rounded-full"
                 >
                   {value}
@@ -472,7 +472,9 @@ export default function StageDetails() {
                       }
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleReaction(element.id, value);
+                        if (element.id) {
+                          handleReaction(element.id, value);
+                        }
                       }}
                     >
                       {value}
@@ -498,7 +500,14 @@ export default function StageDetails() {
       <ItemDetailsModal
         isOpen={isModalOpen}
         onClose={closeAddModal}
-        item={selectedItem}
+        item={selectedItem ? {
+          name: selectedItem.name,
+          description: selectedItem.description || '',
+          url: selectedItem.url,
+          image: selectedItem.image,
+          likes: 0,
+          dislikes: 0,
+        } : null}
       />
 
       <AddStageElement
@@ -508,7 +517,7 @@ export default function StageDetails() {
         stageName={stageName}
       />
 
-      {isEditModalOpen && (
+      {isEditModalOpen && selectedItem && (
         <EditStageElementModal
           isOpen={isEditModalOpen}
           onClose={closeEditModal}

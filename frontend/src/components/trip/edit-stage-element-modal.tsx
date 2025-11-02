@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label.tsx';
 import { Textarea } from '@/components/ui/textarea.tsx';
 import { StageElement } from '@/lib/api/stages.ts';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 interface EditStageElementModalProps {
   isOpen: boolean;

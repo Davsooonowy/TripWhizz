@@ -155,8 +155,8 @@ export default function TripStagesBuilder({
         if (savedStages && savedStages.length > 0) {
           setHasSavedData(true);
         }
-      } catch {
-        console.error('Error parsing saved trip data:', e);
+      } catch (error) {
+        console.error('Error parsing saved trip data:', error);
       }
     }
   }, []);
@@ -570,7 +570,7 @@ export default function TripStagesBuilder({
       is_custom_category: stage.category.startsWith('custom-'),
       custom_category_color: stage.category.startsWith('custom-')
         ? getCategoryDetails(stage.category).color
-        : null,
+        : undefined,
       start_date: stage.dateRange?.from
         ? stage.dateRange.from.toISOString()
         : null,
@@ -773,9 +773,8 @@ export default function TripStagesBuilder({
                       onValueChange={(value) =>
                         handleNewStageChange('category', value)
                       }
-                      className="flex-1"
                     >
-                      <SelectTrigger id="stage-category">
+                      <SelectTrigger id="stage-category" className="flex-1">
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                       <SelectContent>
@@ -905,9 +904,10 @@ export default function TripStagesBuilder({
                             exit={{ opacity: 0, height: 0, marginBottom: 0 }}
                             transition={{ duration: 0.2 }}
                             draggable
-                            onDragStart={(e) =>
-                              handleDragStart(e, stage.id, index)
-                            }
+                            onDragStart={(e) => {
+                              const dragEvent = e as unknown as React.DragEvent;
+                              handleDragStart(dragEvent, stage.id, index);
+                            }}
                             onDragOver={(e) => handleDragOver(e, index)}
                             onDragEnd={handleDragEnd}
                             onDrop={handleDrop}

@@ -24,14 +24,14 @@ interface TripInvitationDialogProps {
     id: number;
     title: string;
     message: string;
-    related_object_id: number;
+    related_object_id: number | null;
     sender?: {
       id: number;
       username: string;
       first_name?: string;
       last_name?: string;
       avatar_url?: string;
-    };
+    } | null;
   } | null;
   onResponse?: () => void;
 }

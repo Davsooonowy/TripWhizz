@@ -9,15 +9,15 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "6543:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./pgdata:/var/lib/postgresql
 
   redis:
     image: redis:latest
     restart: always
     ports:
-      - "6379:6379"
+      - "6969:6969"
     volumes:
       - redis_data:/data
     command: redis-server --requirepass 1234

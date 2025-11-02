@@ -1,4 +1,4 @@
-import { UsersApiClient } from '@/lib/api/users.ts';
+import { type User, UsersApiClient } from '@/lib/api/users.ts';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
 
 import { useState } from 'react';
@@ -62,9 +62,9 @@ export default function Onboarding() {
         first_name: formData.firstName,
         last_name: formData.lastName,
         username: formData.username,
-        avatar: formData.avatar,
+        avatar: formData.avatar as File | null | undefined,
         onboarding_complete: true,
-      });
+      } as Partial<User> & { avatar?: File | null | undefined });
       navigate('/trip/new');
     } catch (error) {
       console.error('Error updating user data:', error);

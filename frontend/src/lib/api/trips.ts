@@ -8,8 +8,8 @@ export interface TripStage {
   name: string;
   category: string;
   description?: string;
-  start_date?: string;
-  end_date?: string;
+  start_date?: string | null;
+  end_date?: string | null;
   order: number;
   is_custom_category?: boolean;
   custom_category_color?: string;
