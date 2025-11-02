@@ -102,7 +102,7 @@ export class UsersApiClient extends BaseApiClient {
   }
 
   async updateUser(
-    userData: Partial<User> & { avatar?: File | null },
+    userData: Partial<User> & { avatar?: File | null | undefined },
   ): Promise<User> {
     // Create FormData for multipart/form-data requests (needed for file uploads)
     const formData = new FormData();
@@ -117,8 +117,11 @@ export class UsersApiClient extends BaseApiClient {
         String(userData.onboarding_complete),
       );
 
-    if ((userData.avatar as any) instanceof File) {
-      formData.append('avatar', userData.avatar);
+    if (userData.avatar && typeof userData.avatar !== 'string') {
+      const avatarFile = userData.avatar as File;
+      if (avatarFile instanceof File) {
+        formData.append('avatar', avatarFile);
+      }
     }
 
     // Send the request

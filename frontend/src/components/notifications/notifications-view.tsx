@@ -85,7 +85,7 @@ export default function NotificationsView() {
           return false;
         return true;
       });
-      setNotifications(filtered);
+      setNotifications(filtered as Notification[]);
     } catch (error) {
       toast({
         title: 'Error',
@@ -281,7 +281,11 @@ export default function NotificationsView() {
       <TripInvitationDialog
         open={invitationDialogOpen}
         onOpenChange={setInvitationDialogOpen}
-        notification={selectedInvitation}
+        notification={selectedInvitation ? {
+          ...selectedInvitation,
+          related_object_id: selectedInvitation.related_object_id ?? 0,
+          sender: selectedInvitation.sender || undefined,
+        } : null}
         onResponse={handleInvitationResponse}
       />
     </>

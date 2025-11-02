@@ -6,7 +6,7 @@ import { calculatePasswordStrength } from '@/components/util/password-utils.ts';
 import { UsersApiClient } from '@/lib/api/users.ts';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Check } from 'lucide-react';

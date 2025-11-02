@@ -218,13 +218,13 @@ export default function CreateTripForm({ tripType }: CreateTripFormProps) {
         name: formData.name,
         destination: formData.destination,
         description: formData.description || '',
-        start_date: formData.dateRange.from,
-        end_date: formData.dateRange.to,
+        start_date: formData.dateRange.from?.toISOString(),
+        end_date: formData.dateRange.to?.toISOString(),
         trip_type: formData.tripType,
         icon: tripIcons[formData.selectedIcon].name.toLowerCase(),
         icon_color: iconColors[formData.selectedColor].value,
         tags: formData.selectedTags,
-        invite_permission: formData.invitePermission,
+        invite_permission: formData.invitePermission as 'admin-only' | 'members-can-invite',
       };
 
       tripsApiClient
@@ -326,7 +326,7 @@ export default function CreateTripForm({ tripType }: CreateTripFormProps) {
                     <Label className="text-base">Trip Dates</Label>
                     <DatePickerWithRange
                       date={formData.dateRange}
-                      setDate={handleDateChange}
+                      setDate={(date) => handleDateChange(date as { from: Date | undefined; to: Date | undefined })}
                       className={errors.dateRange ? 'border-red-500' : ''}
                     />
                     {errors.dateRange && (

@@ -8,7 +8,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog.tsx';
 
-import React from 'react';
 
 interface ItemDetailsModalProps {
   isOpen: boolean;

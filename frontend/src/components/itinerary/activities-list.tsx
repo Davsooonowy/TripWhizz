@@ -16,7 +16,6 @@ import {
   ItineraryApiClient,
   type ItineraryEventDto,
 } from '@/lib/api/itinerary';
-import { TripMapsApiClient } from '@/lib/api/trips';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
 
 import { useEffect, useMemo, useState } from 'react';
@@ -53,10 +52,6 @@ export default function ActivitiesList({ tripId }: { tripId?: string }) {
   const navigate = useNavigate();
   const resolvedTripId = tripId ? Number(tripId) : selectedTrip?.id;
   const apiClient = new ItineraryApiClient(authenticationProviderInstance);
-  const mapsClient = useMemo(
-    () => new TripMapsApiClient(authenticationProviderInstance),
-    [],
-  );
   const [events, setEvents] = useState<ItineraryEventDto[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<ItineraryEventDto | null>(null);
