@@ -518,8 +518,6 @@ export default function StageDetails() {
           description: selectedItem.description || '',
           url: selectedItem.url,
           image: selectedItem.image,
-          likes: 0,
-          dislikes: 0,
         } : null}
       />
 

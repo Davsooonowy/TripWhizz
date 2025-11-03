@@ -1,4 +1,3 @@
-import { Badge } from '@/components/ui/badge.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import {
   Dialog,
