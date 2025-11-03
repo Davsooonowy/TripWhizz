@@ -37,7 +37,6 @@ import {
   Bell,
   ChevronRight,
   Globe,
-  HelpCircle,
   Info,
   LogOut,
   Moon,
@@ -520,11 +519,6 @@ export default function MainSettings() {
             </SettingsSection>
 
             <SettingsSection title="Support" delay={0.6}>
-              <SettingsItem
-                icon={<HelpCircle className="h-5 w-5" />}
-                title="Help Center"
-                to="/help"
-              />
               <SettingsItem
                 icon={<Info className="h-5 w-5" />}
                 title="About TripWhizz"

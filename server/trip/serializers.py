@@ -181,6 +181,18 @@ class TripListSerializer(serializers.ModelSerializer):
 
 
 class StageElementSerializer(serializers.ModelSerializer):
+	def validate(self, attrs):
+		stage = attrs.get("stage") if isinstance(attrs.get("stage"), Stage) else None
+		stage_id = attrs.get("stage") if isinstance(attrs.get("stage"), int) else None
+		if not stage and stage_id:
+			stage = Stage.objects.filter(pk=stage_id).first()
+		if stage and stage.end_date:
+			from django.utils import timezone
+			today = timezone.localdate()
+			if stage.end_date < today:
+				raise serializers.ValidationError({"detail": "Stage has ended. Adding new elements is not allowed."})
+		return attrs
+
 	class Meta:
 		model = StageElement
 		fields = ["id", "name", "description", "url", "stage", "averageReaction"]

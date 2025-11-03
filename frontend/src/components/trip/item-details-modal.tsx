@@ -1,4 +1,3 @@
-import { Badge } from '@/components/ui/badge.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import {
   Dialog,
@@ -14,11 +13,9 @@ interface ItemDetailsModalProps {
   onClose: () => void;
   item: {
     name: string;
-    description: string;
+    description?: string;
     url?: string;
     image?: string;
-    likes: number;
-    dislikes: number;
   } | null;
 }
 
@@ -56,10 +53,6 @@ export function ItemDetailsModal({
         </DialogHeader>
         <div className="space-y-4">
           <p className="break-words">{item.description}</p>
-          <div className="flex gap-2 justify-center">
-            <Badge variant="secondary">Likes: {item.likes}</Badge>
-            <Badge variant="secondary">Dislikes: {item.dislikes}</Badge>
-          </div>
         </div>
         <div className="mt-4">
           <Button variant="outline" onClick={onClose}>

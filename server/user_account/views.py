@@ -31,7 +31,7 @@ from .serializers import (
     UserPreferencesSerializer,
 )
 from .utils import generate_otp, send_otp_email, send_password_reset_email
-from .redis_utils import check_friend_request_rate_limit
+from .redis_utils import check_friend_request_rate_limit, get_redis_connection
 
 User = get_user_model()
 
@@ -83,9 +83,17 @@ class AddUserView(APIView):
 
         otp_code = generate_otp()
         pending_user, created = PendingUser.objects.get_or_create(email=email)
-        pending_user.password = password
-        pending_user.otp = otp_code
-        pending_user.save()
+        if created is False:
+            if hasattr(pending_user, "password"):
+                pending_user.password = ""
+            if hasattr(pending_user, "otp"):
+                pending_user.otp = ""
+            pending_user.save(update_fields=[f for f in ["password", "otp"] if hasattr(pending_user, f)])
+
+        r = get_redis_connection()
+        # 10 minutes TTL for OTP and password
+        r.setex(f"signup:otp:{email}", 10 * 60, otp_code)
+        r.setex(f"signup:pwd:{email}", 10 * 60, password)
 
         send_otp_email(pending_user, otp_code)
 
@@ -263,16 +271,24 @@ class OTPVerifyView(APIView):
         except PendingUser.DoesNotExist:
             return Response({"error": "Invalid session"}, status=404)
 
-        if pending_user.otp != otp:
+        r = get_redis_connection()
+        stored_otp = r.get(f"signup:otp:{email}")
+        if stored_otp is None or stored_otp != otp:
             return Response({"error": "Invalid OTP"}, status=400)
+
+        raw_password = r.get(f"signup:pwd:{email}")
+        if raw_password is None:
+            return Response({"error": "Session expired. Please sign up again."}, status=400)
 
         user = Profile.objects.create_user(
             username=pending_user.email,
             email=pending_user.email,
-            password=pending_user.password,
+            password=raw_password,
         )
 
         token, _ = Token.objects.get_or_create(user=user)
+        r.delete(f"signup:otp:{email}")
+        r.delete(f"signup:pwd:{email}")
         pending_user.delete()
 
         return Response(
@@ -298,9 +314,8 @@ class ResendOtpView(APIView):
             )
 
         otp_code = generate_otp()
-        pending_user.otp = otp_code
-        pending_user.save()
-
+        r = get_redis_connection()
+        r.setex(f"signup:otp:{email}", 10 * 60, otp_code)
         send_otp_email(pending_user, otp_code)
 
         return Response(

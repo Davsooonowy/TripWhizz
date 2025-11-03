@@ -571,6 +571,15 @@ class StageElementView(APIView):
 				return Response(serializer.data, status=status.HTTP_200_OK)
 			return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+		stage = element.stage
+		if stage and stage.end_date:
+			from django.utils import timezone
+			if stage.end_date < timezone.localdate():
+				return Response(
+					{"detail": "Stage has ended. Voting is closed."},
+					status=status.HTTP_400_BAD_REQUEST,
+				)
+
 		reaction = request.data.get("reaction")
 		user = request.user
 		existing_reaction = StageElementReaction.objects.filter(

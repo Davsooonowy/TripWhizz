@@ -17,8 +17,9 @@ class Profile(AbstractUser):
 
 class PendingUser(models.Model):
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=128)
-    otp = models.CharField(max_length=6)
+    # Legacy columns password/otp kept in DB for existing migrations; avoid using them.
+    password = models.CharField(max_length=128, blank=True, default="")
+    otp = models.CharField(max_length=6, blank=True, default="")
     session_token = models.UUIDField(default=uuid.uuid4)
 
 

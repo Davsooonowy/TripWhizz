@@ -32,6 +32,7 @@ const FriendsPage = React.lazy(() => import('@/pages/friends'));
 const ProfileSettingsPage = React.lazy(
   () => import('@/pages/settings/profile'),
 );
+const AboutPage = React.lazy(() => import('./pages/about'));
 const TripTypePage = React.lazy(() => import('@/pages/trip/new'));
 const PrivateTripPage = React.lazy(() => import('@/pages/trip/new/private'));
 const PublicTripPage = React.lazy(() => import('@/pages/trip/new/public'));
@@ -220,6 +221,10 @@ const router = createBrowserRouter([
       {
         path: '/settings/profile',
         element: <ProfileSettingsPage />,
+      },
+      {
+        path: '/about',
+        element: <AboutPage />,
       },
     ],
   },
