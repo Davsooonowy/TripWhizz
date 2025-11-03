@@ -11,6 +11,12 @@ export interface ItineraryEventDto {
   start_minutes: number;
   end_minutes: number;
   color?: string | null;
+  map_pins?: Array<{
+    id: number;
+    title: string;
+    latitude: number;
+    longitude: number;
+  }>;
 }
 
 export class ItineraryApiClient extends BaseApiClient {

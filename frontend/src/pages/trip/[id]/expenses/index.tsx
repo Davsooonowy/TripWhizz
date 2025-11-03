@@ -64,7 +64,7 @@ export default function TripExpensesPage() {
         setForm((prev) => ({
           ...prev,
           paid_by_id: people[0]?.id || 0,
-          shares: people.map((p) => ({ user_id: p.id })),
+          shares: people.map((p: any) => ({ user_id: p.id })),
         }));
 
         const [exp, bal, setl] = await Promise.all([

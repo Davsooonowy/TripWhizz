@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { useTripContext } from '@/components/util/trip-context';
 
-import * as React from 'react';
 
 import { FileText, FolderOpen, Plus, Shield, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';

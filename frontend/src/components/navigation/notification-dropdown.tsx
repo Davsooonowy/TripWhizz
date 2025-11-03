@@ -383,7 +383,19 @@ export function NotificationDropdown() {
         onOpenChange={(open) =>
           setInvitationDialog({ open, notification: null })
         }
-        notification={invitationDialog.notification}
+        notification={invitationDialog.notification ? {
+          id: invitationDialog.notification.id,
+          title: invitationDialog.notification.title,
+          message: invitationDialog.notification.message,
+          related_object_id: invitationDialog.notification.related_object_id ?? 0,
+          sender: invitationDialog.notification.sender ? {
+            id: invitationDialog.notification.sender.id,
+            username: invitationDialog.notification.sender.username,
+            first_name: invitationDialog.notification.sender.first_name,
+            last_name: invitationDialog.notification.sender.last_name,
+            avatar_url: invitationDialog.notification.sender.avatar_url || undefined,
+          } : undefined,
+        } : null}
         onResponse={() => {
           fetchNotifications();
         }}

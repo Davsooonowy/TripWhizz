@@ -51,7 +51,7 @@ export default function TripExpensesAddPage() {
           (p: TripParticipant) => p.invitation_status !== 'pending',
         );
         setParticipants(people);
-        const baseShares = people.map((p) => ({ user_id: p.id }));
+        const baseShares = people.map((p: any) => ({ user_id: p.id }));
         const equalShares = updateShareValues('equal', 0, baseShares);
         setForm((prev) => ({
           ...prev,
@@ -174,7 +174,7 @@ export default function TripExpensesAddPage() {
         amount: Number(form.amount),
         paid_by_id: Number(form.paid_by_id),
       };
-      const created = await api.createExpense(Number(tripId), payload);
+      await api.createExpense(Number(tripId), payload);
       setForm((prev) => ({ ...prev, description: '', amount: 0 }));
       toast({ title: 'Expense added' });
     } catch (e: any) {

@@ -195,8 +195,12 @@ export class DocumentsApiClient extends BaseApiClient {
     }
 
     // For FormData, don't set Content-Type header - let browser set it with boundary
-    const config = this._requestConfiguration(true);
-    delete config.headers['Content-Type'];
+    const baseConfig = this._requestConfiguration(true);
+    const { headers, ...restConfig } = baseConfig;
+    const headersObj = headers as Record<string, string>;
+    const newHeaders: HeadersInit = { ...headersObj };
+    delete (newHeaders as Record<string, string>)['Content-Type'];
+    const config = { ...restConfig, headers: newHeaders };
 
     const response = await fetch(this.url(tripId), {
       ...config,

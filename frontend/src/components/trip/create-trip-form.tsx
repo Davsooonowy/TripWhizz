@@ -124,6 +124,7 @@ export default function CreateTripForm({ tripType }: CreateTripFormProps) {
   const [errors, setErrors] = useState({
     name: '',
     destination: '',
+    dateRange: '',
   });
 
   const [openTagsPopover, setOpenTagsPopover] = useState(false);
@@ -177,7 +178,11 @@ export default function CreateTripForm({ tripType }: CreateTripFormProps) {
 
   const validateForm = () => {
     let isValid = true;
-    const newErrors = { name: '', destination: '' };
+    const newErrors = { name: '', destination: '', dateRange: '' } as {
+      name: string;
+      destination: string;
+      dateRange: string;
+    };
 
     if (!formData.name.trim()) {
       newErrors.name = 'Trip name is required';
@@ -186,6 +191,14 @@ export default function CreateTripForm({ tripType }: CreateTripFormProps) {
 
     if (!formData.destination.trim()) {
       newErrors.destination = 'Destination is required';
+      isValid = false;
+    }
+
+    if (!formData.dateRange.from || !formData.dateRange.to) {
+      newErrors.dateRange = 'Trip dates are required';
+      isValid = false;
+    } else if (formData.dateRange.from > formData.dateRange.to) {
+      newErrors.dateRange = 'Start date must be before end date';
       isValid = false;
     }
 
@@ -205,11 +218,13 @@ export default function CreateTripForm({ tripType }: CreateTripFormProps) {
         name: formData.name,
         destination: formData.destination,
         description: formData.description || '',
+        start_date: formData.dateRange.from?.toISOString(),
+        end_date: formData.dateRange.to?.toISOString(),
         trip_type: formData.tripType,
         icon: tripIcons[formData.selectedIcon].name.toLowerCase(),
         icon_color: iconColors[formData.selectedColor].value,
         tags: formData.selectedTags,
-        invite_permission: formData.invitePermission,
+        invite_permission: formData.invitePermission as 'admin-only' | 'members-can-invite',
       };
 
       tripsApiClient
@@ -307,15 +322,17 @@ export default function CreateTripForm({ tripType }: CreateTripFormProps) {
                     </div>
                   </div>
 
-                  {tripType === 'public' && (
-                    <div className="space-y-2">
-                      <Label className="text-base">Trip Dates</Label>
-                      <DatePickerWithRange
-                        date={formData.dateRange}
-                        setDate={handleDateChange}
-                      />
-                    </div>
-                  )}
+                  <div className="space-y-2">
+                    <Label className="text-base">Trip Dates</Label>
+                    <DatePickerWithRange
+                      date={formData.dateRange}
+                      setDate={(date) => handleDateChange(date as { from: Date | undefined; to: Date | undefined })}
+                      className={errors.dateRange ? 'border-red-500' : ''}
+                    />
+                    {errors.dateRange && (
+                      <p className="text-red-500 text-sm">{errors.dateRange}</p>
+                    )}
+                  </div>
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -556,12 +573,14 @@ export default function CreateTripForm({ tripType }: CreateTripFormProps) {
                           {formData.name || 'Your Trip'}
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          {formData.destination || 'Destination'} •
-                          {tripType === 'public' &&
-                          formData.dateRange.from &&
-                          formData.dateRange.to
-                            ? ` ${formData.dateRange.from.toLocaleDateString()} - ${formData.dateRange.to.toLocaleDateString()}`
-                            : ' Private Trip'}
+                          {formData.destination || 'Destination'} •{' '}
+                          {formData.dateRange.from && formData.dateRange.to ? (
+                            `${formData.dateRange.from.toLocaleDateString()} - ${formData.dateRange.to.toLocaleDateString()}`
+                          ) : tripType === 'private' ? (
+                            'Private Trip'
+                          ) : (
+                            'Dates not set'
+                          )}
                         </p>
                       </div>
                     </div>

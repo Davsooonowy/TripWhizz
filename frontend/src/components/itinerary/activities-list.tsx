@@ -19,6 +19,8 @@ import {
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { MapPin, ExternalLink } from 'lucide-react';
 
 type GroupedEvents = Record<string, ItineraryEventDto[]>;
 
@@ -47,11 +49,13 @@ function clamp(value: number, min: number, max: number): number {
 
 export default function ActivitiesList({ tripId }: { tripId?: string }) {
   const { selectedTrip } = useTripContext();
+  const navigate = useNavigate();
   const resolvedTripId = tripId ? Number(tripId) : selectedTrip?.id;
   const apiClient = new ItineraryApiClient(authenticationProviderInstance);
   const [events, setEvents] = useState<ItineraryEventDto[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<ItineraryEventDto | null>(null);
+  const [eventPins, setEventPins] = useState<Record<number, Array<{ id: number; title: string; latitude: number; longitude: number }>>>({});
   const minuteStep = 15;
 
   useEffect(() => {
@@ -66,12 +70,21 @@ export default function ActivitiesList({ tripId }: { tripId?: string }) {
           return a.start_minutes - b.start_minutes;
         });
         setEvents(list);
+        
+        // Load pins for events
+        const pinsMap: Record<number, Array<{ id: number; title: string; latitude: number; longitude: number }>> = {};
+        for (const event of list) {
+          if (event.map_pins && event.map_pins.length > 0 && event.id) {
+            pinsMap[event.id] = event.map_pins;
+          }
+        }
+        setEventPins(pinsMap);
       } catch (e) {
         setError('Failed to load activities. Please try again.');
       }
     };
     run();
-  }, [resolvedTripId]);
+  }, [resolvedTripId, apiClient]);
 
   const grouped: GroupedEvents = useMemo(() => {
     const byDate: GroupedEvents = {};
@@ -288,6 +301,57 @@ export default function ActivitiesList({ tripId }: { tripId?: string }) {
                 }
                 className="min-h-[100px]"
               />
+              {editing.id && (
+                <div className="border rounded-md p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Map Locations</span>
+                    {(!eventPins[editing.id] || eventPins[editing.id].length === 0) && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (resolvedTripId) {
+                            navigate(`/trip/${resolvedTripId}/maps`);
+                          }
+                        }}
+                        className="text-xs"
+                      >
+                        <MapPin className="h-3 w-3 mr-1" />
+                        Add Location
+                      </Button>
+                    )}
+                  </div>
+                  {eventPins[editing.id] && eventPins[editing.id].length > 0 ? (
+                    <div className="space-y-2">
+                      {eventPins[editing.id].map((pin) => (
+                        <div
+                          key={pin.id}
+                          className="flex items-center justify-between text-sm p-2 bg-muted rounded"
+                        >
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-primary" />
+                            <span>{pin.title}</span>
+                          </div>
+                          <a
+                            href={`https://www.google.com/maps?q=${pin.latitude},${pin.longitude}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline text-xs"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      No map locations linked. Click "Add Location" to link a pin to this event.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           )}
           <DialogFooter className="flex flex-col md:flex-row gap-2 md:gap-2">

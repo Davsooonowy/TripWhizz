@@ -8,8 +8,8 @@ export interface TripStage {
   name: string;
   category: string;
   description?: string;
-  start_date?: string;
-  end_date?: string;
+  start_date?: string | null;
+  end_date?: string | null;
   order: number;
   is_custom_category?: boolean;
   custom_category_color?: string;
@@ -256,6 +256,21 @@ export interface TripMapPin {
   latitude: number;
   longitude: number;
   reason?: string;
+  itinerary_event?: number | null;
+  itinerary_event_id?: number | null;
+  itinerary_event_title?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MapSpawnPoint {
+  id: number;
+  trip: number;
+  name: string;
+  latitude: number;
+  longitude: number;
+  zoom: number;
+  order: number;
   created_at: string;
   updated_at: string;
 }
@@ -264,6 +279,7 @@ export interface TripMapSettings {
   default_latitude?: number | null;
   default_longitude?: number | null;
   default_zoom?: number | null;
+  spawn_points?: MapSpawnPoint[];
 }
 
 export interface PaginatedResponse<T> {
@@ -386,5 +402,75 @@ export class TripMapsApiClient extends BaseApiClient {
     });
     if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
     return await response.json();
+  }
+
+  async getSpawnPoints(tripId: number): Promise<MapSpawnPoint[]> {
+    const response = await fetch(
+      `${TRIP_API_URL}/${tripId}/maps/spawn-points/`,
+      {
+        ...this._requestConfiguration(true),
+        method: 'GET',
+      },
+    );
+    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+    return await response.json();
+  }
+
+  async createSpawnPoint(
+    tripId: number,
+    data: Partial<MapSpawnPoint>,
+  ): Promise<MapSpawnPoint> {
+    const payload: any = { ...data };
+    if (payload.latitude !== undefined && payload.latitude !== null) {
+      payload.latitude = Number(payload.latitude).toFixed(6);
+    }
+    if (payload.longitude !== undefined && payload.longitude !== null) {
+      payload.longitude = Number(payload.longitude).toFixed(6);
+    }
+    const response = await fetch(
+      `${TRIP_API_URL}/${tripId}/maps/spawn-points/`,
+      {
+        ...this._requestConfiguration(true),
+        method: 'POST',
+        body: JSON.stringify(payload),
+      },
+    );
+    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+    return await response.json();
+  }
+
+  async updateSpawnPoint(
+    tripId: number,
+    spawnPointId: number,
+    data: Partial<MapSpawnPoint>,
+  ): Promise<MapSpawnPoint> {
+    const payload: any = { ...data };
+    if (payload.latitude !== undefined && payload.latitude !== null) {
+      payload.latitude = Number(payload.latitude).toFixed(6);
+    }
+    if (payload.longitude !== undefined && payload.longitude !== null) {
+      payload.longitude = Number(payload.longitude).toFixed(6);
+    }
+    const response = await fetch(
+      `${TRIP_API_URL}/${tripId}/maps/spawn-points/${spawnPointId}/`,
+      {
+        ...this._requestConfiguration(true),
+        method: 'PUT',
+        body: JSON.stringify(payload),
+      },
+    );
+    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+    return await response.json();
+  }
+
+  async deleteSpawnPoint(tripId: number, spawnPointId: number): Promise<void> {
+    const response = await fetch(
+      `${TRIP_API_URL}/${tripId}/maps/spawn-points/${spawnPointId}/`,
+      {
+        ...this._requestConfiguration(true),
+        method: 'DELETE',
+      },
+    );
+    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
   }
 }

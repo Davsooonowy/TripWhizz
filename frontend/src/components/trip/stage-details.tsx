@@ -355,7 +355,7 @@ export default function StageDetails() {
                       ? 'default'
                       : 'outline'
                   }
-                  onClick={() => handleReaction(currentElement.id!, value)}
+                  onClick={() => currentElement.id && handleReaction(currentElement.id, value)}
                   className="w-10 h-10 p-0 rounded-full"
                   disabled={hasDeadlinePassed}
                 >
@@ -483,7 +483,10 @@ export default function StageDetails() {
                       }
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleReaction(element.id!, value);
+
+                        if (element.id) {
+                          handleReaction(element.id, value);
+                        }
                       }}
                       disabled={hasDeadlinePassed}
                     >
@@ -510,7 +513,14 @@ export default function StageDetails() {
       <ItemDetailsModal
         isOpen={isModalOpen}
         onClose={closeAddModal}
-        item={selectedItem}
+        item={selectedItem ? {
+          name: selectedItem.name,
+          description: selectedItem.description || '',
+          url: selectedItem.url,
+          image: selectedItem.image,
+          likes: 0,
+          dislikes: 0,
+        } : null}
       />
 
       <AddStageElement
@@ -520,7 +530,7 @@ export default function StageDetails() {
         stageName={stageName}
       />
 
-      {isEditModalOpen && (
+      {isEditModalOpen && selectedItem && (
         <EditStageElementModal
           isOpen={isEditModalOpen}
           onClose={closeEditModal}

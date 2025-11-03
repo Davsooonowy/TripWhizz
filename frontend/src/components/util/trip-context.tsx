@@ -67,9 +67,9 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (storedTripId) {
         const foundTrip = fetchedTrips.find(
-          (trip) => trip.id?.toString() === storedTripId,
+          (trip: any) => trip.id?.toString() === storedTripId,
         );
-        if (foundTrip) {
+        if (foundTrip && foundTrip.id) {
           try {
             const details = await tripsApiClient.getTripDetails(foundTrip.id);
             setSelectedTrip({ ...foundTrip, ...details });
@@ -150,6 +150,7 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
     setSelectedTrip(trip);
     localStorage.setItem('selectedTripId', trip.id?.toString() || '');
 
+    if (!trip.id) return;
     try {
       const tripsApiClient = new TripsApiClient(authenticationProviderInstance);
       const details = await tripsApiClient.getTripDetails(trip.id);

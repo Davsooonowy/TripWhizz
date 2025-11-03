@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
-from .models import Trip, Stage, StageElement, StageElementReaction, TripInvitation, PackingList, PackingItem, DocumentCategory, Document, DocumentComment, Expense, Settlement, ItineraryEvent, TripMapPin, TripMapSettings
+from .models import Trip, Stage, StageElement, StageElementReaction, TripInvitation, PackingList, PackingItem, DocumentCategory, Document, DocumentComment, Expense, Settlement, ItineraryEvent, TripMapPin, TripMapSettings, MapSpawnPoint
 from .serializers import (
 	TripSerializer,
 	TripListSerializer,
@@ -29,6 +29,7 @@ from .serializers import (
     ItineraryEventSerializer,
     TripMapPinSerializer,
     TripMapSettingsSerializer,
+    MapSpawnPointSerializer,
 )
 from user_account.models import Notification
 from user_account.models import UserPreferences as AccountUserPreferences
@@ -1386,3 +1387,73 @@ class TripMapSettingsView(GenericAPIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class MapSpawnPointListCreateView(GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = MapSpawnPointSerializer
+
+    def get_trip(self, request, pk):
+        try:
+            return Trip.objects.filter(
+                Q(pk=pk) & (Q(owner=request.user) | Q(participants=request.user))
+            ).distinct().get()
+        except Trip.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        trip = self.get_trip(request, pk)
+        if not trip:
+            return Response({"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND)
+        spawn_points = MapSpawnPoint.objects.filter(trip=trip).order_by("order", "name")
+        return Response(self.get_serializer(spawn_points, many=True).data, status=status.HTTP_200_OK)
+
+    def post(self, request, pk):
+        trip = self.get_trip(request, pk)
+        if not trip:
+            return Response({"detail": "Trip not found."}, status=status.HTTP_404_NOT_FOUND)
+        # Only owner and participants can add spawn points
+        if request.user != trip.owner and not trip.participants.filter(id=request.user.id).exists():
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            spawn_point = serializer.save(trip=trip)
+            return Response(self.get_serializer(spawn_point).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class MapSpawnPointDetailView(GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = MapSpawnPointSerializer
+
+    def get_objects(self, request, pk, spawn_point_id):
+        trip = Trip.objects.filter(
+            Q(pk=pk) & (Q(owner=request.user) | Q(participants=request.user))
+        ).distinct().first()
+        if not trip:
+            return None, None
+        spawn_point = MapSpawnPoint.objects.filter(pk=spawn_point_id, trip=trip).first()
+        return trip, spawn_point
+
+    def put(self, request, pk, spawn_point_id):
+        trip, spawn_point = self.get_objects(request, pk, spawn_point_id)
+        if not spawn_point:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        # Only owner and participants can update
+        if request.user != trip.owner and not trip.participants.filter(id=request.user.id).exists():
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+        serializer = self.get_serializer(spawn_point, data=request.data, partial=True)
+        if serializer.is_valid():
+            spawn_point = serializer.save()
+            return Response(self.get_serializer(spawn_point).data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk, spawn_point_id):
+        trip, spawn_point = self.get_objects(request, pk, spawn_point_id)
+        if not spawn_point:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        # Only owner and participants can delete
+        if request.user != trip.owner and not trip.participants.filter(id=request.user.id).exists():
+            return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
+        spawn_point.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -351,6 +351,13 @@ class TripMapPin(models.Model):
     latitude = models.DecimalField(max_digits=9, decimal_places=6)
     longitude = models.DecimalField(max_digits=9, decimal_places=6)
     reason = models.TextField(blank=True, null=True)
+    itinerary_event = models.ForeignKey(
+        'ItineraryEvent',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="map_pins"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -361,8 +368,27 @@ class TripMapPin(models.Model):
         return f"{self.title} ({self.latitude}, {self.longitude}) - {self.trip.name}"
 
 
+class MapSpawnPoint(models.Model):
+    """Starting points/locations for the map - more user-friendly than 'default center'"""
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="map_spawn_points")
+    name = models.CharField(max_length=255, help_text="Friendly name for this location (e.g., 'Hotel', 'Airport', 'Downtown')")
+    latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    zoom = models.PositiveIntegerField(default=12, help_text="Zoom level for this spawn point")
+    order = models.PositiveIntegerField(default=0, help_text="Order for displaying spawn points")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["trip", "order", "name"]
+
+    def __str__(self):
+        return f"{self.name} ({self.latitude}, {self.longitude}) - {self.trip.name}"
+
+
 class TripMapSettings(models.Model):
     trip = models.OneToOneField(Trip, on_delete=models.CASCADE, related_name="map_settings")
+    # Keep these for backward compatibility, but prefer using MapSpawnPoint
     default_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     default_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     default_zoom = models.PositiveIntegerField(null=True, blank=True)

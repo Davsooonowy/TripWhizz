@@ -1,7 +1,7 @@
 import { stageCategories } from '@/components/trip/stage-constants';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { DatePickerWithRange } from '@/components/ui/date-range-picker';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -115,10 +115,15 @@ export default function StageAddForm({
           </div>
         )}
         <div className="space-y-2">
-          <Label htmlFor="stage-date">Date Range (Optional)</Label>
-          <DatePickerWithRange
-            date={form.dateRange as any}
-            setDate={(dateRange) => setForm((prev) => ({ ...prev, dateRange }))}
+          <Label htmlFor="stage-deadline">Deadline (Optional)</Label>
+          <DatePicker
+            date={form.dateRange?.from}
+            setDate={(d) =>
+              setForm((prev) => ({
+                ...prev,
+                dateRange: { from: d, to: undefined },
+              }))
+            }
           />
         </div>
         <div className="space-y-2">

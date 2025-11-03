@@ -183,7 +183,7 @@ export default function ProfileSettings() {
 
     try {
       const apiClient = new UsersApiClient(authenticationProviderInstance);
-      const updatedUser = await apiClient.updateUser(formData);
+      const updatedUser = await apiClient.updateUser(formData as Partial<User> & { avatar?: File | null | undefined });
 
       setUser(updatedUser);
 

@@ -16,9 +16,10 @@ import {
 } from '@/lib/api/itinerary';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MapPin, ExternalLink } from 'lucide-react';
 
 type DayPlanEvent = {
   id?: number;
@@ -47,6 +48,7 @@ function roundToStep(minutes: number, step: number): number {
 
 export default function DayPlanner({ tripId }: { tripId?: string }) {
   const { selectedTrip } = useTripContext();
+  const navigate = useNavigate();
   const resolvedTripId = tripId ? Number(tripId) : selectedTrip?.id;
   const apiClient = new ItineraryApiClient(authenticationProviderInstance);
   const [selectedDate, setSelectedDate] = useState<string>(() => {
@@ -62,6 +64,7 @@ export default function DayPlanner({ tripId }: { tripId?: string }) {
     end: number;
   } | null>(null);
   const [editingEvent, setEditingEvent] = useState<DayPlanEvent | null>(null);
+  const [eventPins, setEventPins] = useState<Record<number, Array<{ id: number; title: string; latitude: number; longitude: number }>>>({});
 
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -75,22 +78,30 @@ export default function DayPlanner({ tripId }: { tripId?: string }) {
       if (!resolvedTripId) return;
       try {
         const list = await apiClient.listEvents(resolvedTripId, selectedDate);
-        setEvents(
-          list.map((e) => ({
-            id: e.id,
-            title: e.title,
-            description: e.description,
-            startMinutes: e.start_minutes,
-            endMinutes: e.end_minutes,
-            color: e.color ?? undefined,
-          })),
-        );
+        const eventsWithIds = list.map((e) => ({
+          id: e.id,
+          title: e.title,
+          description: e.description,
+          startMinutes: e.start_minutes,
+          endMinutes: e.end_minutes,
+          color: e.color ?? undefined,
+        }));
+        setEvents(eventsWithIds);
+        
+        // Load pins for events that have them
+        const pinsMap: Record<number, Array<{ id: number; title: string; latitude: number; longitude: number }>> = {};
+        for (const event of list) {
+          if (event.map_pins && event.map_pins.length > 0) {
+            pinsMap[event.id!] = event.map_pins;
+          }
+        }
+        setEventPins(pinsMap);
       } catch (e) {
         console.error('Failed to load itinerary events', e);
       }
     };
     load();
-  }, [resolvedTripId, selectedDate]);
+  }, [resolvedTripId, selectedDate, apiClient]);
 
   const hours = useMemo(
     () => Array.from({ length: hourCount }, (_, i) => i),
@@ -547,6 +558,57 @@ export default function DayPlanner({ tripId }: { tripId?: string }) {
               }
               className="min-h-[100px]"
             />
+            {editingEvent?.id && (
+              <div className="border rounded-md p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Map Locations</span>
+                  {(!eventPins[editingEvent.id] || eventPins[editingEvent.id].length === 0) && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (resolvedTripId) {
+                          navigate(`/trip/${resolvedTripId}/maps`);
+                        }
+                      }}
+                      className="text-xs"
+                    >
+                      <MapPin className="h-3 w-3 mr-1" />
+                      Add Location
+                    </Button>
+                  )}
+                </div>
+                {eventPins[editingEvent.id] && eventPins[editingEvent.id].length > 0 ? (
+                  <div className="space-y-2">
+                    {eventPins[editingEvent.id].map((pin) => (
+                      <div
+                        key={pin.id}
+                        className="flex items-center justify-between text-sm p-2 bg-muted rounded"
+                      >
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-primary" />
+                          <span>{pin.title}</span>
+                        </div>
+                        <a
+                          href={`https://www.google.com/maps?q=${pin.latitude},${pin.longitude}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline text-xs"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    No map locations linked. Click "Add Location" to link a pin to this event.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter className="flex flex-col md:flex-row gap-2 md:gap-2">
             <Button

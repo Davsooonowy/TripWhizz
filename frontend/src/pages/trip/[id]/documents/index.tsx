@@ -3,7 +3,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
@@ -24,18 +23,15 @@ import {
 } from '@/lib/api/documents';
 import { authenticationProviderInstance } from '@/lib/authentication-provider';
 
-import * as React from 'react';
 import { useEffect, useState } from 'react';
 
 import {
   Eye,
   FileText,
-  Filter,
   MoreHorizontal,
   Plus,
   Search,
   Trash2,
-  Upload,
 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 
@@ -148,7 +144,8 @@ export default function TripDocumentsPage() {
   const handleDeleteDocument = async (doc: Document) => {
     if (window.confirm(`Are you sure you want to delete "${doc.title}"?`)) {
       try {
-        await documentsApiClient.deleteDocument(selectedTrip!.id, doc.id);
+        if (!selectedTrip?.id) return;
+        await documentsApiClient.deleteDocument(selectedTrip.id, doc.id);
         // Reload documents
         loadDocuments();
         toast({

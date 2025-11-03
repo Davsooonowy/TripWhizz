@@ -44,4 +44,6 @@ urlpatterns = [
 	path('trip/<int:pk>/maps/pins/', views.TripMapPinListCreateView.as_view(), name='trip-map-pins'),
 	path('trip/<int:pk>/maps/pins/<int:pin_id>/', views.TripMapPinDetailView.as_view(), name='trip-map-pin-detail'),
 	path('trip/<int:pk>/maps/settings/', views.TripMapSettingsView.as_view(), name='trip-map-settings'),
+	path('trip/<int:pk>/maps/spawn-points/', views.MapSpawnPointListCreateView.as_view(), name='trip-map-spawn-points'),
+	path('trip/<int:pk>/maps/spawn-points/<int:spawn_point_id>/', views.MapSpawnPointDetailView.as_view(), name='trip-map-spawn-point-detail'),
 ]

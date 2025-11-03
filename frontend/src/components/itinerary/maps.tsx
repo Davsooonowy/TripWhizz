@@ -12,12 +12,17 @@ import { useToast } from '@/components/ui/use-toast.tsx';
 import {
   type TripMapPin,
   type TripMapSettings,
+  type MapSpawnPoint,
   TripMapsApiClient,
 } from '@/lib/api/trips.ts';
 import { type User, UsersApiClient } from '@/lib/api/users.ts';
+import {
+  ItineraryApiClient,
+  type ItineraryEventDto,
+} from '@/lib/api/itinerary.ts';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
 
-import React, {
+import {
   useCallback,
   useEffect,
   useMemo,
@@ -25,7 +30,7 @@ import React, {
   useState,
 } from 'react';
 
-import { Info } from 'lucide-react';
+import { Info, ChevronDown, ChevronUp } from 'lucide-react';
 
 const GOOGLE_MAPS_API_KEY =
   import.meta.env.VITE_GOOGLE_MAPS_API_KEY ||
@@ -45,11 +50,21 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
     [],
   );
   const apiClient = new UsersApiClient(authenticationProviderInstance);
+  const itineraryClient = useMemo(
+    () => new ItineraryApiClient(authenticationProviderInstance),
+    [],
+  );
 
   const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
   const [pins, setPins] = useState<TripMapPin[]>([]);
   const [settings, setSettings] = useState<TripMapSettings>({});
-  const [selectDefaultMode, setSelectDefaultMode] = useState(false);
+  const [spawnPoints, setSpawnPoints] = useState<MapSpawnPoint[]>([]);
+  const [savingNewLocationView, setSavingNewLocationView] = useState(false);
+  const [newLocationViewName, setNewLocationViewName] = useState('');
+  const [showLocationViewsList, setShowLocationViewsList] = useState(false);
+  const [events, setEvents] = useState<ItineraryEventDto[]>([]);
+  const [newPinEventId, setNewPinEventId] = useState<number | null>(null);
+  const [selectedSpawnPoint, setSelectedSpawnPoint] = useState<number | null>(null);
   const [addingPinAt, setAddingPinAt] = useState<{
     lat: number;
     lng: number;
@@ -94,9 +109,11 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
       if (!tripId) return;
       try {
         setIsLoading(true);
-        const [pinsRes, settingsRes, me] = await Promise.all([
+        const [pinsRes, settingsRes, spawnPointsRes, eventsRes, me] = await Promise.all([
           mapsClient.getPins(Number(tripId), 1, 5, activeCategory || undefined),
           mapsClient.getSettings(Number(tripId)),
+          mapsClient.getSpawnPoints(Number(tripId)).catch(() => []),
+          itineraryClient.listEvents(Number(tripId)).catch(() => []),
           apiClient.getActiveUser().catch(() => null),
         ]);
         setPins(pinsRes.results);
@@ -104,8 +121,11 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
         setHasMore(Boolean(pinsRes.next));
         if (me) setCurrentUser(me);
         setSettings(settingsRes || {});
-        if (!settingsRes?.default_latitude || !settingsRes?.default_longitude) {
-          setSelectDefaultMode(true);
+        setSpawnPoints(spawnPointsRes || []);
+        setEvents(eventsRes || []);
+        // Automatically select and apply the first location view if available
+        if (spawnPointsRes.length > 0) {
+          setSelectedSpawnPoint(spawnPointsRes[0].id);
         }
       } catch (e: any) {
         toast({
@@ -128,11 +148,36 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
     if ((container as HTMLElement).dataset.tripwhizzMapInitialized === '1')
       return;
 
-    const center = {
-      lat: Number(settings.default_latitude ?? 0) || 0,
-      lng: Number(settings.default_longitude ?? 0) || 0,
-    };
-    const zoom = Number(settings.default_zoom ?? 3) || 3;
+    // Use selected spawn point, first spawn point, or default center
+    let center = { lat: 0, lng: 0 };
+    let zoom = 3;
+    
+    let spawnPointToUse: MapSpawnPoint | null = null;
+    if (selectedSpawnPoint) {
+      spawnPointToUse = spawnPoints.find(sp => sp.id === selectedSpawnPoint) || null;
+    }
+    // If no selected but we have spawn points, use the first one
+    if (!spawnPointToUse && spawnPoints.length > 0) {
+      spawnPointToUse = spawnPoints[0];
+      // Also set it as selected for the dropdown
+      if (spawnPoints[0].id) {
+        setSelectedSpawnPoint(spawnPoints[0].id);
+      }
+    }
+    
+    if (spawnPointToUse) {
+      center = {
+        lat: Number(spawnPointToUse.latitude),
+        lng: Number(spawnPointToUse.longitude),
+      };
+      zoom = Number(spawnPointToUse.zoom) || 12;
+    } else if (settings.default_latitude && settings.default_longitude) {
+      center = {
+        lat: Number(settings.default_latitude),
+        lng: Number(settings.default_longitude),
+      };
+      zoom = Number(settings.default_zoom ?? 3) || 3;
+    }
 
     const map = new window.google.maps.Map(container, {
       center,
@@ -153,8 +198,11 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
         draggable: currentUser ? pin.created_by?.id === currentUser.id : false,
         title: pin.title,
       });
+      const eventInfo = pin.itinerary_event_title 
+        ? `<div style="font-size:11px; color:#10B981; margin-top:4px; padding:4px 6px; background:#ECFDF5; border-radius:4px;">Event: ${escapeHtml(pin.itinerary_event_title)}</div>`
+        : '';
       const info = new window.google.maps.InfoWindow({
-        content: `\n<div style="max-width:240px; font-family: Inter, system-ui, sans-serif; color:#111827;">\n  <div style="font-weight:600; margin-bottom:4px; font-size:14px;">${escapeHtml(pin.title)}</div>\n  ${pin.description ? `<div style="font-size:12px; line-height:1.4; color:#374151; margin-bottom:4px;">${escapeHtml(pin.description)}</div>` : ''}\n  ${pin.reason ? `<div style="font-size:12px; line-height:1.4; color:#6B7280; margin-bottom:6px;"><em>${escapeHtml(pin.reason)}</em></div>` : ''}\n  <div style="font-size:11px; color:#6B7280;">by ${escapeHtml(pin.created_by?.username || 'unknown')}</div>\n  <div style="margin-top:6px;"><a href="https://www.google.com/maps?q=${encodeURIComponent(String(pin.latitude))},${encodeURIComponent(String(pin.longitude))}" target="_blank" rel="noopener noreferrer" style="font-size:12px; color:#2563EB; text-decoration:underline;">Open in Google Maps</a></div>\n</div>`,
+        content: `\n<div style="max-width:240px; font-family: Inter, system-ui, sans-serif; color:#111827;">\n  <div style="font-weight:600; margin-bottom:4px; font-size:14px;">${escapeHtml(pin.title)}</div>\n  ${pin.description ? `<div style="font-size:12px; line-height:1.4; color:#374151; margin-bottom:4px;">${escapeHtml(pin.description)}</div>` : ''}\n  ${pin.reason ? `<div style="font-size:12px; line-height:1.4; color:#6B7280; margin-bottom:6px;"><em>${escapeHtml(pin.reason)}</em></div>` : ''}\n  ${eventInfo}\n  <div style="font-size:11px; color:#6B7280; margin-top:6px;">by ${escapeHtml(pin.created_by?.username || 'unknown')}</div>\n  <div style="margin-top:6px;"><a href="https://www.google.com/maps?q=${encodeURIComponent(String(pin.latitude))},${encodeURIComponent(String(pin.longitude))}" target="_blank" rel="noopener noreferrer" style="font-size:12px; color:#2563EB; text-decoration:underline;">Open in Google Maps</a></div>\n</div>`,
       });
       marker.addListener('click', () => {
         Object.values(newInfoById).forEach((iw) => iw?.close());
@@ -228,22 +276,14 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
     map.addListener('click', (e: any) => {
       const lat = e.latLng.lat();
       const lng = e.latLng.lng();
-      if (selectDefaultMode) {
-        setSettings((prev) => ({
-          ...prev,
-          default_latitude: lat,
-          default_longitude: lng,
-          default_zoom: 8,
-        }));
-      } else {
-        setAddingPinAt({ lat, lng });
-      }
+      setAddingPinAt({ lat, lng });
     });
   }, [
     isGoogleLoaded,
     pins,
     settings,
-    selectDefaultMode,
+    spawnPoints,
+    selectedSpawnPoint,
     currentUser,
     mapsClient,
     tripId,
@@ -366,6 +406,7 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
         category: newPinCategory || undefined,
         latitude: addingPinAt.lat,
         longitude: addingPinAt.lng,
+        itinerary_event: newPinEventId || undefined,
       } as any);
       setPins((prev) => [created, ...prev]);
       setAddingPinAt(null);
@@ -380,6 +421,7 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
       setNewPinTitle('');
       setNewPinDescription('');
       setNewPinReason('');
+      setNewPinEventId(null);
       toast({ title: 'Pin added' });
       if (mapInstance && window.google?.maps) {
         const marker = new window.google.maps.Marker({
@@ -413,26 +455,12 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
     newPinDescription,
     newPinReason,
     newPinCategory,
+    newPinEventId,
     mapsClient,
     toast,
     mapInstance,
   ]);
 
-  const saveDefaultLocation = useCallback(async () => {
-    if (!tripId) return;
-    try {
-      const updated = await mapsClient.updateSettings(Number(tripId), settings);
-      setSettings(updated);
-      setSelectDefaultMode(false);
-      toast({ title: 'Default map location saved' });
-    } catch (e: any) {
-      toast({
-        title: 'Failed to save default location',
-        description: e.message,
-        variant: 'destructive',
-      });
-    }
-  }, [tripId, settings, mapsClient, toast]);
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -449,24 +477,43 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
             <Info className="h-5 w-5" />
           </button>
         </div>
-        {selectDefaultMode ? (
-          <div className="flex items-center gap-2">
-            <span className="text-sm">
-              Click on the map to choose default center
-            </span>
-            <Button
-              variant="secondary"
-              onClick={() => setSelectDefaultMode(false)}
+        <div className="flex items-center gap-2">
+          {spawnPoints.length > 0 && (
+            <select
+              className="border rounded px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-800 min-w-[200px]"
+              value={selectedSpawnPoint || (spawnPoints.length > 0 ? spawnPoints[0].id : '')}
+              onChange={(e) => {
+                const spId = e.target.value ? Number(e.target.value) : null;
+                setSelectedSpawnPoint(spId);
+                if (spId && mapInstance) {
+                  const sp = spawnPoints.find(s => s.id === spId);
+                  if (sp) {
+                    mapInstance.panTo({
+                      lat: Number(sp.latitude),
+                      lng: Number(sp.longitude),
+                    });
+                    mapInstance.setZoom(sp.zoom || 12);
+                  }
+                }
+              }}
             >
-              Cancel
-            </Button>
-            <Button onClick={saveDefaultLocation}>Save default</Button>
-          </div>
-        ) : (
-          <Button variant="outline" onClick={() => setSelectDefaultMode(true)}>
-            Set default center
+              {spawnPoints.map((sp) => (
+                <option key={sp.id} value={sp.id}>
+                  {sp.name}
+                </option>
+              ))}
+            </select>
+          )}
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSavingNewLocationView(true);
+              setNewLocationViewName('');
+            }}
+          >
+            Add new
           </Button>
-        )}
+        </div>
       </div>
 
       <div className="w-full flex justify-center">
@@ -562,6 +609,11 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
                             {pin.description}
                           </div>
                         )}
+                        {pin.itinerary_event_title && (
+                          <div className="text-[11px] text-green-600 dark:text-green-400 mt-1">
+                            Event: {pin.itinerary_event_title}
+                          </div>
+                        )}
                         <div className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
                           by {pin.created_by?.username || 'unknown'}
                         </div>
@@ -651,6 +703,25 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
                 <option value="activity">Activity</option>
               </select>
             </div>
+            {events.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
+                  Link to Event:
+                </span>
+                <select
+                  className="border rounded px-2 py-1 text-sm dark:bg-gray-900 dark:border-gray-800 flex-1"
+                  value={newPinEventId || ''}
+                  onChange={(e) => setNewPinEventId(e.target.value ? Number(e.target.value) : null)}
+                >
+                  <option value="">None</option>
+                  {events.map((ev) => (
+                    <option key={ev.id} value={ev.id}>
+                      {ev.title} ({ev.date})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setAddingPinAt(null)}>
@@ -699,6 +770,181 @@ export default function TripMaps({ tripId }: { tripId?: string }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Save New Location View Dialog */}
+      <Dialog
+        open={savingNewLocationView}
+        onOpenChange={(open) => !open && setSavingNewLocationView(false)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Save Current View as Location</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <Input
+              placeholder="Location name (e.g., Paris, Rome, Tokyo)"
+              value={newLocationViewName}
+              onChange={(e) => setNewLocationViewName(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Save the current map view (center and zoom) as a named location view.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setSavingNewLocationView(false);
+                setNewLocationViewName('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!tripId || !mapInstance || !newLocationViewName.trim()) return;
+                try {
+                  const center = mapInstance.getCenter();
+                  const zoom = mapInstance.getZoom();
+                  
+                  if (!center) {
+                    toast({
+                      title: 'Failed to get map position',
+                      variant: 'destructive',
+                    });
+                    return;
+                  }
+                  
+                  const created = await mapsClient.createSpawnPoint(Number(tripId), {
+                    name: newLocationViewName,
+                    latitude: center.lat(),
+                    longitude: center.lng(),
+                    zoom: zoom || 12,
+                    order: spawnPoints.length,
+                  });
+                  setSpawnPoints((prev) => [...prev, created]);
+                  setSelectedSpawnPoint(created.id);
+                  setSavingNewLocationView(false);
+                  setNewLocationViewName('');
+                  toast({ title: 'View location saved' });
+                } catch (e: any) {
+                  toast({
+                    title: 'Failed to save view location',
+                    description: e.message,
+                    variant: 'destructive',
+                  });
+                }
+              }}
+              disabled={!newLocationViewName.trim()}
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Location Views List with Delete Option - Collapsible */}
+      {spawnPoints.length > 0 && (
+        <div className="w-full flex justify-center">
+          <div className="w-full" style={{ maxWidth: 1100 }}>
+            <button
+              onClick={() => setShowLocationViewsList(!showLocationViewsList)}
+              className="flex items-center justify-between w-full p-2 rounded-md border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                {showLocationViewsList ? (
+                  <ChevronUp className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                )}
+                <span className="text-sm font-medium">Location Views</span>
+                <span className="text-xs text-muted-foreground">
+                  ({spawnPoints.length} {spawnPoints.length === 1 ? 'view' : 'views'})
+                </span>
+              </div>
+            </button>
+            {showLocationViewsList && (
+              <ul className="divide-y divide-gray-200 rounded-md border border-gray-200 dark:divide-gray-800 dark:border-gray-800 mt-2">
+                {spawnPoints.map((sp) => (
+                  <li
+                    key={sp.id}
+                    className="p-3 hover:bg-gray-50 dark:hover:bg-gray-900"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="mt-1 h-2 w-2 rounded-full bg-green-500" />
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {sp.name}
+                          </div>
+                          <div className="text-xs text-gray-600 dark:text-gray-400">
+                            {Number(sp.latitude).toFixed(6)}, {Number(sp.longitude).toFixed(6)} • Zoom: {sp.zoom}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (mapInstance) {
+                              mapInstance.panTo({
+                                lat: Number(sp.latitude),
+                                lng: Number(sp.longitude),
+                              });
+                              mapInstance.setZoom(sp.zoom || 12);
+                              setSelectedSpawnPoint(sp.id);
+                            }
+                          }}
+                        >
+                          Go to
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={async () => {
+                            if (!confirm(`Delete location view "${sp.name}"?`)) return;
+                            try {
+                              await mapsClient.deleteSpawnPoint(Number(tripId), sp.id);
+                              setSpawnPoints((prev) => {
+                                const filtered = prev.filter((s) => s.id !== sp.id);
+                                // If deleted spawn point was selected, select first remaining or null
+                                if (selectedSpawnPoint === sp.id) {
+                                  setSelectedSpawnPoint(filtered.length > 0 ? filtered[0].id : null);
+                                  // Center map on first remaining or default
+                                  if (filtered.length > 0 && mapInstance) {
+                                    const first = filtered[0];
+                                    mapInstance.panTo({
+                                      lat: Number(first.latitude),
+                                      lng: Number(first.longitude),
+                                    });
+                                    mapInstance.setZoom(first.zoom || 12);
+                                  }
+                                }
+                                return filtered;
+                              });
+                              toast({ title: 'Location view deleted' });
+                            } catch (err: any) {
+                              toast({
+                                title: 'Failed to delete location view',
+                                description: err.message,
+                                variant: 'destructive',
+                              });
+                            }
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

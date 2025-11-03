@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from .models import Trip, Stage, StageElement, TripInvitation, PackingList, PackingItem, DocumentCategory, Document, DocumentComment, Expense, ExpenseShare, Settlement, ItineraryEvent, TripMapPin, TripMapSettings
+from .models import Trip, Stage, StageElement, TripInvitation, PackingList, PackingItem, DocumentCategory, Document, DocumentComment, Expense, ExpenseShare, Settlement, ItineraryEvent, TripMapPin, TripMapSettings, MapSpawnPoint
 
 User = get_user_model()
 
@@ -634,6 +634,7 @@ class SettlementSerializer(serializers.ModelSerializer):
 
 class ItineraryEventSerializer(serializers.ModelSerializer):
     created_by = UserBasicSerializer(read_only=True)
+    map_pins = serializers.SerializerMethodField()
 
     class Meta:
         model = ItineraryEvent
@@ -647,14 +648,27 @@ class ItineraryEventSerializer(serializers.ModelSerializer):
             "end_minutes",
             "color",
             "created_by",
+            "map_pins",
             "created_at",
             "updated_at",
         ]
         read_only_fields = ["id", "trip", "created_by", "created_at", "updated_at"]
 
+    def get_map_pins(self, obj):
+        pins = obj.map_pins.all()
+        # Return simplified pin data to avoid circular references
+        return [{
+            "id": pin.id,
+            "title": pin.title,
+            "latitude": float(pin.latitude),
+            "longitude": float(pin.longitude),
+        } for pin in pins]
+
 
 class TripMapPinSerializer(serializers.ModelSerializer):
     created_by = UserBasicSerializer(read_only=True)
+    itinerary_event_id = serializers.SerializerMethodField()
+    itinerary_event_title = serializers.SerializerMethodField()
 
     class Meta:
         model = TripMapPin
@@ -668,17 +682,50 @@ class TripMapPinSerializer(serializers.ModelSerializer):
             "latitude",
             "longitude",
             "reason",
+            "itinerary_event",
+            "itinerary_event_id",
+            "itinerary_event_title",
             "created_at",
             "updated_at",
         ]
         read_only_fields = ["id", "trip", "created_by", "created_at", "updated_at"]
 
+    def get_itinerary_event_id(self, obj):
+        return obj.itinerary_event.id if obj.itinerary_event else None
+
+    def get_itinerary_event_title(self, obj):
+        return obj.itinerary_event.title if obj.itinerary_event else None
+
+
+class MapSpawnPointSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MapSpawnPoint
+        fields = [
+            "id",
+            "trip",
+            "name",
+            "latitude",
+            "longitude",
+            "zoom",
+            "order",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "trip", "created_at", "updated_at"]
+
 
 class TripMapSettingsSerializer(serializers.ModelSerializer):
+    spawn_points = serializers.SerializerMethodField()
+
     class Meta:
         model = TripMapSettings
         fields = [
             "default_latitude",
             "default_longitude",
             "default_zoom",
+            "spawn_points",
         ]
+
+    def get_spawn_points(self, obj):
+        spawn_points = obj.trip.map_spawn_points.all()
+        return MapSpawnPointSerializer(spawn_points, many=True, context=self.context).data
