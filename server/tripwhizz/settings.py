@@ -153,12 +153,16 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-REDIS_HOST = os.getenv("REDIS_HOST")
-REDIS_PORT = os.getenv("REDIS_PORT")
-REDIS_DB = os.getenv("REDIS_DB")
-REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
+REDIS_USE_URL = os.getenv("REDIS_USE_URL") == "True"
+REDIS_URL = os.getenv("REDIS_URL")
 
-REDIS_URL = f"redis://{':' + REDIS_PASSWORD + '@' if REDIS_PASSWORD else ''}{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
+if not REDIS_URL:
+    REDIS_HOST = os.getenv("REDIS_HOST")
+    REDIS_PORT = os.getenv("REDIS_PORT")
+    REDIS_DB = os.getenv("REDIS_DB")
+    REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
+
+    REDIS_URL = f"redis://{':' + REDIS_PASSWORD + '@' if REDIS_PASSWORD else ''}{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
 
 CHANNEL_LAYERS = {
     "default": {

@@ -3,18 +3,19 @@ from django.conf import settings
 import redis
 
 # Create a Redis connection pool
-redis_pool = redis.ConnectionPool(
-    host=settings.REDIS_HOST,
-    port=int(settings.REDIS_PORT),
-    db=int(settings.REDIS_DB),
-    password=settings.REDIS_PASSWORD or None,
-    decode_responses=True
-)
+if not settings.REDIS_USE_URL:
+    redis_pool = redis.ConnectionPool(
+        host=settings.REDIS_HOST,
+        port=int(settings.REDIS_PORT),
+        db=int(settings.REDIS_DB),
+        password=settings.REDIS_PASSWORD or None,
+        decode_responses=True
+    )
 
 
 def get_redis_connection():
     """Get a Redis connection from the pool"""
-    return redis.Redis(connection_pool=redis_pool)
+    return redis.Redis(connection_pool=redis_pool) if not settings.REDIS_USE_URL else redis.Redis.from_url(settings.REDIS_URL)
 
 
 # Rate limiting for friend requests
