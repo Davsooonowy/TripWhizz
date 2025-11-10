@@ -13,8 +13,22 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   setFormError,
 }) => {
   const login = useGoogleLogin({
+    onError: (err) => {
+      console.error('Google login onError:', err);
+      setFormError('Google login failed. Please try again.');
+    },
     onSuccess: async (tokenResponse) => {
       try {
+        console.log('Google onSuccess tokenResponse:', {
+          ...tokenResponse,
+          access_token: tokenResponse?.access_token
+            ? `${tokenResponse.access_token.slice(0, 6)}...${tokenResponse.access_token.slice(-4)}`
+            : undefined,
+        });
+        console.log('Posting Google token to backend:', {
+          url: import.meta.env.VITE_GOOGLE_AUTH_API,
+          hasToken: Boolean(tokenResponse.access_token),
+        });
         const res = await axios.post(
           import.meta.env.VITE_GOOGLE_AUTH_API as string,
           {
@@ -22,15 +36,23 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
           },
         );
 
+        console.log('Backend Google auth response:', {
+          status: res.status,
+          data: res.data,
+        });
         localStorage.setItem('token', res.data.token);
         window.location.href = '/';
-      } catch (error) {
-        console.error('Google login error:', error);
+      } catch (error: any) {
+        console.error('Google login error (axios):', {
+          isAxiosError: !!error?.isAxiosError,
+          message: error?.message,
+          status: error?.response?.status,
+          data: error?.response?.data,
+          url: error?.config?.url,
+          method: error?.config?.method,
+        });
         setFormError('Google login failed. Please try again.');
       }
-    },
-    onError: () => {
-      setFormError('Google login failed. Please try again.');
     },
   });
 
