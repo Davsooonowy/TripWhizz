@@ -191,12 +191,11 @@ export function AuthForm({
         onSubmit={handleSubmit(onSubmit as SubmitHandler<FieldValues>)}
       >
         <div className="flex flex-col items-center gap-2">
-          <a href="https://ibb.co/SwRQqVwf">
             <img
-              src="https://i.ibb.co/fd48mrdD/logo-no-background.png"
+              src="src/assets/tripwhizz_logo.png"
               alt="TripWhizz Logo"
+              className="w-64 h-64 object-contain"
             />
-          </a>
           <h1 className="text-xl font-bold">Welcome to TripWhizz</h1>
           {!isResetPasswordMode && (
             <div className="text-center text-sm">
