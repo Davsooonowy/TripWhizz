@@ -15,6 +15,7 @@ import { calculatePasswordStrength } from '@/components/util/password-utils.ts';
 import { UsersApiClient } from '@/lib/api/users.ts';
 import { authenticationProviderInstance } from '@/lib/authentication-provider.ts';
 import { cn } from '@/lib/utils';
+import tripwhizzLogo from '@/assets/tripwhizz_logo.png';
 
 import type React from 'react';
 import { useEffect, useState } from 'react';
@@ -192,7 +193,7 @@ export function AuthForm({
       >
         <div className="flex flex-col items-center gap-2">
             <img
-              src="src/assets/tripwhizz_logo.png"
+              src={tripwhizzLogo}
               alt="TripWhizz Logo"
               className="w-64 h-64 object-contain"
             />

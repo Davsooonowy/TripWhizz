@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ImageCropper } from '@/components/util/image-cropper';
+import personalInfoImage from '@/assets/undraw_personal-information.svg';
 
 import type React from 'react';
 import { useState } from 'react';
@@ -106,7 +107,7 @@ export function PersonalInfoStep({
       <div className="hidden md:flex flex-col justify-center">
         <div className="relative h-96 w-full rounded-xl overflow-hidden">
           <img
-            src="src/assets/undraw_personal-information.svg"
+            src={personalInfoImage}
             alt="Travel adventure"
             className="object-cover w-full h-full"
           />

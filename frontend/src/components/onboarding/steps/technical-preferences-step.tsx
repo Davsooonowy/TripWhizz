@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import technicalPreferencesImage from '@/assets/undraw_true-friends.svg';
 
 import type React from 'react';
 
@@ -75,7 +76,7 @@ export function TechnicalPreferencesStep({
       <div className="hidden md:flex flex-col justify-center">
         <div className="relative h-96 w-full rounded-xl overflow-hidden">
           <img
-            src="src/assets/undraw_true-friends.svg"
+            src={technicalPreferencesImage}
             alt="Travel adventure"
             className="object-cover w-full h-full"
           />

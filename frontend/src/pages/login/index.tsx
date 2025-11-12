@@ -1,5 +1,6 @@
 import { AuthForm } from '@/components/auth/auth-form.tsx';
 import { quotes } from '@/components/util/quotes.ts';
+import loginImage from '@/assets/login_image.jpg';
 
 import { useEffect, useState } from 'react';
 
@@ -42,7 +43,7 @@ export default function LoginPage() {
         <div
           className="absolute inset-0 z-0 bg-cover bg-center"
           style={{
-            backgroundImage: "url('/src/assets/login_image.jpg')",
+            backgroundImage: `url(${loginImage})`,
           }}
         />
 
