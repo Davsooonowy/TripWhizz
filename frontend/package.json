@@ -11,7 +11,7 @@
     "format": "prettier --write src/**/*.{js,jsx,ts,tsx}",
     "format:check": "prettier --check src/**/*.{js,jsx,ts,tsx}",
     "preview": "vite preview",
-    "generate-pwa-assets": "pwa-assets-generator --preset minimal public/vite.svg"
+    "generate-pwa-assets": "pwa-assets-generator --preset minimal public/logo.svg"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.0.0",
