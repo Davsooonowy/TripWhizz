@@ -13,7 +13,7 @@ def generate_otp():
     return ''.join(secrets.choice('0123456789') for _ in range(6))
 
 
-def send_email2(subject, html_message, to_list, text_message):
+def send_email2(subject, html_message, to_list, text_message=None):
     api_key = os.getenv('RESEND_API_KEY')
     from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None)
     if not api_key or not from_email:
