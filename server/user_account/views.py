@@ -305,10 +305,14 @@ class OTPVerifyView(APIView):
 
         r = get_redis_connection()
         stored_otp = r.get(f"signup:otp:{email}")
-        if stored_otp is None or stored_otp != otp:
+        if isinstance(stored_otp, bytes):
+            stored_otp = stored_otp.decode("utf-8")
+        if stored_otp is None or str(stored_otp) != str(otp):
             return Response({"error": "Invalid OTP"}, status=400)
 
         raw_password = r.get(f"signup:pwd:{email}")
+        if isinstance(raw_password, bytes):
+            raw_password = raw_password.decode("utf-8")
         if raw_password is None:
             return Response({"error": "Session expired. Please sign up again."}, status=400)
 
