@@ -1,12 +1,45 @@
 import secrets
+import logging
+import os
+import requests
 
-from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 
 def generate_otp():
     return ''.join(secrets.choice('0123456789') for _ in range(6))
+
+
+def send_email(subject, html_message, to_list, text_message):
+    api_key = os.getenv('RESEND_API_KEY')
+    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None)
+    if not api_key or not from_email:
+        msg = 'Resend not configured: missing RESEND_API_KEY or DEFAULT_FROM_EMAIL'
+        logger.error(msg)
+        return
+
+    try:
+        requests.post(
+            'https://api.resend.com/emails',
+            headers={
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json',
+            },
+            json={
+                'from': from_email,
+                'to': to_list,
+                'subject': subject,
+                'html': html_message,
+                **({'text': text_message} if text_message else {}),
+            },
+            timeout=10,
+        )
+    except Exception as ex:
+        logger.exception('Resend API failed: %s', ex)
+        return
 
 
 def send_password_reset_email(user, reset_link):
@@ -16,7 +49,7 @@ def send_password_reset_email(user, reset_link):
         'reset_link': reset_link,
     }
     message = render_to_string('password_reset_email.html', context)
-    send_mail(subject, '', settings.DEFAULT_FROM_EMAIL, [user.email], html_message=message)
+    send_email(subject, message, [user.email])
 
 
 def send_otp_email(user, otp_code):
@@ -26,7 +59,7 @@ def send_otp_email(user, otp_code):
         'otp_code': otp_code,
     }
     message = render_to_string('send_otp_email.html', context)
-    send_mail(subject, '', settings.DEFAULT_FROM_EMAIL, [user.email], html_message=message)
+    send_email(subject, message, [user.email])
 
 
 def send_trip_invitation_email(invitation):
@@ -58,11 +91,4 @@ def send_trip_invitation_email(invitation):
     The TripWhizz Team
     """
 
-    send_mail(
-        subject=subject,
-        message=text_message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[invitation.invitee.email],
-        html_message=html_message,
-        fail_silently=False,
-    )
+    send_email(subject, html_message=html_message, to_list=[invitation.invitee.email], text_message=text_message)
