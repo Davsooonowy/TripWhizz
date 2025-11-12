@@ -13,7 +13,7 @@ def generate_otp():
     return ''.join(secrets.choice('0123456789') for _ in range(6))
 
 
-def send_email(subject, html_message, to_list, text_message):
+def send_email2(subject, html_message, to_list, text_message):
     api_key = os.getenv('RESEND_API_KEY')
     from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None)
     if not api_key or not from_email:
@@ -49,7 +49,7 @@ def send_password_reset_email(user, reset_link):
         'reset_link': reset_link,
     }
     message = render_to_string('password_reset_email.html', context)
-    send_email(subject, message, [user.email])
+    send_email2(subject, message, [user.email])
 
 
 def send_otp_email(user, otp_code):
@@ -59,7 +59,7 @@ def send_otp_email(user, otp_code):
         'otp_code': otp_code,
     }
     message = render_to_string('send_otp_email.html', context)
-    send_email(subject, message, [user.email])
+    send_email2(subject, message, [user.email])
 
 
 def send_trip_invitation_email(invitation):
@@ -91,4 +91,4 @@ def send_trip_invitation_email(invitation):
     The TripWhizz Team
     """
 
-    send_email(subject, html_message=html_message, to_list=[invitation.invitee.email], text_message=text_message)
+    send_email2(subject, html_message=html_message, to_list=[invitation.invitee.email], text_message=text_message)
