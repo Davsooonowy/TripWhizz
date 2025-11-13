@@ -41,6 +41,10 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
   const { toast } = useToast();
 
   const fetchTrips = async () => {
+    if (!authenticationProviderInstance.isAuthenticated()) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setError(null);
     try {
@@ -128,6 +132,10 @@ export const TripProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     const init = async () => {
+      if (!authenticationProviderInstance.isAuthenticated()) {
+        setIsLoading(false);
+        return;
+      }
       try {
         const client = new PreferencesApiClient(authenticationProviderInstance);
         const p = await client.getPreferences();

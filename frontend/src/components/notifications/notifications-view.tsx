@@ -44,6 +44,10 @@ export default function NotificationsView() {
   const [prefs, setPrefs] = React.useState<UserPreferencesDTO | null>(null);
 
   React.useEffect(() => {
+    if (!authenticationProviderInstance.isAuthenticated()) {
+      setIsLoading(false);
+      return;
+    }
     fetchNotifications();
     (async () => {
       try {

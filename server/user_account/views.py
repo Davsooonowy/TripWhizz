@@ -1,6 +1,5 @@
 import json
 import os
-import logging
 
 import requests
 from django.conf import settings
@@ -35,7 +34,6 @@ from .utils import generate_otp, send_otp_email, send_password_reset_email
 from .redis_utils import check_friend_request_rate_limit, get_redis_connection
 
 User = get_user_model()
-logger = logging.getLogger(__name__)
 
 
 class LoginView(APIView):
@@ -199,42 +197,17 @@ class GoogleAuthView(GenericAPIView):
         try:
             access_token = request.data.get("token")
             if not access_token:
-                logger.warning("GoogleAuthView: missing token in request body")
                 return Response(
                     {"status": "error", "message": "Token is required", "payload": {}},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # Mask sensitive token in logs
-            try:
-                masked = (
-                    f"{access_token[:6]}...{access_token[-4:]}"
-                    if isinstance(access_token, str) and len(access_token) > 10
-                    else "(short/invalid)"
-                )
-                logger.info(
-                    "GoogleAuthView: received token len=%s masked=%s",
-                    len(access_token) if isinstance(access_token, str) else None,
-                    masked,
-                )
-            except Exception:
-                logger.info("GoogleAuthView: received token (masking failed)")
-            logger.info("GoogleAuthView: GOOGLE_RESPONSE_URL=%s", os.getenv("GOOGLE_RESPONSE_URL"))
-
             response = requests.get(
                 os.getenv("GOOGLE_RESPONSE_URL"),
-                headers={"Authorization": f"Bearer {access_token}"},
-            )
-            logger.info("GoogleAuthView: userinfo status=%s", response.status_code)
-            try:
-                response_text_preview = response.text[:500]
-            except Exception:
-                response_text_preview = "<no text>"
-            logger.debug("GoogleAuthView: userinfo body preview=%s", response_text_preview)
+                headers={"Authorization": f"Bearer {access_token}"})
             response_data = response.json()
 
             if "error" in response_data:
-                logger.warning("GoogleAuthView: userinfo error payload=%s", response_data)
                 return Response(
                     {
                         "status": "error",
@@ -244,8 +217,7 @@ class GoogleAuthView(GenericAPIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-        except Exception as ex:
-            logger.exception("GoogleAuthView: exception while verifying Google token: %s", ex)
+        except Exception:
             return Response(
                 {
                     "status": "error",
@@ -257,11 +229,6 @@ class GoogleAuthView(GenericAPIView):
 
         google_response_serializer = GoogleAuthResponseSerializer(data=response_data)
         if google_response_serializer.is_valid() is False:
-            logger.error(
-                "GoogleAuthView: serializer invalid errors=%s data=%s",
-                google_response_serializer.errors,
-                response_data,
-            )
             return Response(
                 {
                     "status": "error",
