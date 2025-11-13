@@ -20,7 +20,6 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AlertCircle, Check, Loader2 } from 'lucide-react';
 import { type FieldValues, type SubmitHandler, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -375,11 +374,7 @@ export function AuthForm({
                   Or continue with
                 </span>
               </div>
-              <GoogleOAuthProvider
-                clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID as string}
-              >
-                <GoogleLoginButton setFormError={setFormError} />
-              </GoogleOAuthProvider>
+              <GoogleLoginButton setFormError={setFormError} />
             </>
           )}
         </div>

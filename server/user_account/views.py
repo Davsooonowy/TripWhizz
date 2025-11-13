@@ -217,7 +217,7 @@ class GoogleAuthView(GenericAPIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-        except Exception as ex:
+        except Exception:
             return Response(
                 {
                     "status": "error",
