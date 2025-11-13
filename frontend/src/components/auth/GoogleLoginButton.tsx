@@ -2,8 +2,9 @@ import { Button } from '@/components/ui/button';
 
 import React from 'react';
 
-import { useGoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { firebaseAuth } from '@/lib/firebase';
 
 interface GoogleLoginButtonProps {
   setFormError: (error: string | null) => void;
@@ -12,56 +13,36 @@ interface GoogleLoginButtonProps {
 const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   setFormError,
 }) => {
-  const login = useGoogleLogin({
-    onError: (err) => {
-      console.error('Google login onError:', err);
-      setFormError('Google login failed. Please try again.');
-    },
-    onSuccess: async (tokenResponse) => {
-      try {
-        console.log('Google onSuccess tokenResponse:', {
-          ...tokenResponse,
-          access_token: tokenResponse?.access_token
-            ? `${tokenResponse.access_token.slice(0, 6)}...${tokenResponse.access_token.slice(-4)}`
-            : undefined,
-        });
-        console.log('Posting Google token to backend:', {
-          url: import.meta.env.VITE_GOOGLE_AUTH_API,
-          hasToken: Boolean(tokenResponse.access_token),
-        });
-        const res = await axios.post(
-          import.meta.env.VITE_GOOGLE_AUTH_API as string,
-          {
-            token: tokenResponse.access_token,
-          },
-        );
+  const provider = new GoogleAuthProvider();
 
-        console.log('Backend Google auth response:', {
-          status: res.status,
-          data: res.data,
-        });
-        localStorage.setItem('token', res.data.token);
-        window.location.href = '/';
-      } catch (error: any) {
-        console.error('Google login error (axios):', {
-          isAxiosError: !!error?.isAxiosError,
-          message: error?.message,
-          status: error?.response?.status,
-          data: error?.response?.data,
-          url: error?.config?.url,
-          method: error?.config?.method,
-        });
-        setFormError('Google login failed. Please try again.');
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await signInWithPopup(firebaseAuth, provider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const accessToken = credential?.accessToken;
+
+      if (!accessToken) {
+        throw new Error('Missing Google access token from Firebase credential');
       }
-    },
-  });
+
+      const res = await axios.post(
+        import.meta.env.VITE_GOOGLE_AUTH_API as string,
+        { token: accessToken },
+      );
+
+      localStorage.setItem('token', res.data.token);
+      window.location.href = '/';
+    } catch (error: any) {
+      setFormError('Google login failed. Please try again.');
+    }
+  };
 
   return (
     <Button
       type="button"
       variant="outline"
       className="flex items-center"
-      onClick={() => login()}
+      onClick={handleGoogleLogin}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
