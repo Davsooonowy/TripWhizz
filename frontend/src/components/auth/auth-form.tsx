@@ -21,7 +21,7 @@ import { useEffect, useState } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { AlertCircle, Check } from 'lucide-react';
+import { AlertCircle, Check, Loader2 } from 'lucide-react';
 import { type FieldValues, type SubmitHandler, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 
@@ -53,7 +53,7 @@ export function AuthForm({
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     reset,
   } = useForm<FormData>({
     resolver: zodResolver(isResetPasswordMode ? EmailSchema : schema) as any,
@@ -251,8 +251,15 @@ export function AuthForm({
                 error={errors.email?.message}
                 placeholder="m@example.com"
               />
-              <Button type="submit" className="w-full">
-                Reset Password
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  'Reset Password'
+                )}
               </Button>
               <a
                 href="#"
@@ -354,7 +361,14 @@ export function AuthForm({
                 />
               )}
               <Button type="submit" className="w-full">
-                {isRegisterMode ? 'Register' : 'Login'}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    {isRegisterMode ? 'Registering...' : 'Logging in...'}
+                  </>
+                ) : (
+                  (isRegisterMode ? 'Register' : 'Login')
+                )}
               </Button>
               <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
                 <span className="relative z-10 bg-background px-2 text-muted-foreground">
